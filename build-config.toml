@@ -10,8 +10,15 @@ extra = ["mkl_rt","gflags","pthread"]
 ## test apps
 [[apps]]
 name = "test_rw"
-src = ["xcomm/tests/test_local_rw.cc"]
+src = ["xcomm/tests/test_local_rw.cc", "deps/r2/src/logging.cc"]
 extra = ["gtest"]
+
+## test apps
+[[apps]]
+name = "test_con_rw"
+src = ["xcomm/tests/test_local_concurrent.cc", "deps/r2/src/logging.cc"]
+extra = ["gtest","pthread"]
+
 
 #[tests]
 #src   = ["deps/r2/src/logging.cc","tests/*.cc","src/stores/*.cc"]

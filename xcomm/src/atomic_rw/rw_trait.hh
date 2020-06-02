@@ -19,14 +19,14 @@ using namespace r2;
 template <class Derived>
 class ReadWriteTrait {
 public:
-  // read content from dest -> src
-  auto read(MemBlock &src, MemBlock &dest) -> Result<> {
+  // read content from src -> dest
+  auto read(const MemBlock &src, const MemBlock &dest) -> Result<> {
     return static_cast<Derived *>(this)->read_impl(src,dest);
   }
 
-  // write content from src -> dest
-  auto write(MemBlock &src, MemBlock &dest) -> Result<> {
-    return static_cast<Derived *>(this)->read_impl(src,dest);
+  // write content from dest -> src
+  auto write(const MemBlock &src, const MemBlock &dest) -> Result<> {
+    return this->read(dest, src);
   }
 };
 

@@ -14,3 +14,6 @@
 [submodule "deps/jemalloc"]
 	path = deps/jemalloc
 	url = https://github.com/jemalloc/jemalloc.git
+[submodule "deps/ggflags"]
+	path = deps/ggflags
+	url = https://github.com/gflags/gflags.git

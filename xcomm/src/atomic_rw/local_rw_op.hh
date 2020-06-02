@@ -14,19 +14,16 @@ class LocalRWOp : public ReadWriteTrait<LocalRWOp> {
 public:
   LocalRWOp() = default;
 
-  auto read_impl(MemBlock &src, MemBlock &dest) -> Result<> {
+  auto read_impl(const MemBlock &src, const MemBlock &dest) -> Result<> {
     if (src.sz > dest.sz) {
       // size not match
       return ::rdmaio::Err();
     }
+    // memcpy version
     memcpy(dest.mem_ptr, src.mem_ptr, dest.sz);
     return ::rdmaio::Ok();
   }
 
-  // a local op's write share the same implementation as the read
-  auto write_impl(MemBlock &src, MemBlock &dest) -> Result<> {
-    return this->read_impl(dest, src);
-  }
 };
 }
 
