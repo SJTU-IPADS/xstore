@@ -1,0 +1,36 @@
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",include="include"}
+
+[[apps]]
+name = "tt"
+src  = [ "xcomm/benchs/main.cc" ]
+extra = ["mkl_rt","gflags","pthread"]
+
+## test apps
+[[apps]]
+name = "test_rw"
+src = ["xcomm/tests/test_local_rw.cc"]
+extra = ["gtest"]
+
+#[tests]
+#src   = ["deps/r2/src/logging.cc","tests/*.cc","src/stores/*.cc"]
+#extra = ["rocksdb","mkl_rt","boost_serialization","jemalloc"]
+#deps  = ["boost","ralloc"] ## cmake depends list
+
+[installs]
+boost = {url = "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz", configure_cmd = "./bootstrap.sh  --with-libraries=system,coroutine,serialization", build_cmd = "./b2",install_cmd = "./b2 install",exports=["boost_system","boost_coroutine","boost_serialization"],include="include",lib="lib"}
+r2 = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git",exports=[],include=".",build = false}
+rlib = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git",build = false,exports=[],include=".."}
+jemalloc={url="https://github.com/jemalloc/jemalloc.git",configure_cmd = "./autogen.sh; ./configure --with-jemalloc-prefix=je",build_cmd = "make -j12",install_cmd = "",exports=["jemalloc"],include="include",build=true,lib="lib"}
+
+[includes]
+## cmake add subdirectory
+ggflags = {url = "https://github.com/gflags/gflags.git",include="include"}
+
+[downloads]
+## just downloads the specific libraries
+cpptoml =  {url = "https://github.com/skystrife/cpptoml.git" }
+
+[config]
+std = "c++17"
