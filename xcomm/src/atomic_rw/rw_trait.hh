@@ -20,12 +20,12 @@ template <class Derived>
 class ReadWriteTrait {
 public:
   // read content from dest -> src
-  Result<> read(Memblock &src, Memblock &dest) {
+  auto read(MemBlock &src, MemBlock &dest) -> Result<> {
     return static_cast<Derived *>(this)->read_impl(src,dest);
   }
 
   // write content from src -> dest
-  Result<> write(Memblock &src, Memblock &dest) {
+  auto write(MemBlock &src, MemBlock &dest) -> Result<> {
     return static_cast<Derived *>(this)->read_impl(src,dest);
   }
 };
