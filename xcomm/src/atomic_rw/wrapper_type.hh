@@ -15,8 +15,8 @@ using namespace r2;
 
 const u32 kInvalidSeq = 0;
 
-#pragma pack(1)
-template <typename T> struct alignas(64) WrappedType {
+template <typename T>
+struct alignas(64) __attribute__((packed)) WrappedType {
   // when the seq equals invalid seq, then it is being written
   volatile u32 seq = kInvalidSeq + 1;
   T payload;
