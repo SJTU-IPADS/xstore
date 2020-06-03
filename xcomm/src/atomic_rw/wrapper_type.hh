@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../../../deps/r2/src/common.hh"
+#include "./rw_trait.hh"
+
+#include "./ptr.hh"
 
 namespace xstore {
 
@@ -15,9 +18,9 @@ const u32 kInvalidSeq = 0;
 #pragma pack(1)
 template <typename T> struct alignas(64) WrappedType {
   // when the seq equals invalid seq, then it is being written
-  volatile u32 seq = kInvalidSeq + 1;
+  volatile u64 seq = kInvalidSeq + 1;
   T payload;
-  volatile u32 seq_check;
+  volatile u64 seq_check;
  public:
   WrappedType(const T &p) : payload(p), seq_check(seq) {}
 
@@ -25,9 +28,13 @@ template <typename T> struct alignas(64) WrappedType {
 
   T &get_payload() { return payload; }
 
+  static auto meta_sz() -> usize {
+    return sizeof(seq) + sizeof(seq_check);
+  }
+
   inline bool consistent() const {
-    r2::compile_fence();
-    return (this->seq == this->seq_check) && (this->seq != kInvalidSeq);
+    r2::lfence();
+    return this->seq == this->seq_check;
   }
 
   /*
@@ -35,17 +42,19 @@ template <typename T> struct alignas(64) WrappedType {
     one must first call the before write, and then call the done write
    */
   inline void begin_write() {
-    volatile u32 *sp = &(this->seq);
-    *sp = kInvalidSeq;
-    r2::compile_fence();
+    this->seq_check += 1;
+    this->seq = kInvalidSeq;
+    //::r2::store_fence();
+    ::r2::compile_fence();
   }
 
   inline void done_write() {
-    r2::compile_fence();
-    volatile u32 *sp = &(this->seq);
-    *sp = this->seq_check += 1;
-    ASSERT(*sp != kInvalidSeq );
-    this->seq_check = this->seq;
+    // the update of *seqs* should after previous writes
+    //::r2::store_fence();
+    ::r2::compile_fence();
+    this->seq = this->seq_check;
+    ::r2::compile_fence();
+    //r2::store_fence();
   }
 };
 

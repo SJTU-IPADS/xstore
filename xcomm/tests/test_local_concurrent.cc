@@ -21,9 +21,10 @@ namespace test {
 TEST(AtomicRW, local_concurrent_rw_64) {
   using TestThread = r2::Thread<usize>;
 
-  using TO = TestObj<64 - sizeof(u32) - sizeof(u32) - sizeof(u64)>;
+  using TO = TestObj<256>;
   using Obj64 = WrappedType<TO>;
-  //ASSERT_EQ(sizeof(Obj64), 64);
+  LOG(4) << "test obj sz:" << sizeof(Obj64) << "; internal obj sz: " << sizeof(TO);
+
   Obj64 o;
   inplace_rand_str(o.get_payload().data, o.get_payload().sz());
   o.get_payload().checksum =
@@ -45,7 +46,7 @@ TEST(AtomicRW, local_concurrent_rw_64) {
 
           ASSERT(o.seq < past_seqs.size()) << o.seq;
           ASSERT(checksum != 0);
-          past_seqs[o.seq] = checksum;
+          past_seqs[o.seq + 1] = checksum;
 
           r2::compile_fence();
           // update
@@ -54,16 +55,16 @@ TEST(AtomicRW, local_concurrent_rw_64) {
             LocalRWOp().write(MemBlock(o.get_payload().data, str.size()),
                               MemBlock((char *)str.data(), str.size()));
 
-            ASSERT(memcmp(o.get_payload().data, str.data(), str.size()) == 0);
+#if 0
             auto re_checksum = ::test::simple_checksum(o.get_payload().data,
                                                        o.get_payload().sz());
 
             ASSERT(re_checksum == checksum)
                 << re_checksum << " " << checksum << "; at :" << i;
             ASSERT(checksum != 0);
-            r2::compile_fence();
+#endif
             o.get_payload().checksum = checksum;
-            r2::compile_fence();
+            ASSERT(!o.consistent());
           }
           o.done_write();
           auto re_checksum = ::test::simple_checksum(o.get_payload().data,
@@ -82,6 +83,8 @@ TEST(AtomicRW, local_concurrent_rw_64) {
   std::unique_ptr<TestThread> read_thread =
       std::make_unique<TestThread>([&o, &succ_read_cnt, &past_seqs]() -> usize {
         LocalRWOp op;
+        OrderedRWOp op1;
+
         MemBlock src(&o, sizeof(Obj64));
         MemBlock dst(new char[sizeof(Obj64)], sizeof(Obj64));
 
@@ -95,7 +98,8 @@ TEST(AtomicRW, local_concurrent_rw_64) {
           ASSERT(ccc == compare)
               << "ccc: " << ccc << " " << compare << "; " << 0x0 << " "
               << ro->seq << "; seqs: " << ro->seq_check
-              << "; past checks: " << past_seqs[ro->seq];
+              << "; past checks: " << past_seqs[ro->seq] << " " <<  past_seqs[ro->seq + 1]
+              << " " << past_seqs[ro->seq - 1];
           ASSERT(ro->consistent());
           succ_read_cnt += 1;
         }

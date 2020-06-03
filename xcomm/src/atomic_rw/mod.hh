@@ -22,7 +22,6 @@ class AtomicRW {
 
     usize retry_cnt = 0;
  retry:
-    r2::compile_fence();
     // 1. read the object
     auto res = op.read(src,dest);
     if (unlikely(res != ::rdmaio::IOCode::Ok)) {
@@ -35,6 +34,7 @@ class AtomicRW {
     WrappedType<T> *v_p = reinterpret_cast<WrappedType<T> *> (dest.mem_ptr);
     if (unlikely(!v_p->consistent())) {
     //if (vs->seq != pseq) {
+      r2::relax_fence();
       retry_cnt += 1;
       if (unlikely(retry_cnt > 1000000)) {
         ASSERT(false) << "should never rety so much:" << retry_cnt

@@ -28,6 +28,13 @@ TEST(AtomicRW, basic_rw) {
   // now write
   LocalRWOp().write(dest,src);
   ASSERT_EQ(0, dest_str.compare(src_str));
+
+  // test wrapped rw
+  inplace_rand_str((char *)dest.mem_ptr, dest.sz);
+  ASSERT_NE(0, dest_str.compare(src_str));
+
+  OrderedRWOp().write(dest, src);
+  ASSERT_EQ(0, dest_str.compare(src_str));
 }
 
 TEST(AtomicRW, wrapped_type_create) {
