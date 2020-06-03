@@ -11,9 +11,9 @@
 [submodule "deps/rlib"]
 	path = deps/rlib
 	url = https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git
-[submodule "deps/ggflags"]
-	path = deps/ggflags
-	url = https://github.com/gflags/gflags.git
 [submodule "deps/jemalloc"]
 	path = deps/jemalloc
 	url = https://github.com/jemalloc/jemalloc.git
+[submodule "deps/ggflags"]
+	path = deps/ggflags
+	url = https://github.com/gflags/gflags.git
