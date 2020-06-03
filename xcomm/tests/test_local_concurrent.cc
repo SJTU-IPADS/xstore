@@ -83,7 +83,7 @@ TEST(AtomicRW, local_concurrent_rw_64) {
 
         while (!update_exit) {
           //op.read(src, dst);  // shoud fail
-          AtomicRW::atomic_read<TO>(op, src, dst); // should work
+          AtomicRW().atomic_read<TO>(op, src, dst); // should work
           Obj64 *ro = reinterpret_cast<Obj64 *>(dst.mem_ptr);
           const usize ccc = ::test::simple_checksum(ro->get_payload().data,
                                                     ro->get_payload().sz());
