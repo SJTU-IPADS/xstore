@@ -377,12 +377,16 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/deps/%s)
 """
         f.write(content % (self.name,self.name,self.name))
 
-gtest_include = Include_project("ggtest",{ "include" : "googletest/include","url" : "https://github.com/google/googletest.git"  })
+#gtest_include = Include_project("ggtest",{ "include" : "googletest/include","url" : "https://github.com/google/googletest.git"  })
 
 def load_installs(s):
-    exts = (toml.load(open(s)))["installs"]
-    for i in exts:
-        a = Install(i,exts[i])
+    try :
+        exts = (toml.load(open(s)))["installs"]
+        for i in exts:
+            a = Install(i,exts[i])
+    except:
+        print("no install entries");
+        pass
 
 def load_externals(s):
     exts = (toml.load(open(s)))["externals"]
@@ -402,12 +406,16 @@ def load_downloads(s):
         pass
 
 def load_includes(s):
-    exts = (toml.load(open(s)))["includes"]
-    res = []
-    for i in exts:
-        res.append(Include_project(i,exts[i]))
-    res.append(gtest_include)
-    return res
+    try :
+        exts = (toml.load(open(s)))["includes"]
+        res = []
+        for i in exts:
+            res.append(Include_project(i,exts[i]))
+       #    res.append(gtest_include)
+        return res
+    except:
+        print("no include entries");
+    return []
 
 def tests_template(s):
     if not os.path.exists("tests"):

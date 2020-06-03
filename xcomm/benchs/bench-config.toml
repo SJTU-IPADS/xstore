@@ -1,0 +1,9 @@
+[[apps]]
+name = "bench_local"
+src = ["../benchs/main.cc", "../../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread"]
+
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+boost = { path = "../../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
+
