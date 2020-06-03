@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../deps/r2/src/common.hh"
+#include "../../deps/r2/src/random.hh"
 
 #include <algorithm> // generate_n
 #include <random>
@@ -10,6 +11,14 @@ namespace test {
 
 using namespace r2;
 
+static ::r2::util::FastRandom rand(0xdeadbeaf);
+
+template <usize N> struct __attribute__((packed))  TestObj {
+  char data[N];
+  u64 checksum = 0;
+  inline auto sz() -> usize { return N; }
+};
+
 // random string generator from
 // https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
 void inplace_rand_str(char *buf, size_t len) {
@@ -18,7 +27,7 @@ void inplace_rand_str(char *buf, size_t len) {
                            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                            "abcdefghijklmnopqrstuvwxyz";
     const size_t max_index = (sizeof(charset) - 1);
-    return charset[rand() % max_index];
+    return charset[rand.next() % max_index];
   };
   std::generate_n(buf, len, randchar);
 }

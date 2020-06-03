@@ -15,25 +15,31 @@ using namespace r2;
 
 const u32 kInvalidSeq = 0;
 
-template <typename T>
-struct alignas(64) __attribute__((packed)) WrappedType {
+template <typename T> struct __attribute__((packed)) WrappedType {
   // when the seq equals invalid seq, then it is being written
   volatile u32 seq = kInvalidSeq + 1;
   T payload;
   volatile u32 seq_check;
  public:
-  WrappedType(const T &p) : payload(p), seq_check(seq) {}
+  WrappedType(const T &p) : payload(p) {
+    this->init();
+  }
+
+  void init() {
+    this->seq = kInvalidSeq + 1;
+    this->seq_check = this->seq;
+  }
 
   WrappedType() : seq_check(seq) {}
 
   T &get_payload() { return payload; }
 
+  // sz of the meta data, namely, two seqs
   static auto meta_sz() -> usize {
     return sizeof(seq) + sizeof(seq_check);
   }
 
   inline bool consistent() const {
-    r2::lfence();
     return this->seq == this->seq_check;
   }
 
@@ -53,7 +59,7 @@ struct alignas(64) __attribute__((packed)) WrappedType {
     this->seq = this->seq_check;
     ::r2::compile_fence();
   }
-};
+} __attribute__((aligned(64)));
 
 } // namespace rw
 } // namespace xcomm

@@ -19,6 +19,11 @@ name = "test_remote_rw"
 src = ["xcomm/tests/test_remote_rw.cc", "deps/r2/src/logging.cc"]
 extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
 
+[[apps]]
+name = "test_remote_con_rw"
+src = ["xcomm/tests/test_remote_concurrent.cc", "deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
 
 [[apps]]
 name = "test_con_rw"
