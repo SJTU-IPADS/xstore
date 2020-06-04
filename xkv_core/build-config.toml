@@ -8,6 +8,11 @@ name = "test_node"
 src = ["../deps/r2/src/logging.cc" , "./tests/test_node.cc"]
 extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
 
+[[apps]]
+name = "test_tree"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_tree.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
 
 [externals]
 ## The external libs are libs which donot built/cloned by the tool
