@@ -41,8 +41,9 @@ TEST(XNode, Nodeoffset) {
   std::vector<u64> check_keys;
   r2::util::FastRandom rand(0xdeadbeaf);
 
-  Node::NodeK *nks = reinterpret_cast<Node::NodeK *>(
+  WrappedType<Node::NodeK> *w = reinterpret_cast<WrappedType<Node::NodeK> *>(
       reinterpret_cast<char *>(&n) + n.keys_start_offset());
+  Node::NodeK *nks = &(w->get_payload());
 
   for (uint i = 0; i < 16; ++i) {
     u64 key = rand.next();
