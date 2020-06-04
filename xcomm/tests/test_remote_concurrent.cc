@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <atomic>
+
 #include "../src/atomic_rw/rdma_rw_op.hh"
 #include "../src/atomic_rw/local_rw_op.hh"
 #include "../src/atomic_rw/wrapper_type.hh"
@@ -69,9 +71,10 @@ TEST(AtomicRW, RemoteRWConcurrent) {
   // the total read counts
   usize succ_read_cnt = 0;
 
+  std::atomic<bool> update_exit(false);
   // spawn an update thread to update 'o'
   std::unique_ptr<TestThread> modify_thread =
-      std::make_unique<TestThread>([o, &succ_read_cnt]() -> usize {
+      std::make_unique<TestThread>([o, &succ_read_cnt, &update_exit]() -> usize {
         for (uint i = 0; i < 10000000; ++i) {
           auto str = ::test::random_string(o->get_payload().sz());
           ASSERT(o->get_payload().sz() == str.size());
@@ -96,11 +99,42 @@ TEST(AtomicRW, RemoteRWConcurrent) {
           // FIXME: shall we add some sleep?
         }
         LOG(4) << "update thread exit, succ read cnt: " << succ_read_cnt;
+        update_exit = true;
         return 0;
       });
 
+    std::unique_ptr<TestThread> read_thread =
+        std::make_unique<TestThread>([&o, &succ_read_cnt, &update_exit, qpp]() -> usize {
+        LocalRWOp op;
+        OrderedRWOp op1;
+        RDMARWOp op2(qpp);
+
+        MemBlock src(reinterpret_cast<void *>(0), sizeof(Obj64));
+        MemBlock dst(dst_loc, sizeof(Obj64));
+
+        while (!update_exit) {
+          //op.read(src, dst);  // shoud fail
+          AtomicRW().atomic_read<TO>(op2, src, dst); // should work
+          Obj64 *ro = reinterpret_cast<Obj64 *>(dst.mem_ptr);
+          const usize ccc = ::test::simple_checksum(ro->get_payload().data,
+                                                    ro->get_payload().sz());
+          const usize compare = static_cast<usize>(ro->get_payload().checksum);
+          ASSERT(ccc == compare)
+              << "ccc: " << ccc << " " << compare << "; " << 0x0 << " "
+              << ro->seq << "; seqs: " << ro->seq_check
+              << "; past checks: " << past_seqs[ro->seq] << " " <<  past_seqs[ro->seq + 1]
+              << " " << past_seqs[ro->seq - 1];
+          ASSERT(ro->consistent());
+          succ_read_cnt += 1;
+        }
+        LOG(4) << "succ read cnt: " << succ_read_cnt;
+        ASSERT(succ_read_cnt > 0);
+        return 0;
+      });
+    read_thread->start();
   modify_thread->start();
   modify_thread->join();
+  read_thread->join();
 }
 
 }
