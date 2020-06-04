@@ -23,3 +23,6 @@
 [submodule "xcomm/deps/ggtest"]
 	path = xcomm/deps/ggtest
 	url = https://github.com/google/googletest.git
+[submodule "x_ml/deps/ggtest"]
+	path = x_ml/deps/ggtest
+	url = https://github.com/google/googletest.git
