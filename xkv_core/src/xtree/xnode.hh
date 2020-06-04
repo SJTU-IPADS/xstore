@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "../../../xcomm/src/atomic_rw/wrapper_type.hh"
+#include "./spin_lock.hh"
 
 namespace xstore {
 
@@ -33,7 +34,7 @@ template <usize N> struct __attribute__((packed)) XNodeKeys {
   /*!
     memory offset of keys entry *idx*
   */
-  u64 key_offset(int idx) const {
+  usize key_offset(int idx) const {
     return offsetof(XNodeKeys<N>, keys) + sizeof(u64) * idx;
   }
 };
@@ -45,6 +46,8 @@ template <usize N> struct __attribute__((packed)) XNodeKeys {
   but how to program it in a nice format ?
  */
 template <usize N, typename V> struct __attribute__((packed)) XNode {
+
+  CompactSpinLock lock;
   // keys
   WrappedType<XNodeKeys<N>> keys;
 
@@ -53,6 +56,15 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
 
   // next pointer
   XNode<N, V> *next = nullptr;
+
+  // methods
+
+  /*!
+    The start offset of keys
+   */
+  auto keys_start_offset() -> usize {
+    return offsetof(XNode<N, V>, this->keys);
+  }
 };
 } // namespace xtree
 } // namespace xkv
