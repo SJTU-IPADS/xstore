@@ -30,6 +30,14 @@ template <typename T> struct __attribute__((packed)) WrappedType {
     this->seq_check = this->seq;
   }
 
+  /*!
+    reset the content of the wrapped type
+   */
+  void reset(const T &t) {
+    this->init();
+    this->payload = t;
+  }
+
   WrappedType() : seq_check(seq) {}
 
   T &get_payload() { return payload; }

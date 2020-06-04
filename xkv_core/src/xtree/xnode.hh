@@ -22,13 +22,18 @@ template <usize N> struct __attribute__((packed)) XNodeKeys {
   // methods
   auto empty() -> bool { return num_keys == 0; }
 
-  auto add_key(const u64 &key) -> bool {
+  auto full() -> bool { return num_keys == N; }
+
+  /*!
+    \ret: the index installed
+   */
+  auto add_key(const u64 &key) -> Option<u8> {
     if (this->num_keys < N) {
       this->keys[this->num_keys] = key;
       this->num_keys += 1;
-      return true;
+      return this->num_keys - 1;
     }
-    return false;
+    return {};
   }
 
   auto get_key(const int &idx) -> u64 {
@@ -77,8 +82,40 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   /*!
     The start offset of keys
    */
-  auto keys_start_offset() -> usize {
-    return offsetof(XNode, keys);
+  auto keys_start_offset() -> usize { return offsetof(XNode, keys); }
+
+  /*!
+    The start offset of values
+   */
+  auto value_start_offset() -> usize { return offsetof(XNode, values); }
+
+  /*!
+    Core insert function
+    \ret: true -> this node has splitted, the splitted node is stored in the candidate
+   */
+  auto insert(const u64 &key, const V &v, XNode<N, V> *candidate) -> bool {
+    // lock the node for atomicity
+    lock.lock();
+
+    bool ret = false;
+    if (this->keys.get_payload().full()) {
+      // split
+      /*
+        Split is more tricky in XTree, because keys in this node can be un-sorted.
+        Plan #1: select the medium key, and split
+        Plan #2: first sort the keys, and then split
+        Currently, we use plan #1 due to simplicity
+       */
+      ret = true;
+
+
+    } else {
+      auto idx = this->keys.get_payload().add_key(key);
+      this->values[idx].reset(v);
+    }
+
+    lock.unlock();
+    return ret;
   }
 };
 } // namespace xtree
