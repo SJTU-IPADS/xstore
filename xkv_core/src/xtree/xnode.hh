@@ -31,6 +31,13 @@ template <usize N> struct __attribute__((packed)) XNodeKeys {
     return false;
   }
 
+  auto get_key(const int &idx) -> u64 {
+    if (idx < this->num_keys) {
+      return this->keys[idx];
+    }
+    return {};
+  }
+
   /*!
     memory offset of keys entry *idx*
   */
@@ -48,8 +55,11 @@ template <usize N> struct __attribute__((packed)) XNodeKeys {
 template <usize N, typename V> struct __attribute__((packed)) XNode {
 
   CompactSpinLock lock;
+
+  using NodeK = XNodeKeys<N>;
+
   // keys
-  WrappedType<XNodeKeys<N>> keys;
+  WrappedType<NodeK> keys;
 
   // values
   WrappedType<V> values[N];
@@ -58,12 +68,17 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   XNode<N, V> *next = nullptr;
 
   // methods
+  XNode() = default;
+
+  auto get_key(const int &idx) -> Option<u64> {
+    return keys.get_payload().get_key(idx);
+  }
 
   /*!
     The start offset of keys
    */
   auto keys_start_offset() -> usize {
-    return offsetof(XNode<N, V>, this->keys);
+    return offsetof(XNode, keys);
   }
 };
 } // namespace xtree
