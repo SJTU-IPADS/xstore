@@ -1,6 +1,6 @@
 [[apps]]
 name = "test_alloc"
-src = ["../../deps/r2/src/logging.cc" , "./tests/test_alloc.cc"]
+src = ["../deps/r2/src/logging.cc" , "./tests/test_alloc.cc"]
 extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
 
 [externals]

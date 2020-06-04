@@ -8,7 +8,8 @@ namespace xkv {
 
 // a slab allocator
 // S indicates the allocate memory block sz
-template <usize S> class XAlloc : public AllocTrait<XAlloc, S> {
+template <usize S>
+class XAlloc : public AllocTrait<XAlloc<S>, S> {
   char *mem_pool = nullptr;
   const usize total_sz = 0;
   usize cur_alloc_sz = 0;
@@ -18,7 +19,7 @@ public:
 
   // interfaces
   auto alloc_impl() -> Option<char *> {
-    if (cur_alloc_sz + S < total_sz) {
+    if (cur_alloc_sz + S <= total_sz) {
       // has free space
       auto res = mem_pool + cur_alloc_sz;
       cur_alloc_sz += S;
