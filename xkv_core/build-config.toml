@@ -1,7 +1,7 @@
 [[apps]]
-name = "bench_local"
-src = ["../benchs/main.cc", "../../deps/r2/src/logging.cc"]
-extra = ["boost_system","boost_coroutine", "pthread"]
+name = "test_alloc"
+src = ["../../deps/r2/src/logging.cc" , "./tests/test_alloc.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
 
 [externals]
 ## The external libs are libs which donot built/cloned by the tool

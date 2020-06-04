@@ -196,11 +196,11 @@ def new():
     mkdir_if_not_exsists("tests")
     mkdir_if_not_exsists("deps")
 
-    create_null_main()
-    create_null_config()
+    #create_null_main()
+    #create_null_config()
 
-    if not os.path.exists(".git"):
-        call(["git","init"])
+    #if not os.path.exists(".git"):
+        #call(["git","init"])
 
 def configure(s = "config.toml"):
     load_downloads(s)
@@ -377,7 +377,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/deps/%s)
 """
         f.write(content % (self.name,self.name,self.name))
 
-#gtest_include = Include_project("ggtest",{ "include" : "googletest/include","url" : "https://github.com/google/googletest.git"  })
+gtest_include = Include_project("ggtest",{ "include" : "googletest/include","url" : "https://github.com/google/googletest.git"  })
 
 def load_installs(s):
     try :
@@ -411,11 +411,11 @@ def load_includes(s):
         res = []
         for i in exts:
             res.append(Include_project(i,exts[i]))
-       #    res.append(gtest_include)
+        res.append(gtest_include)
         return res
     except:
         print("no include entries");
-    return []
+    return [gtest_include]
 
 def tests_template(s):
     if not os.path.exists("tests"):

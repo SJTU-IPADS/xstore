@@ -1,0 +1,34 @@
+[[apps]]
+name = "bench_local"
+src = ["./benchs/main.cc", "../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread"]
+
+######################### start test apps ################################
+## test apps
+[[apps]]
+name = "test_rw"
+src = ["./tests/test_local_rw.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+[[apps]]
+name = "test_remote_rw"
+src = ["./tests/test_remote_rw.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
+[[apps]]
+name = "test_remote_con_rw"
+src = ["./tests/test_remote_concurrent.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
+
+[[apps]]
+name = "test_con_rw"
+src = ["./tests/test_local_concurrent.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest","pthread"]
+########################## end test apps ################################
+
+
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+boost = { path = "../../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
+
