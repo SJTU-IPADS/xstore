@@ -3,6 +3,12 @@ name = "test_alloc"
 src = ["../deps/r2/src/logging.cc" , "./tests/test_alloc.cc"]
 extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
 
+[[apps]]
+name = "test_node"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_node.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+
 [externals]
 ## The external libs are libs which donot built/cloned by the tool
 boost = { path = "../../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
