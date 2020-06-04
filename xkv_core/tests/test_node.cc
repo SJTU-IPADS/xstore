@@ -34,8 +34,8 @@ TEST(XNode, offset) {
 }
 
 TEST(XNode, Nodeoffset) {
-  using Node = XNode<16, u64>;
 
+  using Node = XNode<16, u64>;
   Node n;
 
   std::vector<u64> check_keys;
@@ -59,7 +59,87 @@ TEST(XNode, Nodeoffset) {
     ASSERT_EQ(*node_k_ptr, key);
     ASSERT_EQ(n.get_key(i), key);
   }
+
+  // check search
+  for (auto k : check_keys) {
+    ASSERT_TRUE(n.keys.get_payload().search(k));
+  }
 }
+
+TEST(XNode, Insert) {
+  using Node = XNode<16, u64>;
+  Node n;
+
+  std::vector<u64> check_keys;
+  r2::util::FastRandom rand(0xdeadbeaf);
+
+  // first check that we have enough space for the insertions
+  for (uint i = 0; i < 16; ++i) {
+    u64 key = rand.next();
+    n.insert(key, key, nullptr);
+    check_keys.push_back(key);
+  }
+
+  for (auto k : check_keys) {
+    auto idx = n.keys.get_payload().search(k);
+    ASSERT_TRUE(idx);
+    ASSERT_EQ(k, n.values[idx.value()].get_payload());
+  }
+
+  // check 1000 times
+  for (uint t = 0; t < 1000; ++t) {
+    check_keys.clear();
+    Node n;
+    Node n1;
+    Node n2;
+
+    Option<u64> pivot_key = {};
+
+    auto insert_num = rand.next() % 24 + 1; // slightly smaller than 2 * N
+
+    for (uint i = 0; i < insert_num; ++i) {
+      auto key = rand.next();
+      check_keys.push_back(key);
+      if (!pivot_key) {
+        // n1 has not been inserted
+        if (n.insert(key, key, &n1)) {
+          // split
+          pivot_key = n1.get_key(0);
+          ASSERT_NE(n1.get_key(0), kInvalidKey);
+          // LOG(4) << "split done for key: "<< key;
+        }
+      } else {
+        if (key >= pivot_key.value()) {
+          LOG(0) << "insert at pivot: " << key
+                 << " ; num keys: " << n1.num_keys()
+                 << "; n0: " << n.num_keys();
+          ASSERT_FALSE(n1.insert(key, key, nullptr)); // should not split!
+        } else {
+          ASSERT_FALSE(n.insert(key, key, nullptr));
+        }
+      }
+      // end insert all keys
+    }
+
+    // then check
+    for (auto k : check_keys) {
+      ASSERT_TRUE(n.search(k) || n1.search(k));
+      ASSERT_TRUE((!(n.search(k))) ||
+                  (!(n1.search(k)))); // should not exist simuatously
+      ASSERT_EQ(insert_num, n.num_keys() + n1.num_keys());
+      auto idx = n.search(k);
+      if (!idx) {
+        idx = n1.search(k);
+        ASSERT_EQ(k, n1.get_value(idx.value()).value());
+      } else {
+        ASSERT_TRUE(idx);
+        ASSERT_EQ(k, n.get_value(idx.value()).value());
+      }
+    }
+    LOG(0) << "done one";
+  }
+}
+
 } // namespace test
 
 int main(int argc, char **argv) {

@@ -5,51 +5,15 @@
 #include "../../../xcomm/src/atomic_rw/wrapper_type.hh"
 #include "./spin_lock.hh"
 
+#include "./xkeys.hh"
+
 namespace xstore {
 
 namespace xkv {
+
 namespace xtree {
 
 using namespace ::xstore::xcomm::rw;
-
-template <usize N> struct __attribute__((packed)) XNodeKeys {
-  static_assert(std::numeric_limits<u8>::max() >= N,
-                "The number of keys is too large for XNode");
-  u64 keys[N];
-  u8 num_keys = 0;
-  u32 incarnation = 0;
-
-  // methods
-  auto empty() -> bool { return num_keys == 0; }
-
-  auto full() -> bool { return num_keys == N; }
-
-  /*!
-    \ret: the index installed
-   */
-  auto add_key(const u64 &key) -> Option<u8> {
-    if (this->num_keys < N) {
-      this->keys[this->num_keys] = key;
-      this->num_keys += 1;
-      return this->num_keys - 1;
-    }
-    return {};
-  }
-
-  auto get_key(const int &idx) -> u64 {
-    if (idx < this->num_keys) {
-      return this->keys[idx];
-    }
-    return {};
-  }
-
-  /*!
-    memory offset of keys entry *idx*
-  */
-  usize key_offset(int idx) const {
-    return offsetof(XNodeKeys<N>, keys) + sizeof(u64) * idx;
-  }
-};
 
 /*!
   - N: max keys in this node
@@ -75,8 +39,18 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   // methods
   XNode() = default;
 
-  auto get_key(const int &idx) -> Option<u64> {
+  auto num_keys() -> usize { return keys.get_payload().num_keys(); }
+
+  auto get_key(const int &idx) -> u64 {
     return keys.get_payload().get_key(idx);
+  }
+
+  auto get_value(const int &idx) -> Option<V> {
+    // TODO: not check idx
+    if (this->keys.get_payload().get_key(idx) != kInvalidKey) {
+      return values[idx].get_payload();
+    }
+    return {};
   }
 
   /*!
@@ -90,31 +64,78 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   auto value_start_offset() -> usize { return offsetof(XNode, values); }
 
   /*!
-    Core insert function
-    \ret: true -> this node has splitted, the splitted node is stored in the candidate
+    Query method
    */
+  auto search(const u64 &key) -> Option<u8> {
+    return keys.get_payload().search(key);
+  }
+
   auto insert(const u64 &key, const V &v, XNode<N, V> *candidate) -> bool {
-    // lock the node for atomicity
-    lock.lock();
+    this->lock.lock();
+    auto ret = this->raw_insert(key, v, candidate);
+    this->lock.unlock();
+    return ret;
+  }
 
+  /*!
+    Core insert function
+    raw means that we donot hold the lock.
+    Warning: we assume that candidate is **exclusively owned** by this
+    insertion thread, and we will use raw_insert on candidate \ret: true ->
+    this node has splitted, the splitted node is stored in the candidate
+   */
+  auto raw_insert(const u64 &key, const V &v, XNode<N, V> *candidate)
+      -> bool { // lock the node for atomicity
     bool ret = false;
-    if (this->keys.get_payload().full()) {
-      // split
-      /*
-        Split is more tricky in XTree, because keys in this node can be un-sorted.
-        Plan #1: select the medium key, and split
-        Plan #2: first sort the keys, and then split
-        Currently, we use plan #1 due to simplicity
-       */
-      ret = true;
-
-
+    auto idx = this->keys.get_payload().add_key(key);
+    if (idx) {
+      // in-place update
+      this->values[idx.value()].reset(v);
     } else {
-      auto idx = this->keys.get_payload().add_key(key);
-      this->values[idx].reset(v);
-    }
+      // split
+      ASSERT(candidate != nullptr) << "split at the node:" << this;
+      /*
+        Split is more tricky in XTree, because keys in this node can be
+        un-sorted. Plan #1: select the medium key, and split Plan #2: first sort
+        the keys, and then split Currently, we use plan #1 due to simplicity
+       */
 
-    lock.unlock();
+      // 1. increment the incarnation
+      this->keys.get_payload().incarnation += 1;
+      r2::compile_fence();
+
+      // 2. move the pivot key
+      auto pivot_key_idx = this->keys.get_payload().find_median_key().value();
+      auto pivot_key = this->keys.get_payload().get_key(pivot_key_idx);
+
+      // should not split
+      auto r = candidate->raw_insert(
+          pivot_key, this->values[pivot_key_idx].get_payload(), nullptr);
+      ASSERT(r == false);
+      this->keys.get_payload().clear(pivot_key_idx);
+
+      // 3. then, move other keys
+      for (uint i = 0; i < N; ++i) {
+        auto k = this->get_key(i);
+        if (k != kInvalidKey && k > pivot_key) {
+          // insert
+          auto r =
+              candidate->raw_insert(k, this->values[i].get_payload(), nullptr);
+          ASSERT(r == false);
+          this->keys.get_payload().clear(i);
+        }
+      }
+
+      r2::compile_fence();
+      // 4. insert the newly inserted keys
+      if (key > pivot_key) {
+        candidate->raw_insert(key, v, nullptr);
+      } else {
+        this->raw_insert(key, v, nullptr); // should have a space
+      }
+
+      ret = true; // notify the insertion process the splition
+    }
     return ret;
   }
 };
