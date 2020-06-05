@@ -37,8 +37,24 @@ TEST(Tree, Stress) {
 
   const usize key_scale = 1000000;
   for (uint i = 0; i < 10; ++i) {
-    std::vector<u64> check_keys;
     r2::util::FastRandom rand(0xdeadbeaf);
+
+    using Tree = XTree<16, u64>;
+    Tree t;
+
+    std::vector<u64> check_keys;
+    for (uint i = 0;i < key_scale; ++i) {
+      auto key = rand.next();
+      check_keys.push_back(key);
+      t.insert(key, key + 73);
+    }
+
+    for (auto k : check_keys) {
+      auto v = t.get(k);
+      ASSERT_TRUE(v);
+      ASSERT_EQ(v.value(), k + 73);
+    }
+    //
   }
 }
 
