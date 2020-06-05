@@ -26,3 +26,6 @@
 [submodule "x_ml/deps/ggtest"]
 	path = x_ml/deps/ggtest
 	url = https://github.com/google/googletest.git
+[submodule "deps/tiny-dnn"]
+	path = deps/tiny-dnn
+	url = https://github.com/tiny-dnn/tiny-dnn.git
