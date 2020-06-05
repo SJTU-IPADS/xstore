@@ -7,7 +7,27 @@ namespace test {
 using namespace xstore::xkv::xtree;
 
 TEST(Tree,Basic) {
-  ASSERT_EQ(0,-1); // not implemented
+
+  using Tree = XTree<16, u64>;
+  Tree t;
+
+  /*
+    simple tests
+   */
+  auto insert_cnt = 18;
+  for (uint i = 0;i < insert_cnt;++i) {
+    t.insert(i, i);
+  }
+
+
+  for (uint i = 0;i < insert_cnt;++i) {
+    auto v = t.get(i);
+    ASSERT_TRUE(v);
+    ASSERT_EQ(v.value(), i);
+  }
+  /*
+    simple tests passes
+   */
 }
 
 }

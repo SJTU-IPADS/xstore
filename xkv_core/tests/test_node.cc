@@ -93,6 +93,8 @@ TEST(XNode, Insert) {
     Node n1;
     Node n2;
 
+    auto prev_incar = n.get_incarnation();
+
     Option<u64> pivot_key = {};
 
     auto insert_num = rand.next() % 24 + 1; // slightly smaller than 2 * N
@@ -135,6 +137,11 @@ TEST(XNode, Insert) {
         ASSERT_TRUE(idx);
         ASSERT_EQ(k, n.get_value(idx.value()).value());
       }
+    }
+
+    // finally check the incarnation
+    if (check_keys.size() > 16) {
+      ASSERT_NE(prev_incar, n.get_incarnation());
     }
     LOG(0) << "done one";
   }

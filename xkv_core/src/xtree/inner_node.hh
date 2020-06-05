@@ -13,12 +13,14 @@ namespace xtree {
 
 using namespace r2;
 
+using raw_ptr_t = char *;
+
 template <usize N> struct TreeInner {
   static_assert(std::numeric_limits<u8>::max() >= N,
                 "The number of keys is too large for XNode");
   u64 keys[N];
   u64 up_key;             // temporally store the up key for split usage
-  void *childrens[N + 1]; // inner nodes has to store one more children
+  raw_ptr_t childrens[N + 1]; // inner nodes has to store one more children
   u8 num_keys = 0;
 
   TreeInner() {
@@ -26,12 +28,28 @@ template <usize N> struct TreeInner {
     std::fill_n(childrens, N, nullptr);
   }
 
+  TreeInner(const u64 &k, const raw_ptr_t &l, const raw_ptr_t &r) : num_keys(1) {
+    this->keys[0] = k;
+    this->childrens[0] = l;
+    this->childrens[1] = r;
+  }
+
+  inline auto find_children(const u64 &k) -> raw_ptr_t {
+    uint i = 0;
+    for (; i < this->num_keys; ++i) {
+      if (this->keys[i] >= k) {
+        break;
+      }
+    }
+    return this->childrens[i];
+  }
+
   inline auto empty() -> bool { return num_keys == 0; }
 
   /*!
     Copy K-addrs after *n) to the next
   */
-  void copy_last_n_to(TreeInner<N> *next, const uint &n) {
+  void copy_after_n_to(TreeInner<N> *next, const uint &n) {
     ASSERT(next->empty());
     uint copied = 0;
     for (uint i = n; i < this->num_keys; ++i, copied += 1) {

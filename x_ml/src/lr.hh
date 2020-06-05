@@ -1,5 +1,8 @@
 #pragma once
 
+#include <mkl.h>
+#include <mkl_lapacke.h>
+
 #include "./ml_trait.hh"
 
 namespace xstore {
@@ -11,6 +14,8 @@ namespace xml {
  */
 struct LR {
   // TODO: impl
+  double w;
+  double b;
 };
 
 } // namespace xml

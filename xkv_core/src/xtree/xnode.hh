@@ -41,6 +41,8 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
 
   auto num_keys() -> usize { return keys.get_payload().num_keys(); }
 
+  auto get_incarnation() -> u32 { return this->keys.get_payload().incarnation; }
+
   auto get_key(const int &idx) -> u64 {
     return keys.get_payload().get_key(idx);
   }
@@ -93,7 +95,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
       this->values[idx.value()].reset(v);
     } else {
       // split
-      ASSERT(candidate != nullptr) << "split at the node:" << this;
+      ASSERT(candidate != nullptr) << "split at the node:" << this << " " << candidate;
       /*
         Split is more tricky in XTree, because keys in this node can be
         un-sorted. Plan #1: select the medium key, and split Plan #2: first sort
@@ -133,6 +135,10 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
       } else {
         this->raw_insert(key, v, nullptr); // should have a space
       }
+
+      // re-set the next pointer
+      candidate->next = this->next;
+      this->next = candidate;
 
       ret = true; // notify the insertion process the splition
     }
