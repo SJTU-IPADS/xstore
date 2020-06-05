@@ -16,7 +16,7 @@ TEST(XML, NN) {
   //network<sequential> net;
 
   //net << fc(1, 300) << sigmoid() << fc(300, 1);
-  auto net = make_mlp<sigmoid>({1 * 1, 12, 1});
+  auto net = make_mlp<relu>({1 * 1, 12, 1});
 
   std::vector<vec_t> train_set;
   std::vector<vec_t> label;
@@ -30,7 +30,7 @@ TEST(XML, NN) {
   }
 
   adagrad optimizer;
-  net.train<mse, adagrad>(optimizer, train_set, label, 30, 50);
+  net.train<mse, adagrad>(optimizer, train_set, label, 5, 120);
 
   for (uint i = 0;i < data->size(); ++i) {
     auto k = (*data)[i];
