@@ -6,22 +6,37 @@
 
 using namespace tiny_dnn;
 using namespace tiny_dnn::activation;
-using namespace tiny_dnn::layers;
+//using namespace tiny_dnn::layers;
 
 namespace test {
 
 using namespace kvs_workloads;
 
 TEST(XML, NN) {
-  network<sequential> net;
+  //network<sequential> net;
 
-  net << fc(1 * 32, 300) << sigmoid() << fc(300, 1);
+  //net << fc(1, 300) << sigmoid() << fc(300, 1);
+  auto net = make_mlp<sigmoid>({1 * 1, 12, 1});
 
-  std::vector<u64> train_set;
-  std::vector<u64> label;
+  std::vector<vec_t> train_set;
+  std::vector<vec_t> label;
 
   auto data = StaticLoader::load_from_file("./test_dataset.txt");
   LOG(4) << "total: " << data->size() << " loaded";
+
+  for (uint i = 0;i < data->size(); ++i) {
+    train_set.push_back(vec_t({static_cast<float>((*data)[i])}));
+    label.push_back(vec_t({static_cast<float>(i)}));
+  }
+
+  adagrad optimizer;
+  net.train<mse, adagrad>(optimizer, train_set, label, 30, 50);
+
+  for (uint i = 0;i < data->size(); ++i) {
+    auto k = (*data)[i];
+    LOG(4) << "predict: " << k << " ->"
+           << net.predict(vec_t({static_cast<float>(k)}))[0];
+  }
 }
 
 } // namespace test
