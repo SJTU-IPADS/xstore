@@ -18,4 +18,5 @@ extra = ["gtest"]
 boost = { path = "../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
 rlib = { path = "../deps", exports = [], lib = "", include = ""}
 mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",include="include"}
+tiny-dnn = {path = "../deps/tiny-dnn", exports = [], lib = "", include = ""}
 
