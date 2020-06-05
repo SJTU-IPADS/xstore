@@ -3,9 +3,12 @@
 #include "../src/xtree/mod.hh"
 #include "../../deps/r2/src/random.hh"
 
+#include "../src/xalloc.hh"
+
 namespace test {
 
 using namespace xstore::xkv::xtree;
+using namespace xstore::xkv;
 
 TEST(Tree,Basic) {
 
@@ -36,8 +39,10 @@ TEST(Tree,Basic) {
 TEST(Tree, Stress) {
 
   const usize key_scale = 1000000;
+
+  r2::util::FastRandom rand(0xdeadbeaf);
+
   for (uint i = 0; i < 10; ++i) {
-    r2::util::FastRandom rand(0xdeadbeaf);
 
     using Tree = XTree<16, u64>;
     Tree t;
@@ -60,6 +65,24 @@ TEST(Tree, Stress) {
 
 TEST(Tree, allocation) {
   // test that there is no double alloc
+  using Tree = XTree<16, u64>;
+  Tree t;
+
+  auto total_keys = 1000000;
+
+  auto total_sz = total_keys * sizeof(Tree::Leaf) / 8; // 8 = 16 / 2
+  auto alloc = XAlloc<sizeof(Tree::Leaf)>(new char[total_sz], total_sz);
+
+  t.init_pre_alloced_leaf(alloc);
+
+  int split_num = 0;
+  for (int i = 0;i < total_keys;++i) {
+    auto ret = t.insert_w_alloc(i, i, alloc);
+    if (ret) {
+      split_num += 1;
+    }
+  }
+  ASSERT_EQ(alloc.cur_alloc_num, split_num + 1);
 }
 
 }

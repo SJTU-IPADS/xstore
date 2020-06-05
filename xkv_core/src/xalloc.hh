@@ -18,6 +18,8 @@ class XAlloc : public AllocTrait<XAlloc<S>, S> {
   usize cur_alloc_sz = 0;
 
 public:
+  usize cur_alloc_num = 0;
+
   XAlloc(char *m, const usize &t) : mem_pool(m), total_sz(t) {}
 
   // interfaces
@@ -27,6 +29,7 @@ public:
       // has free space
       auto res = mem_pool + cur_alloc_sz;
       cur_alloc_sz += S;
+      cur_alloc_num += 1;
       lock.unlock();
       return res;
     }

@@ -53,7 +53,11 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
 
   auto insert_impl(const u64 &k, const V &v) {
     ::xstore::xkv::TrivalAlloc<sizeof(Leaf)> alloc;
+    this->insert_w_alloc(k, v, alloc);
+  }
 
+  template <class Alloc>
+  auto insert_w_alloc(const u64 &k, const V &v, Alloc &alloc) -> bool {
     // 1. initialize the pre_alloc_leaf_node
     if (unlikely(this->pre_alloc_leaf_node == nullptr)) {
       init_pre_alloced_leaf(alloc);
@@ -67,6 +71,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
       // take out the current leaf node
       this->take_pre_alloced_leaf(alloc);
     }
+    return ret;
   }
 
   /*!
