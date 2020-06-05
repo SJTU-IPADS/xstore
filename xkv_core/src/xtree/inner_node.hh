@@ -65,6 +65,8 @@ template <usize N> struct TreeInner {
     raw_ptr_t to_insert = nullptr;
     u64       up_key = 0;
 
+    TreeInner<N> *new_sib = nullptr;
+
     if (depth == 1) {
       // the underlying is the leaf
       auto leaf = reinterpret_cast<XNode<N, V> *>(child);
@@ -83,14 +85,31 @@ template <usize N> struct TreeInner {
       }
     }
 
-    // insert to me
+    // should insert to me
     if (to_insert != nullptr) {
       ASSERT(up_key != kInvalidKey);
-      ASSERT(false) << " not implemented";
 
+      auto sib_to_insert = this;
 
+      if (this->full()) {
+        new_sib = new TreeInner<N>();
+        auto threshod = (N + 1) / 2;
+        this->copy_after_n_to(new_sib, threshod);
+        this->num_keys = threshod - 1;
+        new_sib->up_key = this->keys[threshod - 1];
+
+        // determine which nodes to insert
+        if (up_key >= new_sib->up_key) {
+          ASSERT(k >= threshod);
+          k -= threshod;
+          sib_to_insert = new_sib;
+        }
+      }
+
+      // insert to the to_insert
+      sib_to_insert->insert_at_pos(up_key, to_insert, k);
     }
-    return nullptr;
+    return new_sib;
   }
 
   inline auto empty() -> bool { return num_keys == 0; }
@@ -104,13 +123,25 @@ template <usize N> struct TreeInner {
     ASSERT(next->empty());
     uint copied = 0;
     for (uint i = n; i < this->num_keys; ++i, copied += 1) {
-      copied += 1;
       next->keys[i - n] = this->keys[i];
       next->childrens[i - n] = this->childrens[i];
     }
     next->num_keys = copied;
     // set the end children
     next->childrens[next->num_keys] = this->childrens[this->num_keys];
+  }
+
+  /*!
+    insert at myself at k
+   */
+  void insert_at_pos(const u64 &k, const raw_ptr_t &p, const int &pos) {
+    for (int i = this->num_keys; i > pos; i--) {
+      this->keys[i] = this->keys[i - 1];
+      this->childrens[i + 1] = this->childrens[i];
+    }
+    this->keys[pos] = k;
+    this->childrens[pos + 1] = p;
+    this->num_keys += 1;
   }
 };
 

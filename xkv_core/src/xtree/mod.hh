@@ -43,6 +43,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
     while (cur_depth != 0) {
       // traversing the inner nodes
       Inner *inner = reinterpret_cast<Inner *>(cur_node);
+      auto idx = inner->find_children_idx(k);
       cur_node = inner->find_children(k);
       // down to the next
       cur_depth -= 1;
@@ -104,7 +105,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
       if (new_root != nullptr) {
         this->depth += 1;
         this->root = reinterpret_cast<raw_ptr_t>(
-            new Inner(reinterpret_cast<Inner *>(this->root)->up_key,
+            new Inner(reinterpret_cast<Inner *>(new_root)->up_key,
                       reinterpret_cast<raw_ptr_t>(this->root),
                       reinterpret_cast<raw_ptr_t>(new_root)));
       }

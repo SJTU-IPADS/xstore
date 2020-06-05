@@ -79,6 +79,14 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
     return ret;
   }
 
+  void print() {
+    for (uint i = 0;i < N; ++i) {
+      if (this->get_key(i) != kInvalidKey) {
+        LOG(4) << "keys: #" << i << " " << this->get_key(i);
+      }
+    }
+  }
+
   /*!
     Core insert function
     raw means that we donot hold the lock.
@@ -135,6 +143,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
       } else {
         this->raw_insert(key, v, nullptr); // should have a space
       }
+      //ASSERT(this->num_keys() + candidate->num_keys() == N + 1);
 
       // re-set the next pointer
       candidate->next = this->next;
