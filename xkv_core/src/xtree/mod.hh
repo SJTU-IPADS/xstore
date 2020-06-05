@@ -4,7 +4,6 @@
 #include "../kv_trait.hh"
 
 #include "./inner_node.hh"
-#include "./xnode.hh"
 
 namespace xstore {
 
@@ -41,12 +40,12 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
     auto cur_node = root;
     auto cur_depth = depth;
 
-    while (this->depth != 0) {
+    while (cur_depth != 0) {
       // traversing the inner nodes
       Inner *inner = reinterpret_cast<Inner *>(cur_node);
       cur_node = inner->find_children(k);
       // down to the next
-      this->depth -= 1;
+      cur_depth -= 1;
     }
     return reinterpret_cast<Leaf *>(cur_node);
   }
@@ -99,7 +98,17 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
 
     } else {
       // not implemented yet
-      ASSERT(false) << " not implemennted";
+      bool whether_split = false;
+      auto new_root = reinterpret_cast<Inner *>(this->root)
+                          ->insert(k, v, this->depth, whether_split, new_leaf);
+      if (new_root != nullptr) {
+        this->depth += 1;
+        this->root = reinterpret_cast<raw_ptr_t>(
+            new Inner(reinterpret_cast<Inner *>(this->root)->up_key,
+                      reinterpret_cast<raw_ptr_t>(this->root),
+                      reinterpret_cast<raw_ptr_t>(new_root)));
+      }
+      ret = whether_split;
     }
     return ret;
   }

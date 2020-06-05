@@ -14,7 +14,7 @@ TEST(Tree,Basic) {
   /*
     simple tests
    */
-  auto insert_cnt = 18;
+  auto insert_cnt = 24;
   for (uint i = 0;i < insert_cnt;++i) {
     t.insert(i, i);
   }
@@ -28,6 +28,10 @@ TEST(Tree,Basic) {
   /*
     simple tests passes
    */
+}
+
+TEST(Tree, allocation) {
+  // test that there is no double alloc
 }
 
 }
