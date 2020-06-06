@@ -7,7 +7,7 @@
 
 namespace xstore {
 
-namespace ml {
+namespace xml {
 
 using namespace r2;
 
@@ -19,7 +19,7 @@ using namespace r2;
  */
 template <class Derived> class MLTrait {
 public:
-  double predict(const u64 &key) {
+  auto predict(const u64 &key) -> double {
     return reinterpret_cast<Derived *>(this)->predict_impl(key);
   }
 
@@ -29,7 +29,7 @@ public:
                                                          train_label, step);
   }
 
-  std::string serialize() {
+  auto serialize() -> std::string {
     return reinterpret_cast<Derived *>(this)->serialize_impl();
   }
 
