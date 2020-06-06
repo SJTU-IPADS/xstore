@@ -4,6 +4,8 @@
 #include "../../deps/tiny-dnn/tiny_dnn/tiny_dnn.h"
 #include "../../deps/r2/src/common.hh"
 
+#include "../src/nn.hh"
+
 using namespace tiny_dnn;
 using namespace tiny_dnn::activation;
 //using namespace tiny_dnn::layers;
@@ -11,34 +13,37 @@ using namespace tiny_dnn::activation;
 namespace test {
 
 using namespace kvs_workloads;
+using namespace xstore::xml;
 
-TEST(XML, NN) {
-  //network<sequential> net;
+TEST(XML, MYNN) {
+  set_random_seed(0xdeadbeaf);
+  for (uint _i = 0; _i < 3; ++_i) {
 
-  //net << fc(1, 300) << sigmoid() << fc(300, 1);
-  auto net = make_mlp<relu>({1 * 1, 12, 1});
+    NN nn(4);
 
-  std::vector<vec_t> train_set;
-  std::vector<vec_t> label;
+    //LOG(4) << "before train: " << nn.net;
+    auto data = StaticLoader::load_from_file("./test_dataset.txt");
+    //LOG(4) << "total: " << data->size() << " loaded";
 
-  auto data = StaticLoader::load_from_file("./test_dataset.txt");
-  LOG(4) << "total: " << data->size() << " loaded";
+    std::vector<u64> t;
+    std::vector<u64> l;
 
-  for (uint i = 0;i < data->size(); ++i) {
-    train_set.push_back(vec_t({static_cast<float>((*data)[i])}));
-    label.push_back(vec_t({static_cast<float>(i)}));
-  }
+    for (uint i = 0; i < data->size(); ++i) {
+      t.push_back((*data)[i]);
+      l.push_back(i);
+    }
 
-  adagrad optimizer;
-  net.train<mse, adagrad>(optimizer, train_set, label, 5, 120);
+    nn.train(t, l);
 
-  for (uint i = 0;i < data->size(); ++i) {
-    auto k = (*data)[i];
-    LOG(4) << "predict: " << k << " ->"
-           << net.predict(vec_t({static_cast<float>(k)}))[0];
+    for (uint i = 0; i < data->size(); ++i) {
+      auto key = (*data)[i];
+      LOG(4) << "my nn predict: " << key << " " << nn.predict(key);
+    }
+    //LOG(4) << nn.net;
+    LOG(2) << "After train: "
+           << " -----------";
   }
 }
-
 } // namespace test
 
 int main(int argc, char **argv) {
