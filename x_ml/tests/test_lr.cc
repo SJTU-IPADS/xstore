@@ -24,8 +24,8 @@ TEST(XML, LR) {
   ASSERT_NE(trained.w, base.w);
   trained.train(train_set, labels);
 
-  ASSERT_EQ(trained.w, base.w);
-  ASSERT_EQ(trained.b, base.b);
+  ASSERT_NEAR(trained.w, base.w, 0.01);
+  ASSERT_NEAR(trained.b, base.b, 0.01);
 }
 
 }
