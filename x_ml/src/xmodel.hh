@@ -44,9 +44,11 @@ template <class ML> struct XSubModel {
   XSubModel() = default;
 
   /*!
-    Train the ml, and use calculate the min_max according to the train_label
+    Train the ml, and use calculate the min_max according to the train_label,
+    update the min-max according to *f*
    */
-  void train(std::vector<u64> &train_data, std::vector<u64> &train_label) {
+  void train(std::vector<u64> &train_data, std::vector<u64> &train_label,
+             update_func f = default_update_func) {
     // TODO
   }
 };
