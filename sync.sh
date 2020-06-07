@@ -8,4 +8,4 @@ rsync -i -rtuv \
       $PWD/*.py \
       $target:/raid/wxd/xstore
 
-rsync -i -rtuv  $PWD/deps/r2 $PWD/deps/rlib $target:/raid/wxd/xstore/deps/
+rsync -i -rtuv  $PWD/deps/kvs-workload/ $PWD/deps/r2 $PWD/deps/rlib $target:/raid/wxd/xstore/deps/

@@ -17,14 +17,20 @@ struct NN : MLTrait<NN> {
   /*!
     2 means that we convert a u64 to 2 float
    */
-  explicit NN(const u64 &layout) : net(make_mlp<::tiny_dnn::activation::leaky_relu>({2 * 1, layout, 1})) {}
+
+  //using act_type = ::tiny_dnn::activation::tanh;
+  using act_type = ::tiny_dnn::activation::leaky_relu;
+  explicit NN(const u64 &layout) : net(make_mlp<act_type>({2 * 1, layout, 1})) {}
 
   auto predict_impl(const u64 &key) -> double {
-    return net.predict(this->key_to_vec(key))[0];
+    auto res = net.predict(this->key_to_vec(key))[0];
+    //LOG(4) << "predict key: " << key << " " << res;
+    return res;
   }
 
   inline auto key_to_vec(const u64 &key) -> vec_t {
-    const u64 mask = std::numeric_limits<u32>::max();
+    //const u64 mask = std::numeric_limits<u32>::max();
+    const u64 mask = 0xffffffffu;
     auto key_vec =
         vec_t({static_cast<float>(key & mask), static_cast<float>(key >> 32)});
     LOG(0) << "convert key: " << key << " to " << key_vec[0] << ","
@@ -41,20 +47,23 @@ struct NN : MLTrait<NN> {
     for (uint i = 0; i < train_data.size(); ++i) {
       real_train_set.push_back(this->key_to_vec(train_data[i]));
       labels.push_back(vec_t({static_cast<float>(train_label[i])}));
+      //LOG(4) << "train key: " << real_train_set[i][0] << " "
+      //<< real_train_set[i][1];
     }
 
-    this->net.weight_init(weight_init::constant(0.1));
-    this->net.bias_init(weight_init::constant(0.5));
+    //this->net.weight_init(weight_init::constant(0.1));
+    //this->net.bias_init(weight_init::constant(0.5));
 
-    //using opt = adagrad;
-    using opt = adam;
+    using opt = adagrad;
+    //using opt = adam;
+    //using opt = nesterov_momentum;
     // adagrad optimizer;
     // nesterov_momentum optimizer;
 
-        opt optimizer;
+    opt optimizer;
     // train 120 epochs
     auto ret = this->net.train<mse, opt>(
-        optimizer, real_train_set, labels, real_train_set.size() / 2, 120);
+        optimizer, real_train_set, labels, real_train_set.size(), 200000);
     ASSERT(ret) << "train error!";
     LOG(0) << "Train done using training-set:" << real_train_set.size();
     r2::compile_fence();
