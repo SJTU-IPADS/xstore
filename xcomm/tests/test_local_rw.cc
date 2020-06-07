@@ -2,6 +2,7 @@
 
 #include "../src/atomic_rw/local_rw_op.hh"
 #include "../src/atomic_rw/wrapper_type.hh"
+#include "../src/atomic_rw/unwrapper_type.hh"
 
 #include "./utils.hh"
 
@@ -49,6 +50,12 @@ TEST(AtomicRW, wrapped_type_create) {
   ASSERT_TRUE(x.consistent());
   // now the value should eq to 6
   ASSERT_EQ(x.get_payload(), 6);
+}
+
+TEST(AtomicRW, unwrapper_type) {
+  using WT = WrappedType<u64>;
+  using UWT = UWrappedType<u64>;
+  ASSERT_NE(sizeof(WT), sizeof(UWT));
 }
 
 } // namespace test

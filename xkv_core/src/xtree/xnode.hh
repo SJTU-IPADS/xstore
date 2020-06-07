@@ -3,6 +3,8 @@
 #include <limits>
 
 #include "../../../xcomm/src/atomic_rw/wrapper_type.hh"
+#include "../../../xcomm/src/atomic_rw/unwrapper_type.hh"
+
 #include "./spin_lock.hh"
 
 #include "./xkeys.hh"
@@ -14,6 +16,8 @@ namespace xkv {
 namespace xtree {
 
 using namespace ::xstore::xcomm::rw;
+
+#define SIZEOF_TYPE(X) (((X *)0) + 1)
 
 /*!
   - N: max keys in this node
@@ -31,6 +35,10 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   WrappedType<NodeK> keys;
 
   // values
+  // if the size of value is smaller, we directly store it
+
+  // FIXME: how to define it statically?
+  //UWrappedType<V> values[N];
   WrappedType<V> values[N];
 
   // next pointer
