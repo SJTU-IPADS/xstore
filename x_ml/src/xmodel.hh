@@ -45,12 +45,24 @@ template <class ML> struct XSubModel {
   int err_min = 0;
   int err_max = 0;
 
-  u64 max = 0;
+  int max = 0;
 
   XSubModel() = default;
 
   // direct forward the init parameters to the ML
   template <typename... Args> XSubModel(Args... args) : ml(args...) {}
+
+  auto get_point_predict(const u64 &k) -> int {
+    return static_cast<int>(
+        std::max(static_cast<int>(this->ml.predict(k)), static_cast<int>(0)));
+  }
+
+  auto get_predict_range(const u64 &k) -> std::pair<int,int> {
+    auto p = this->get_point_predict(k);
+    auto p_start = std::max(0, p + this->err_min);
+    auto p_end   = std::min(this->max, p + this->err_max);
+    return std::make_pair(p_start, p_end);
+  }
 
   /*!
     Train the ml, and use calculate the min_max according to the train_label,
@@ -58,16 +70,17 @@ template <class ML> struct XSubModel {
    */
   void train(std::vector<u64> &train_data, std::vector<u64> &train_label,
              update_func f = default_update_func) {
-    // TODO
+    ASSERT(train_data.size() == train_label.size());
     // first train ml
     this->ml.train(train_data,train_label);
+    this->max = static_cast<int>(train_label.size());
 
     // then calculate the min-max
     for (uint i = 0;i < train_data.size(); ++i) {
       auto k = train_data[i];
       auto label = train_label[i];
 
-      auto res = f(label, static_cast<u64>(this->ml.predict(k)),
+      auto res = f(label, static_cast<u64>(this->get_point_predict(k)),
                    this->err_min, this->err_max);
       this->err_min = std::get<0>(res);
       this->err_max = std::get<1>(res);

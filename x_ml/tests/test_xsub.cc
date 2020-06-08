@@ -18,7 +18,7 @@ TEST(XML, XModel) {
   std::vector<u64> keys;
   std::vector<u64> labels;
 
-  const int insert_num = 10;
+  const int insert_num = 1000;
 
   for (uint i = 0;i < insert_num; ++i) {
     u64 key = ::kvs_workloads::ycsb::Hasher::hash(i);
@@ -32,6 +32,14 @@ TEST(XML, XModel) {
   // start prepareing the training-set
   x.train(keys,labels);
   LOG(4) << "Err min:  " << x.err_min << "; max:" << x.err_max;
+
+  // sanity check correctness
+  for (uint i = 0;i < keys.size(); ++i) {
+    auto k = keys[i];
+    auto range = x.get_predict_range(k);
+    ASSERT_GE(i,std::get<0>(range));
+    ASSERT_LE(i,std::get<1>(range));
+  }
 
   /* fogort NN now, its too costly to train
   LOG(4) << x1.ml.net;
