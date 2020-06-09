@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../src/lr/mod.hh"
+#include "../src/lr/compact.hh"
 //#include "../src/nn.hh"
 #include "../src/xmodel.hh"
 
@@ -32,6 +33,10 @@ TEST(XML, XModel) {
   // start prepareing the training-set
   x.train(keys,labels);
   LOG(4) << "Err min:  " << x.err_min << "; max:" << x.err_max;
+
+  XSubModel<CompactLR> x1;
+  x1.train(keys, labels);
+  LOG(4) << "Err min:  " << x1.err_min << "; max:" << x1.err_max;
 
   // sanity check correctness
   for (uint i = 0;i < keys.size(); ++i) {
