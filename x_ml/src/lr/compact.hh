@@ -10,7 +10,7 @@ namespace xml {
 /*!
   LR in a compact form, which uses float (4-byte) to store ml parameters
  */
-struct CompactLR : public MLTrait<CompactLR> {
+struct __attribute__((packed)) CompactLR : public MLTrait<CompactLR> {
   float w;
   float b;
 

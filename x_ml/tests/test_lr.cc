@@ -1,11 +1,14 @@
 #include <gtest/gtest.h>
 
+#include "../../xutils/marshal.hh"
+
 #include "../src/lr/mod.hh"
 #include "../src/lr/compact.hh"
 
 namespace test {
 
 using namespace xstore::xml;
+using namespace xstore::util;
 
 TEST(XML, LR) {
   std::vector<u64> train_set;
@@ -48,6 +51,11 @@ TEST(LR, OTHERS) {
   clr.train(train_set, labels);
   ASSERT_NEAR(static_cast<double>(clr.w), w,0.01);
   ASSERT_NEAR(static_cast<double>(clr.b), b, 100);
+}
+
+TEST(LR, Serialize) {
+  LR test(0.73, 0xdeadbeaf);
+  auto res = MarshalT<LR>::serialize(test);
 }
 
 }

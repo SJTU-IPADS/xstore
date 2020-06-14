@@ -12,7 +12,7 @@ namespace xml {
 /*!
   Core LR Model, leverage MKL for training
  */
-struct LR : public MLTrait<LR> {
+struct __attribute__((packed))  LR : public MLTrait<LR> {
   double w;
   double b;
 
