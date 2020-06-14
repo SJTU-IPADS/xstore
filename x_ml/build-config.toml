@@ -17,6 +17,12 @@ extra = ["gtest"]
 
 ########################## end test apps ################################
 
+## bench apps
+[[apps]]
+name = "bench_lr"
+src = ["./benchs/bench_lat.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
 
 [externals]
 ## The external libs are libs which donot built/cloned by the tool
