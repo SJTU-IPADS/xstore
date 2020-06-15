@@ -61,9 +61,28 @@ TEST(LR, OTHERS) {
   //ASSERT_NEAR(static_cast<double>(mlr.lr.b), b, 1);
 }
 
+TEST(MLR, basic) {
+  using MLRT = MLR<u32, CompactLR>;
+  MLRT mlr;
+
+  std::vector<u64> train_set = {0, 1, 2, 9, 10};
+  std::vector<u64> labels = {0, 1, 2, 3, 4};
+
+  mlr.train(train_set, labels);
+  u32 base = 3;
+  mlr.set_base(base);
+
+  for (auto k : train_set) {
+    ASSERT_LE(mlr.predict(k), base);
+  }
+}
+
 TEST(LR, Serialize) {
   LR test(0.73, 0xdeadbeaf);
   auto res = MarshalT<LR>::serialize(test);
+
+
+
 }
 
 }
