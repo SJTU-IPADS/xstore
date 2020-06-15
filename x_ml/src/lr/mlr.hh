@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./compact.hh"
+#include "../../../xutils/marshal.hh"
 
 namespace xstore {
 
@@ -12,6 +13,7 @@ namespace xml {
 // BT states for BaseType
 template <typename BT = u32, typename LRT = CompactLR>
 struct __attribute__((packed)) MLR : public MLTrait<MLR<BT,LRT>> {
+  using Self = MLR<BT,LRT>;
   LRT       lr;
   BT        base;
 
@@ -35,12 +37,11 @@ struct __attribute__((packed)) MLR : public MLTrait<MLR<BT,LRT>> {
   }
 
   auto serialize_impl() -> std::string {
-    ASSERT(false) << "not implemented";
-    return "";
+    return ::xstore::util::MarshalT<Self>::serialize(*this);
   }
 
   void from_serialize_impl(const std::string &data) {
-    ASSERT(false) << "not implemented";
+    *this = ::xstore::util::MarshalT<Self>::deserialize(data).value();
   }
 };
 

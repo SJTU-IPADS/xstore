@@ -78,11 +78,24 @@ TEST(MLR, basic) {
 }
 
 TEST(LR, Serialize) {
-  LR test(0.73, 0xdeadbeaf);
-  auto res = MarshalT<LR>::serialize(test);
 
+  using MLRT = MLR<u32, CompactLR>;
+  MLRT mlr;
 
+  std::vector<u64> train_set = {0, 1, 2, 9, 10};
+  std::vector<u64> labels = {0, 1, 2, 3, 4};
 
+  mlr.train(train_set, labels);
+  u32 base = 3;
+  mlr.set_base(base);
+
+  auto s = mlr.serialize();
+  MLRT mlr2;
+  ASSERT_NE(mlr2.base, mlr.base);
+  mlr2.from_serialize(s);
+  ASSERT_EQ(mlr2.base, mlr.base);
+  ASSERT_EQ(mlr2.lr.w, mlr.lr.w);
+  ASSERT_EQ(mlr2.lr.w, mlr.lr.w);
 }
 
 }

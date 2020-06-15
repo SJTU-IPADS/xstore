@@ -27,8 +27,13 @@ public:
    */
   static inline auto serialize_to(const T &t) -> std::string {
     std::string data(sizeof(T), '\0');
-    memcpy((void *)data.data(), &t, sizeof(T));
+    serialize_to(t, data);
     return data;
+  }
+
+  static inline auto serialize_to(const T &t, std::string &s) {
+    ASSERT(s.size() >= sizeof(T));
+    memcpy((void *)s.data(), &t, sizeof(T));
   }
 
   static inline T deserialize(const char *buf, u64 size) {
@@ -77,6 +82,14 @@ template <typename  T> class MarshalT {
      };
      return Marshal<_WrapperT>::serialize_to(temp);
    }
+
+  static inline auto deserialize(const std::string &d) -> Option<T> {
+    auto res = Marshal<_WrapperT>::deserialize_opt(d.data(), d.size());
+    if (res) {
+      return res.value().payload;
+    }
+    return {};
+  }
 };
 
 } // namespace util
