@@ -4,6 +4,7 @@
 
 #include "../src/lr/mod.hh"
 #include "../src/lr/compact.hh"
+#include "../src/lr/mlr.hh"
 
 namespace test {
 
@@ -51,6 +52,13 @@ TEST(LR, OTHERS) {
   clr.train(train_set, labels);
   ASSERT_NEAR(static_cast<double>(clr.w), w,0.01);
   ASSERT_NEAR(static_cast<double>(clr.b), b, 100);
+
+  using MLRT =  MLR<u32, CompactLR>;
+  MLRT mlr;
+  mlr.train(train_set,labels);
+  ASSERT_NEAR(clr.w, mlr.lr.w, 0.001);
+  ASSERT_NEAR(clr.b, mlr.lr.b, 0);
+  //ASSERT_NEAR(static_cast<double>(mlr.lr.b), b, 1);
 }
 
 TEST(LR, Serialize) {
