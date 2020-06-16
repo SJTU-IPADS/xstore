@@ -50,6 +50,7 @@ def configure_deps_dir(s):
 
     for e in extern_map:
         b = extern_map[e]
+        print("write",b);
         b.write_include(cmake_file)
         cmake_file.write("\n")
 
@@ -229,6 +230,7 @@ class External:
         extern_map[name] = self
 
     def write_include(self,f):
+        print("write ext: ", self.name, self.include_path)
         content = "include_directories(%s)\n" % self.include_path
         f.write(content)
 

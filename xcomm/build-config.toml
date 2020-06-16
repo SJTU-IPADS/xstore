@@ -11,6 +11,12 @@ src = ["./tests/test_local_rw.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest"]
 
 [[apps]]
+name = "test_rpc"
+src = ["./tests/test_rpc.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs"]
+
+
+[[apps]]
 name = "test_remote_rw"
 src = ["./tests/test_remote_rw.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
@@ -32,4 +38,5 @@ extra = ["gtest","pthread"]
 ## The external libs are libs which donot built/cloned by the tool
 boost = { path = "../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
 rlib = { path = "../deps", exports = [], lib = "", include = ""}
+jemalloc = { path = "../deps/jemalloc", exports=["jemalloc"], include = "include", lib = "lib"}
 
