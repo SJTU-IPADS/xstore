@@ -25,10 +25,10 @@ struct RRingTransport : public STrait<RRingTransport<R, kRingSz, kMaxMsg>> {
     So there would be a memory leakage.
     Maybe we can add an explict method to let user free it?
    */
-  RingS *core = nullptr;
+  Arc<RingS> core = nullptr;
 
   // methods
-  explicit RRingTransport(RingS *c) : core(c) {}
+  explicit RRingTransport(RingS *c) : core(c, [](RingS *p) { /* do nothing! */ }) {}
 
   RRingTransport(const u16 &id, Arc<RNic> nic, const QPConfig &config,
                  ibv_cq *cq, Arc<AbsRecvAllocator> alloc)

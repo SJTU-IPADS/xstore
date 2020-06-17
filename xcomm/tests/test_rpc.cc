@@ -70,13 +70,29 @@ TEST(rpc, basic) {
   const int ring_sz    = max_msg_sz * 128;
   const int ring_entry = 128;
 
+  /*
+    init the recv point at the sender, inorder to receive the reply
+   */
   auto recv_cq_res = ::rdmaio::qp::Impl::create_cq(nic, 128);
   RDMA_ASSERT(recv_cq_res == IOCode::Ok);
   auto recv_cq = std::get<0>(recv_cq_res.desc);
 
-
   auto receiver = RecvFactory<ring_entry, ring_sz, max_msg_sz>::create(
                       rm, std::to_string(0), recv_cq, alloc)
+                      .value();
+  /*
+    sender's receive entry done
+   */
+
+  /*
+    init the recv point at the receiver
+   */
+  recv_cq_res = ::rdmaio::qp::Impl::create_cq(nic, 128);
+  RDMA_ASSERT(recv_cq_res == IOCode::Ok);
+  auto recv_cq1 = std::get<0>(recv_cq_res.desc);
+
+  auto receiver1 = RecvFactory<ring_entry, ring_sz, max_msg_sz>::create(
+                      rm, std::to_string(73), recv_cq1, alloc)
                       .value();
 
   // spawn for testing
@@ -85,22 +101,51 @@ TEST(rpc, basic) {
   RRingTransport<ring_entry,ring_sz, max_msg_sz> t(73, nic, QPConfig(), recv_cq, alloc);
   LOG(4) << "transport init donex !";
 
-  auto res_c = t.connect("localhost:8888", std::to_string(0), 0,
+  auto res_c = t.connect("localhost:8888", std::to_string(73), 0,
                          QPConfig());
   ASSERT(res_c == IOCode::Ok) << "res_c error: " << res_c.code.name();
   LOG(4) << "transport connect done!";
 
   // trying to send
-  t.send(MemBlock((void *)"ok",3));
+  t.send(MemBlock((void *)"okk",4));
+  receiver->reg_channel(t.core);
 
   sleep(1);
 
-  // trying to recv
-  RRingRecvTransport<ring_entry, ring_sz, max_msg_sz> r_end(receiver);
-  for (; r_end.has_msgs(); r_end.next()) {
-    auto cur_msg = r_end.cur_msg();
-    LOG(4) << "aha, recv one!: " << (char *)cur_msg.mem_ptr;
+  int count = 0;
+  while (1) {
+    // trying to recv at the receive end
+    RRingRecvTransport<ring_entry, ring_sz, max_msg_sz> r_end(receiver1);
+    for (; r_end.has_msgs(); r_end.next()) {
+      auto cur_msg = r_end.cur_msg();
+      LOG(0) << "aha, recv one!: " << (char *)cur_msg.mem_ptr << "; msg sz: "
+             << cur_msg.sz << "; total: "
+             << count << "; check the first:" << (int)((char *)cur_msg.mem_ptr)[0];
+
+      auto s = r_end.reply_entry();
+      auto ret = s.send(MemBlock((void *)"ss", 4));
+      ASSERT(ret == IOCode::Ok) << ret.desc;
+      count += 1;
+    }
+
+    if (count > 40960) {
+      break;
+    }
+
+    // trying to recv at the sender side
+    // trying to recv at the receive end
+    RRingRecvTransport<ring_entry, ring_sz, max_msg_sz> s_end(receiver);
+    for (; s_end.has_msgs(); s_end.next()) {
+      auto cur_msg = s_end.cur_msg();
+      LOG(0) << "aha, recv one at the sender!: " << (char *)cur_msg.mem_ptr
+             << "; msg sz: " << cur_msg.sz << "; total: " << count
+             << "; check the first:" << (int)((char *)cur_msg.mem_ptr)[0];
+
+      auto ret = t.send(MemBlock((void *)"okk", 4));
+      ASSERT(ret == IOCode::Ok) << ret.desc;
+    }
   }
+  LOG(4) << "Total:" << count  * 2<< " msgs transfered";
 }
 
 }
