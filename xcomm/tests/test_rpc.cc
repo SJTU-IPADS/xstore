@@ -89,6 +89,18 @@ TEST(rpc, basic) {
                          QPConfig());
   ASSERT(res_c == IOCode::Ok) << "res_c error: " << res_c.code.name();
   LOG(4) << "transport connect done!";
+
+  // trying to send
+  t.send(MemBlock((void *)"ok",3));
+
+  sleep(1);
+
+  // trying to recv
+  RRingRecvTransport<ring_entry, ring_sz, max_msg_sz> r_end(receiver);
+  for (; r_end.has_msgs(); r_end.next()) {
+    auto cur_msg = r_end.cur_msg();
+    LOG(4) << "aha, recv one!: " << (char *)cur_msg.mem_ptr;
+  }
 }
 
 }

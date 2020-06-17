@@ -19,28 +19,33 @@ public:
   // send
   template <class... Args>
   auto connect(const std::string &host, Args ... args) -> Result<> {
-    return static_cast<Derived *>(this)->connect_impl(host,args...);
+    return reinterpret_cast<Derived *>(this)->connect_impl(host,args...);
   }
 
   auto send(const MemBlock &msg, const double &timeout = 1000000)
       -> Result<std::string> {
-    return static_cast<Derived *>(this)->send_impl(msg, timeout);
+    return reinterpret_cast<Derived *>(this)->send_impl(msg, timeout);
   }
 };
 
 // Recv Trait
-template <class Derived> struct RTrait {
+// ST state for send_trait, because receive trait will return the current send session
+template <class Derived, class ST> struct RTrait {
 public:
   void begin() { reinterpret_cast<Derived *>(this)->begin_impl(); }
 
   void next() { reinterpret_cast<Derived *>(this)->next_impl(); }
 
   auto has_msgs() -> bool {
-    return reinterpret_cast<Derived *>(this)->next_impl();
+    return reinterpret_cast<Derived *>(this)->has_msgs_impl();
   }
 
   auto cur_msg() -> MemBlock {
     return reinterpret_cast<Derived *>(this)->cur_msg_impl();
+  }
+
+  auto reply_entry() -> ST {
+    return reinterpret_cast<Derived *>(this)->reply_entry_impl();
   }
 };
 
