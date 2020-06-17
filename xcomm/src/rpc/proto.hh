@@ -1,0 +1,45 @@
+#pragma once
+
+#include "../../../deps/r2/src/common.hh"
+
+/*!
+  This file defines common RPC exchange data structures
+ */
+
+namespace xstore {
+
+namespace rpc {
+
+using namespace r2;
+
+/*!
+  Define the msg type that can be exchanged
+ */
+enum MsgType {
+  Req = 1, // RPC request
+  Reply    // RPC reply
+};
+
+/*!
+  Abstract the end-point of Addr
+ */
+struct __attribute__((packed)) Addr {
+  u32 mac_id : 16;
+  u32 thread_id : 16;
+};
+
+struct __attribute__((packed)) Meta {
+  u8 cor_id;
+  Addr dest;
+};
+
+struct __attribute__((packed)) Header {
+  u32 type : 2;
+  u32 rpc_id : 5;
+  u32 payload : 18;
+  u32 cor_id : 7;
+} __attribute__((aligned(sizeof(u64))));
+
+} // namespace rpc
+
+} // namespace xstore

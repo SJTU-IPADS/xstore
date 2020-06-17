@@ -59,7 +59,7 @@ struct RRingRecvTransport
   explicit RRingRecvTransport(Arc<Receiver<R, kRingSz, kMaxMsg>> &r)
       : core(r) {}
 
-  void begin_impl() {}
+  void begin_impl() { core.begin(); }
 
   void next_impl() { return core.next(); }
 
