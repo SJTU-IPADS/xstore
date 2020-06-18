@@ -35,6 +35,10 @@ TEST(Array, Basic) {
     ASSERT_EQ(array.keys_at(i).value(), all_keys[i]);
     ASSERT_EQ(array.vals_at(i).value(), all_keys[i]);
   }
+
+  for (auto k : all_keys) {
+    ASSERT_EQ(array.get(k).value(),k);
+  }
 }
 
 } // namespace test

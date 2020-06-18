@@ -1,7 +1,8 @@
 #pragma once
 
-#include "./lib.hh"
+#include <map>
 
+#include "./kv_trait.hh"
 #include "../../deps/r2/src/common.hh"
 #include "../../xcomm/src/atomic_rw/wrapper_type.hh"
 
@@ -18,12 +19,14 @@ namespace xkv {
 using namespace r2;
 using namespace ::xstore::xcomm::rw;
 
-template <typename V> struct XArray {
+template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
 
   using VType = WrappedType<V>;
 
   MemBlock key_array;
   MemBlock val_array;
+
+  std::map<KeyType, usize> index;
 
   // unsafe pointer
   // these two pointers would point to the address in key_array and val_array
@@ -44,7 +47,7 @@ template <typename V> struct XArray {
     val_mem is out of space
     2. the k is smaller than the current key, because the array must be sorted
    */
-  auto insert(const KeyType &k, const V &v) -> bool {
+  auto insert_w_index(const KeyType &k, const V &v, bool add_idx = false) -> bool {
     if (size != 0) {
       // check prev key
       if (this->keys_at(size - 1).value() >= k) {
@@ -62,6 +65,10 @@ template <typename V> struct XArray {
 
     key_ptr[this->size] = k;
     val_ptr[this->size].reset(v);
+
+    if (add_idx) {
+      this->index.insert(std::make_pair(k, this->size));
+    }
     this->size += 1;
 
     return true;
@@ -79,6 +86,22 @@ template <typename V> struct XArray {
       return val_ptr[idx].get_payload();
     }
     return {};
+  }
+
+  /*!
+    Impl the KVTrait
+   */
+
+  auto get_impl(const KeyType &k) -> Option<V> {
+    auto it = this->index.find(k);
+    if (it != this->index.end()) {
+      return this->vals_at(it->second);
+    }
+    return {};
+  }
+
+  auto insert_impl(const KeyType &k, const V &v){
+    return this->insert_w_index(k, v,true);
   }
 };
 

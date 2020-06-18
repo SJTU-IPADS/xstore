@@ -2,6 +2,8 @@
 
 #include "../deps/r2/src/common.hh"
 
+#include "./lib.hh"
+
 namespace xstore {
 
 namespace xkv {
@@ -10,11 +12,11 @@ using namespace r2;
 
 template <class Derived, typename V> class KVTrait {
  public:
-  auto get(const u64 &k) -> Option<V> {
+  auto get(const KeyType &k) -> Option<V> {
     return reinterpret_cast<Derived *>(this)->get_impl(k);
   }
 
-  auto insert(const u64 &k, const V &v) {
+  auto insert(const KeyType &k, const V &v) {
     return reinterpret_cast<Derived *>(this)->insert_impl(k,v);
   }
 };
