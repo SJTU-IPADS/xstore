@@ -4,6 +4,12 @@ src = ["../deps/r2/src/logging.cc" , "./tests/test_alloc.cc"]
 extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
 
 [[apps]]
+name = "test_array"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_array.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+
+[[apps]]
 name = "test_node"
 src = ["../deps/r2/src/logging.cc" , "./tests/test_node.cc"]
 extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
