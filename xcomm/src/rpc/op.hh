@@ -14,8 +14,7 @@ using namespace ::xstore::transport;
 /*!
   Usage:
   RPCOp op;
-  op.set_msg(some msg).set_rpc_id(xx).set_corid(xx).set_reply(some
-  rpc_context).add_arg<T>(T ...); auto ret = rpc.execute(op.finalize());
+  op.set_msg(some msg).set_rpc_id(xx).set_corid(xx).set_reply(somerpc_context).add_arg<T>(T ...); auto ret = rpc.execute(op.finalize());
 
   \note: set_msg() must be called first!
  */
@@ -36,6 +35,16 @@ struct RPCOp {
     return *this;
   }
 
+  auto set_req() -> RPCOp & {
+    this->header.type = Req;
+    return *this;
+  }
+
+  auto set_reply() -> RPCOp & {
+    this->header.type = Reply;
+    return *this;
+  }
+
   auto set_corid(const u32 &id) -> RPCOp & {
     this->header.cor_id = id;
     return *this;
@@ -44,9 +53,13 @@ struct RPCOp {
   /*!
     Note: the corid must be set using set_corid() before using this function
    */
-  auto set_reply(ReplyStation &s, const ReplyEntry &reply) -> RPCOp & {
+  auto add_reply_entry(ReplyStation &s, const ReplyEntry &reply) -> RPCOp & {
     s.add_pending_reply(header.cor_id, reply);
     return *this;
+  }
+
+  auto add_one_reply(ReplyStation &s, const MemBlock &reply) -> RPCOp & {
+    return this->add_reply_entry(s, ReplyEntry(reply));
   }
 
   /*!
@@ -63,10 +76,14 @@ struct RPCOp {
 
   auto finalize() -> RPCOp & {
     this->header.payload = this->cur_sz() - sizeof(Header);
-    this->header.type = Req;
     *(reinterpret_cast<Header *>(this->msg.mem_ptr)) = this->header;
     this->msg.sz = this->header.payload + sizeof(Header);
     return *this;
+  }
+
+  template <typename SendTrait>
+  auto execute(SendTrait *s) -> Result<std::string> {
+    return s->send(this->finalize().msg);
   }
 
   auto cur_sz() -> usize { return cur_ptr - (char *)msg.mem_ptr; }

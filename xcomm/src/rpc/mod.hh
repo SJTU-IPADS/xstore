@@ -44,21 +44,24 @@ template <class SendTrait, class RecvTrait> struct RPCCore {
       ASSERT(cur_msg.sz >= sizeof(Header));
 
       Header &h = *(reinterpret_cast<Header *>(cur_msg.mem_ptr));
+      ASSERT(h.payload + sizeof(Header) == cur_msg.sz); // sanity check header and content
+      MemBlock payload((char *)cur_msg.mem_ptr + sizeof(Header), h.payload);
+
       switch (h.type) {
       case Req: {
         try {
           auto reply_channel = recv->reply_entry();
-          callbacks[h.rpc_id](
-              h,
-              MemBlock((char *)cur_msg.mem_ptr + sizeof(Header),
-                       cur_msg.sz - sizeof(Header)),
-              &reply_channel);
+          callbacks[h.rpc_id](h, payload, &reply_channel);
         } catch (...) {
           ASSERT(false) << "rpc called failed with rpc id " << h.rpc_id;
         }
       } break;
-      case Reply:
+      case Reply: {
         // pass
+        auto ret = this->reply_station.append_reply(h.cor_id, payload);
+        ASSERT(ret);
+      }
+        break;
       default:
         ASSERT(false) << "not implemented";
       }

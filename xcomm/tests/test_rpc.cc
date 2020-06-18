@@ -20,9 +20,17 @@ using RecvTrait = RRingRecvTransport<ring_entry, ring_sz, max_msg_sz>;
 
 void test_callback(const Header &rpc_header, const MemBlock &args,
                    SendTrait *replyc) {
+  // sanity check the requests
   ASSERT(args.sz == sizeof(u64)) << "args sz:" << args.sz;
   auto val = *((u64 *)args.mem_ptr);
   ASSERT(val == 73);
+
+  // send the reply
+  RPCOp op;
+  char reply_buf[64];
+  op.set_msg(MemBlock(reply_buf, 64)).set_reply().set_corid(2).add_arg<u64>(73 + 1);
+  auto ret = op.execute(replyc);
+  ASSERT(ret == IOCode::Ok);
 }
 
 TEST(RPC, basic) {
@@ -90,28 +98,51 @@ TEST(RPC, basic) {
   LOG(4) << "RPC init done";
 
   // start call
+  // 1. prepare the bufs
   auto send_buf = std::get<0>(alloc->alloc_one(4096).value());
+  char reply_buf[1024];
+
+  // 2. prepare the op
   RPCOp op;
   op.set_msg(MemBlock(send_buf, 4096))
+      .set_req()
       .set_rpc_id(rpc_id)
       .set_corid(2)
+      .add_one_reply(rpc.reply_station, {.mem_ptr = reply_buf, .sz = 1024 })
       .add_arg<u64>(73);
   ASSERT(sender.get() != nullptr);
-  auto ret = rpc.execute(op.finalize(), sender.get());
+  auto ret = op.execute(sender.get());
   ASSERT(ret == IOCode::Ok);
 
   sleep(1);
 
   usize counter = 0;
   while (true) {
-    // start to recv
-    auto num = rpc.recv_event_loop(recv.get());
-    if (num != 0) {
-      counter += num;
+    // recv rpc calls
+    counter += rpc.recv_event_loop(recv.get());
+
+    // recv reply
+    rpc.recv_event_loop(sender_recv.get());
+
+    if (rpc.reply_station.cor_ready(2)) {
+      // we have received the reply
+      RPCOp op;
+      op.set_msg(MemBlock(send_buf, 4096))
+          .set_req()
+          .set_rpc_id(rpc_id)
+          .set_corid(2)
+          .add_one_reply(rpc.reply_station, {.mem_ptr = reply_buf, .sz = 1024})
+          .add_arg<u64>(73);
+      ASSERT(sender.get() != nullptr);
+      auto ret = op.execute(sender.get());
+      ASSERT(ret == IOCode::Ok);
+    }
+
+    if (counter >= 102400) {
       break;
     }
   }
-  ASSERT_EQ(counter, 1);
+  ASSERT_LE(counter, 102400);
 }
 } // namespace test
 
