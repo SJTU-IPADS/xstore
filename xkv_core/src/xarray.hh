@@ -1,5 +1,7 @@
 #pragma once
 
+#include "./lib.hh"
+
 #include "../../deps/r2/src/common.hh"
 #include "../../xcomm/src/atomic_rw/wrapper_type.hh"
 
@@ -25,7 +27,7 @@ template <typename V> struct XArray {
 
   // unsafe pointer
   // these two pointers would point to the address in key_array and val_array
-  u64 *key_ptr = nullptr;
+  KeyType *key_ptr = nullptr;
   WrappedType<V> *val_ptr = nullptr;
 
   usize size = 0;
@@ -42,7 +44,7 @@ template <typename V> struct XArray {
     val_mem is out of space
     2. the k is smaller than the current key, because the array must be sorted
    */
-  auto insert(const u64 &k, const V &v) -> bool {
+  auto insert(const KeyType &k, const V &v) -> bool {
     if (size != 0) {
       // check prev key
       if (this->keys_at(size - 1).value() >= k) {
@@ -65,7 +67,7 @@ template <typename V> struct XArray {
     return true;
   }
 
-  auto keys_at(const int &idx) -> Option<u64> {
+  auto keys_at(const int &idx) -> Option<KeyType> {
     if (likely(idx >= 0 && idx < size)) {
       return key_ptr[idx];
     }
