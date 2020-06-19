@@ -6,6 +6,11 @@ namespace xstore {
 
 namespace xcache {
 
+/*!
+  Step samplers provides a sampler for adding data to training set in steps.
+  For example, if the training data is [0,1,2,4], and the StepSampler is initialized with step 2,
+  then it will init the training-set to [0,2].
+ */
 struct StepSampler : public SampleTrait<StepSampler> {
   const usize step = 1;
   usize cur_count = 0;
