@@ -40,6 +40,12 @@ template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
         key_ptr(reinterpret_cast<u64 *>(key_mem.mem_ptr)),
         val_ptr(reinterpret_cast<WrappedType<V> *>(val_mem.mem_ptr)) {}
 
+  explicit XArray(const usize &max_num_k)
+      : XArray(MemBlock(new char[max_num_k * sizeof(KeyType)],
+                        max_num_k * sizeof(KeyType)),
+               MemBlock(new char[max_num_k * sizeof(WrappedType<V>)],
+                        max_num_k * sizeof(WrappedType<V>))) {}
+
   /*!
     \ret true if insertion success, false if failure
     insertion could be reject due to two reasons:

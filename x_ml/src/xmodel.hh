@@ -57,6 +57,10 @@ template <class ML> struct XSubModel {
         std::max(static_cast<int>(this->ml.predict(k)), static_cast<int>(0)));
   }
 
+  auto total_error() -> int {
+    return this->err_max - this->err_min;
+  }
+
   auto get_predict_range(const u64 &k) -> std::pair<int,int> {
     auto p = this->get_point_predict(k);
     auto p_start = std::max(0, p + this->err_min);
