@@ -5,6 +5,12 @@ name = "test_dispatcher"
 src = ["./tests/test_dispatcher.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest", "mkl_rt"]
 
+[[apps]]
+name = "test_sampler"
+src = ["./tests/test_sampler.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+
 ########################## end test apps ################################
 
 
