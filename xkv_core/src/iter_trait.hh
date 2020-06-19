@@ -15,6 +15,10 @@ public:
 
   void begin() { return reinterpret_cast<Derived *>(this)->begin_impl(); }
 
+  void seek(const KeyType &k) {
+    return reinterpret_cast<Derived *>(this)->seek_impl(k);
+  }
+
   void next() { return reinterpret_cast<Derived *>(this)->next_impl(); }
 
   auto has_next() -> bool {

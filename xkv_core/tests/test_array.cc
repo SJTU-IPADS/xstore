@@ -66,6 +66,16 @@ TEST(XArray,Iter) {
   using AIter = ArrayIter<u64>;
   auto it = AIter::from(array);
   test_iter(all_keys, it);
+
+  // check seek
+  // because array's seek is quite different from others, e.g., B+Tree
+  // so we use a customized function for testing
+  for (auto k : all_keys) {
+    auto it = AIter::from(array);
+    it.seek(k);
+    ASSERT_TRUE(it.has_next());
+    ASSERT_EQ(it.cur_key(),k);
+  }
 }
 
 } // namespace test

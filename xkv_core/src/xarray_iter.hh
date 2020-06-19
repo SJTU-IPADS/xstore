@@ -31,6 +31,16 @@ struct ArrayIter : public KeyIterTrait<ArrayIter<V>, XArray<V>> {
   auto cur_key_impl() -> KeyType { return kv->keys_at(this->cur_idx).value(); }
 
   auto opaque_val_impl() -> u64 { return cur_idx; }
+
+  auto seek_impl(const KeyType &k) {
+    auto pos = kv->pos(k);
+    if (pos) {
+      this->cur_idx = pos.value();
+    } else {
+      // invalid
+      pos = kv->size;
+    }
+  }
 };
 } // namespace xkv
 

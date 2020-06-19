@@ -93,9 +93,17 @@ template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
    */
 
   auto get_impl(const KeyType &k) -> Option<V> {
+    auto p = this->pos(k);
+    if (p) {
+      return this->vals_at(p.value());
+    }
+    return {};
+  }
+
+  auto pos(const KeyType &k) -> Option<usize> {
     auto it = this->index.find(k);
     if (it != this->index.end()) {
-      return this->vals_at(it->second);
+      return it->second;
     }
     return {};
   }
