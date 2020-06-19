@@ -15,8 +15,8 @@ template <class Derived, class KV_> struct KeyIterTrait {
 
   void begin() { return reinterpret_cast<Derived *>(this)->begin_impl(); }
 
-  void seek(const KeyType &k) {
-    return reinterpret_cast<Derived *>(this)->seek_impl(k);
+  void seek(const KeyType &k, KV_ &kv) {
+    return reinterpret_cast<Derived *>(this)->seek_impl(k,kv);
   }
 
   void next() { return reinterpret_cast<Derived *>(this)->next_impl(); }

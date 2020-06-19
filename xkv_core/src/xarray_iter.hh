@@ -32,7 +32,7 @@ struct ArrayIter : public KeyIterTrait<ArrayIter<V>, XArray<V>> {
 
   auto opaque_val_impl() -> u64 { return cur_idx; }
 
-  auto seek_impl(const KeyType &k) {
+  auto seek_impl(const KeyType &k, XArray<V> &) {
     auto pos = kv->pos(k);
     if (pos) {
       this->cur_idx = pos.value();

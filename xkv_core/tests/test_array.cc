@@ -72,7 +72,7 @@ TEST(XArray,Iter) {
   // so we use a customized function for testing
   for (auto k : all_keys) {
     auto it = AIter::from(array);
-    it.seek(k);
+    it.seek(k, array);
     ASSERT_TRUE(it.has_next());
     ASSERT_EQ(it.cur_key(),k);
   }
