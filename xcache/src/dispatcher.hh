@@ -3,6 +3,8 @@
 #include "../../x_ml/src/lib.hh"
 #include "../../xkv_core/src/iter_trait.hh"
 
+#include "./sample_trait.hh"
+
 namespace xstore {
 
 namespace xcache {
@@ -40,15 +42,34 @@ template <class ML> struct Dispatcher {
 
   /*!
     Train the dispatcher with the KV
-    The KV must implements the KeyIterTrait
+    The KV must implements the KeyIterTrait.
+    S must implement the SampleTrait.
+
+    \ret how many keys trained
    */
-  // TODO: we need a sample mechanism
-  template <class IT>
-  auto train(IT::KV &kv) {
+  template <class IT, class S>
+  auto train(typename IT::KV &kv, S &s) -> usize {
     std::vector<KeyType> train_set;
     std::vector<u64>     train_label;
 
     // 1. fill in the train_set, train_label
+    auto it = IT::from(kv);
+    u64 count = 0;
+    for (it.begin(); it.has_next(); it.next()) {
+      s.add_to(it.cur_key(), count, train_set, train_label);
+      count += 1;
+    }
+
+    // 2. train the ml model
+    this->model.train(train_set, train_label);
+
+    return train_set.size();
+  }
+
+  template <class IT>
+  auto default_train(typename IT::KV &kv) -> usize {
+    DefaultSample s;
+    return this->train<IT, DefaultSample>(kv, s);
   }
 };
 

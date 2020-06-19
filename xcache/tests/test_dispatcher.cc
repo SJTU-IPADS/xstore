@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "../../xkv_core/src/xarray_iter.hh"
+
 #include "../../x_ml/src/lr/mod.hh"
 #include "../src/dispatcher.hh"
 
@@ -15,9 +17,17 @@ r2::util::FastRandom rand(0xdeadbeaf);
 
 TEST(XCache, Dispatcher) {
   using DT = Dispatcher<LR>;
+  using A = XArray<u64>;
+
+  char *key_buf = new char[sizeof(u64) * 1200];
+  char *val_buf = new char[sizeof(A::VType) * 1200];
+
+  A array(MemBlock(key_buf, sizeof(u64) * 1200),
+          MemBlock(val_buf, sizeof(A::VType) * 1200));
 
   const usize d_num = 4;
   DT dt(d_num);
+  DT dt1(d_num);
 
   std::vector<u64> train_set;
   std::vector<u64> labels;
@@ -33,9 +43,13 @@ TEST(XCache, Dispatcher) {
   std::sort(all_keys.begin(), all_keys.end());
 
   for (uint i = 0; i < all_keys.size(); ++i) {
+    array.insert(all_keys[i],all_keys[i]);
     train_set.push_back(all_keys[i]);
     labels.push_back(i);
   }
+
+  ASSERT_EQ(array.size, 1200);
+
   dt.model.train(train_set, labels);
 
   // dispatch
@@ -59,6 +73,13 @@ TEST(XCache, Dispatcher) {
     //ASSERT_EQ(average, dispatcher_counts[i]);
     LOG(4) << dispatcher_counts[i];
   }
+
+  // train w the array
+  auto sz = dt1.default_train<ArrayIter<u64>>(array);
+  ASSERT_EQ(sz, 1200);
+
+  // check the train result
+  ASSERT_EQ(dt1.model.w, dt.model.w);
 }
 
 } // namespace test
