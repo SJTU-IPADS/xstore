@@ -1,12 +1,14 @@
 #pragma once
 
 #include "../../x_ml/src/lib.hh"
+#include "../../xkv_core/src/iter_trait.hh"
 
 namespace xstore {
 
 namespace xcache {
 
 using namespace r2;
+using namespace xstore::xkv;
 
 /*!
   The dispatcher will route a key to some number between [1,n),
@@ -34,6 +36,19 @@ template <class ML> struct Dispatcher {
       res = static_cast<float>(res) / max * this->dispatch_num;
     }
     return static_cast<usize>(res);
+  }
+
+  /*!
+    Train the dispatcher with the KV
+    The KV must implements the KeyIterTrait
+   */
+  // TODO: we need a sample mechanism
+  template <class IT>
+  auto train(IT::KV &kv) {
+    std::vector<KeyType> train_set;
+    std::vector<u64>     train_label;
+
+    // 1. fill in the train_set, train_label
   }
 };
 
