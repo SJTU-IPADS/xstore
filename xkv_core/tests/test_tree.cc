@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../src/xtree/mod.hh"
+#include "../src/xtree/iter.hh"
 #include "../../deps/r2/src/random.hh"
 
 #include "../src/xalloc.hh"
@@ -83,6 +84,43 @@ TEST(Tree, allocation) {
     }
   }
   ASSERT_EQ(alloc.cur_alloc_num, split_num + 1);
+}
+
+TEST(Tree, Iter) {
+  const usize key_scale = 1000000;
+  //const usize key_scale = 10;
+
+  r2::util::FastRandom rand(0xdeadbeaf);
+
+  using Tree = XTree<16, u64>;
+  Tree t;
+
+  std::vector<u64> check_keys;
+  for (uint i = 0; i < key_scale; ++i) {
+    auto key = rand.next();
+    check_keys.push_back(key);
+    t.insert(key, key + 73);
+  }
+
+  for (auto k : check_keys) {
+    auto v = t.get(k);
+    ASSERT_TRUE(v);
+    ASSERT_EQ(v.value(), k + 73);
+  }
+
+  std::sort(check_keys.begin(), check_keys.end());
+  // using the iterator
+
+  auto it = XTreeIter<16, u64>::from(t);
+  usize counter = 0;
+
+  LOG(4) << "f key: " << it.cur_key() << " " << check_keys[0] << "; invalid k: " << kInvalidKey;
+
+  for (it.seek(0,t); it.has_next();it.next()) {
+    counter += 1;
+  }
+  // iter should find all keys
+  ASSERT_EQ(counter, check_keys.size());
 }
 
 }
