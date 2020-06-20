@@ -10,6 +10,10 @@ namespace xkv {
 
 namespace xtree {
 
+/*!
+  Note: currently, keys in the same node is not sorted.
+  Consequently, we need to sort it otherwise
+ */
 template <usize N, typename V>
 struct XTreeIter : public KeyIterTrait<XTreeIter<N, V>, XTree<N, V>> {
   using Self = XTreeIter<N, V>;
@@ -86,6 +90,10 @@ struct XTreeIter : public KeyIterTrait<XTreeIter<N, V>, XTree<N, V>> {
            this->cur_node.value().get_key(idx) == kInvalidKey) {
       this->idx += 1;
     }
+  }
+
+  auto opaque_val_impl() -> u64 {
+    return reinterpret_cast<u64>(this->cur_node_ptr);
   }
 };
 } // namespace xtree

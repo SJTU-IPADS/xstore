@@ -116,9 +116,35 @@ TEST(Tree, Iter) {
 
   LOG(4) << "f key: " << it.cur_key() << " " << check_keys[0] << "; invalid k: " << kInvalidKey;
 
+  std::vector<u64> temp;
+  std::vector<u64> batch;
+  u64 cur_n = 0;
   for (it.seek(0,t); it.has_next();it.next()) {
+
+    if (cur_n != it.opaque_val()) {
+      cur_n = it.opaque_val();
+      if (!batch.empty()) {
+        std::sort(batch.begin(), batch.end());
+        for (uint i = 0; i < batch.size(); ++i) {
+          temp.push_back(batch[i]);
+          ASSERT_EQ(temp[temp.size() - 1], check_keys[temp.size() - 1]);
+        }
+        batch.clear();
+      }
+    }
+
+    batch.push_back(it.cur_key());
     counter += 1;
   }
+
+  if (!batch.empty()) {
+    std::sort(batch.begin(), batch.end());
+    for (uint i = 0; i < batch.size(); ++i) {
+      temp.push_back(batch[i]);
+      ASSERT_EQ(temp[temp.size() - 1], check_keys[temp.size() - 1]);
+    }
+  }
+  ASSERT_EQ(counter, temp.size());
   // iter should find all keys
   ASSERT_EQ(counter, check_keys.size());
 }
