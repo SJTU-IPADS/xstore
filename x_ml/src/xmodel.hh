@@ -77,7 +77,7 @@ template <class ML> struct XSubModel {
     ASSERT(train_data.size() == train_label.size());
     // first train ml
     this->ml.train(train_data,train_label);
-    this->max = static_cast<int>(train_label.size());
+    //this->max = static_cast<int>(train_label.size());
 
     // then calculate the min-max
     for (uint i = 0;i < train_data.size(); ++i) {
@@ -88,6 +88,7 @@ template <class ML> struct XSubModel {
                    this->err_min, this->err_max);
       this->err_min = std::get<0>(res);
       this->err_max = std::get<1>(res);
+      this->max = std::max(this->max, static_cast<int>(train_label[i]));
     }
   }
 };

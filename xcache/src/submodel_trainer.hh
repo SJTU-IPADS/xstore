@@ -63,6 +63,7 @@ struct XMLTrainer {
     if (!this->need_train()) {
       return model;
     }
+    //LOG(4) << "train model w : " << this->start_key << " :" << this->end_key;
 
     // take a snapshot of the start/end key
     KeyType s_key;
@@ -79,15 +80,14 @@ struct XMLTrainer {
 
     // 1. fill in the train_set/label
     auto iter = IT::from(kv);
-    // base is used to algin the labels start from 0
-    u64 base = 0;
-    if (iter.has_next()) {
-      // valid
-      ASSERT(iter.cur_key() == s_key);
-      base = iter.opaque_val();
-    }
 
-    for (iter.seek(s_key); iter.has_next(); iter.next()) {
+    // base is used to algin the labels start from 0
+    u64 base = 0; // legacy
+
+    for (iter.seek(s_key,kv); iter.has_next(); iter.next()) {
+      if (iter.cur_key() > e_key) {
+        break;
+      }
       s.add_to(iter.cur_key(), iter.opaque_val() - base, train_set,
                train_label);
     }

@@ -19,6 +19,7 @@ using namespace xstore::xkv;
 template <class ML> struct Dispatcher {
   ML model;
   const usize dispatch_num;
+  usize       up_bound = 0;
 
   explicit Dispatcher(const usize &dn) : dispatch_num(dn) {
     ASSERT(dispatch_num > 0) << " dispatch number must be larger than zero";
@@ -54,10 +55,12 @@ template <class ML> struct Dispatcher {
 
     // 1. fill in the train_set, train_label
     auto it = IT::from(kv);
-    u64 count = 0;
+    // FIXME: assumes the totoal KVS is smaller than usize's limit
+    usize count = 0;
     for (it.begin(); it.has_next(); it.next()) {
       s.add_to(it.cur_key(), count, train_set, train_label);
       count += 1;
+      up_bound = std::max<usize>(up_bound, count);
     }
 
     // 2. train the ml model

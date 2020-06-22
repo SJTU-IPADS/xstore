@@ -3,6 +3,7 @@
 #include "../../x_ml/src/lr/mod.hh"
 #include "../../xkv_core/src/xarray_iter.hh"
 
+#include "../src/rmi_2.hh"
 #include "../src/submodel_trainer.hh"
 
 #include "../../deps/r2/src/random.hh"
@@ -58,6 +59,61 @@ TEST(RMI, Sub_array) {
         found = true;
         break;
       }
+    }
+    ASSERT_TRUE(found);
+  }
+}
+
+TEST(RMI, Full) {
+  std::vector<u64> all_keys;
+  int num_keys = 2048;
+
+  // 12 means all keys num
+  for (uint i = 0; i < num_keys; ++i) {
+    all_keys.push_back(rand.next());
+    //all_keys.push_back(i);
+  }
+  std::sort(all_keys.begin(), all_keys.end());
+
+  A array(num_keys);
+
+  for (auto k : all_keys) {
+    array.insert(k, k);
+  }
+
+  // init
+  ASSERT_FALSE(all_keys.empty());
+
+  const usize num_rmi = 12;
+  LocalTwoRMI<LR, LR> rmi_idx(num_rmi);
+  rmi_idx.default_train_first<ArrayIter<u64>>(array);
+
+  DefaultSample s;
+  Statics statics;
+  rmi_idx.train_second_models<ArrayIter<u64>,DefaultSample>(array,s,statics);
+
+  for (uint i = 0; i < num_rmi; ++i) {
+    LOG(4) << "model #" << i
+           << " responsible for keys: " << rmi_idx.second_layer[i].max
+           << "; error: " << rmi_idx.second_layer[i].total_error();
+  }
+
+  // testing
+  for (auto k : all_keys) {
+
+    bool found = false;
+    auto p_range = rmi_idx.get_predict_range(k);
+    for (int i = std::get<0>(p_range); i <= std::get<1>(p_range); ++i) {
+      auto res = array.keys_at(i);
+      if (res && res.value() == k) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      LOG(4) << "failed to find key: " << k
+             << "; range:" << std::get<0>(p_range) << ":"
+             << std::get<1>(p_range);
     }
     ASSERT_TRUE(found);
   }
