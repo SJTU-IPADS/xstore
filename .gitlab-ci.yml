@@ -27,4 +27,5 @@ test_xcomm:
   tags:
   - rdma
   script:
+    - cmake .; make boost  
     - cd xcomm; ./test.sh
