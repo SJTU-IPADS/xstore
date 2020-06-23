@@ -14,7 +14,7 @@ build:
   #   - apt update && apt -y install make autoconf
   tags:
   - rdma
-  
+
   script:
     - ./magic.py config -f  build-config.toml 
     - cmake .; make boost;
@@ -31,5 +31,10 @@ test_xcomm:
   stage: test
   tags:
   - rdma
+
   script:
     - cd xcomm; ./test.sh
+
+  needs:
+   - job: build
+   
