@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-../magic.py config -f build-config.toml
+../magic.py config -f build-config2.toml
 
 cmake . ; make;
 
