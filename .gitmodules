@@ -31,7 +31,7 @@
 	url = https://github.com/tiny-dnn/tiny-dnn.git
 [submodule "deps/kvs-workload"]
 	path = deps/kvs-workload
-	url = https://ipads.se.sjtu.edu.cn:1312/weixd/kvsworkloads.git
+    url = git@ipads.se.sjtu.edu.cn:weixd/kvsworkloads.git
 [submodule "xcache/deps/ggtest"]
 	path = xcache/deps/ggtest
 	url = https://github.com/google/googletest.git
