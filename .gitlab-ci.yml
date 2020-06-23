@@ -1,6 +1,5 @@
 build:
   stage: build
-
   tags: rdma
   script:
     - ./magic.py config -f build-config.toml
