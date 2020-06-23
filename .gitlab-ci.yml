@@ -18,6 +18,9 @@ build:
   script:
     - ./magic.py config -f  build-config.toml 
     - cmake .; make boost;
+  cache:
+    paths:
+        - ./deps/boost/
 
 # run tests using the binary built before
 test_xml:
@@ -35,6 +38,3 @@ test_xcomm:
   script:
     - cd xcomm; ./test.sh
 
-  needs:
-   - job: build
-   
