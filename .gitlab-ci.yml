@@ -3,8 +3,8 @@ before_script:
   - pip install toml
   - git config --global user.email "wxdwfc@gmail.com"
   - git config --global user.name "wxd"
-  - git submodule sync --recursive
-  - git submodule update --init --recursive
+  - git submodule sync
+  - git submodule update --init
 
 build:
   stage: build
