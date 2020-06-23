@@ -15,4 +15,5 @@ test:
   tags:
   - rdma
   script:
-    - ./x_ml/test.sh
+    - git submodule update --init --recursive
+    - cd x_ml; ./test.sh
