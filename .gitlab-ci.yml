@@ -15,9 +15,16 @@ build:
     - cmake .; make boost;
 
 # run tests using the binary built before
-test:
+test_xml:
   stage: test
   tags:
   - rdma
   script:
     - cd x_ml; ./test.sh
+
+test_xcomm:
+  stage: test
+  tags:
+  - rdma
+  script:
+    - cd xcomm; ./test.sh
