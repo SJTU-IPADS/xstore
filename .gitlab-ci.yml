@@ -1,11 +1,14 @@
 build:
   stage: build
-  tags: rdma
+  tags: 
+  - rdma
   script:
     - ./magic.py config -f build-config.toml
 
 # run tests using the binary built before
 test:
   stage: test
+  tags:
+  - rdma
   script:
     - ./x_ml/test.sh
