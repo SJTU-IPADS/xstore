@@ -1,0 +1,33 @@
+######################### start test apps ################################
+## test apps
+[[apps]]
+name = "test_lr"
+src = ["./tests/test_lr.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
+[[apps]]
+name = "test_x"
+src = ["./tests/test_xsub.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
+[[apps]]
+name = "test_nn"
+src = ["./tests/test_nn.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+########################## end test apps ################################
+
+## bench apps
+[[apps]]
+name = "bench_lr"
+src = ["./benchs/bench_lat.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
+
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+boost = { path = "../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
+rlib = { path = "../deps", exports = [], lib = "", include = ""}
+tiny-dnn = {path = "../deps/tiny-dnn", exports = [], lib = "", include = ""}
+mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",include="include"}
+
