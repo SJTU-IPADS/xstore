@@ -156,7 +156,12 @@ def configure_main(s):
     f = open(s)
     cmake_file = open("CMakeLists.txt","w")
     write_header(cmake_file)
-    apps = (toml.load(f))["apps"]
+
+    apps = []
+    try:
+        apps = (toml.load(f))["apps"]
+    except:
+        pass
     for a in apps:
         name = a['name']
         #libs = a['deps']
