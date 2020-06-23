@@ -2,7 +2,7 @@
 
 ../magic.py config -f build-config.toml
 
-cmake. ; make;
+cmake . ; make;
 
 ./test_lr;
 ./test_nn;
