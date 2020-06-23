@@ -42,6 +42,8 @@ template <typename T> struct __attribute__((packed)) WrappedType {
 
   T &get_payload() { return payload; }
 
+  T *get_payload_ptr() { return &payload; }
+
   // sz of the meta data, namely, two seqs
   static auto meta_sz() -> usize {
     return sizeof(seq) + sizeof(seq_check);

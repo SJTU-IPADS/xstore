@@ -42,14 +42,14 @@ TEST(AtomicRW, wrapped_type_create) {
   using WT = WrappedType<u64>;
   WT x(5);
   x.begin_write();
-  x.get_payload() += 1;
+  *(x.get_payload_ptr()) += 1;
   ASSERT_FALSE(x.consistent()); // should be inconsistent during the write
   x.done_write();
 
   // should be consistent after the done_write
   ASSERT_TRUE(x.consistent());
   // now the value should eq to 6
-  ASSERT_EQ(x.get_payload(), 6);
+  ASSERT_EQ(*x.get_payload_ptr(), 6);
 }
 
 TEST(AtomicRW, unwrapper_type) {
