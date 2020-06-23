@@ -12,6 +12,7 @@ build:
   - rdma
   script:
     - ./magic.py config -f build-config.toml
+    - cmake .; make boost;
 
 # run tests using the binary built before
 test:
