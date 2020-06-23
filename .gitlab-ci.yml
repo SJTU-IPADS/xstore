@@ -1,3 +1,8 @@
+cache:
+  key: boost
+  paths:
+  - ./deps/boost
+
 before_script:
   - python -V  # Print out python version for debugging
   - pip install toml
@@ -5,22 +10,8 @@ before_script:
   - git config --global user.name "wxd"
   - git submodule sync
   - git submodule update --init
-
-build:
-  stage: build
-  # instead of calling g++ directly you can also use some build toolkit like make
-  # install the necessary build tools when needed
-  # before_script:
-  #   - apt update && apt -y install make autoconf
-  tags:
-  - rdma
-
-  script:
-    - ./magic.py config -f  build-config.toml 
-    - cmake .; make boost;
-  cache:
-    paths:
-        - ./deps/boost/
+  - ./magic.py config -f  build-config.toml 
+  - cmake .; make boost;
 
 # run tests using the binary built before
 test_xml:
@@ -34,6 +25,9 @@ test_xcomm:
   stage: test
   tags:
   - rdma
+
+  cache:
+    key: "boost"
 
   script:
     - cd xcomm; ./test.sh
