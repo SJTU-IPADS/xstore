@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "../src/lr/mod.hh"
 #include "../src/lr/compact.hh"
 //#include "../src/nn.hh"
@@ -7,7 +9,7 @@
 
 #include "../../deps/kvs-workload/ycsb/hash.hh"
 
-namespace test {
+    namespace test {
 
 using namespace xstore::xml;
 
