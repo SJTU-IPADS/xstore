@@ -55,7 +55,8 @@ before_script:
   ##
   - git config --global user.email "wxdwfc@gmail.com"
   - git config --global user.name "wxd"
-  
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
 
 build:
   stage: build
@@ -70,5 +71,4 @@ test:
   tags:
   - rdma
   script:
-    - git submodule update --init --recursive
     - cd x_ml; ./test.sh
