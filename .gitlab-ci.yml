@@ -12,6 +12,9 @@ build:
   # install the necessary build tools when needed
   # before_script:
   #   - apt update && apt -y install make autoconf
+  tags:
+  - rdma
+  
   script:
     - ./magic.py config -f  build-config.toml 
     - cmake .; make boost;
