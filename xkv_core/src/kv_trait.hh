@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../deps/r2/src/common.hh"
+#include "../../deps/r2/src/common.hh"
 
 #include "./lib.hh"
 
