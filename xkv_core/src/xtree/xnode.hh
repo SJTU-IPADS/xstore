@@ -47,18 +47,18 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   // methods
   XNode() = default;
 
-  auto num_keys() -> usize { return keys.get_payload().num_keys(); }
+  auto num_keys() -> usize { return keys.get_payload_ptr()->num_keys(); }
 
-  auto get_incarnation() -> u32 { return this->keys.get_payload().incarnation; }
+  auto get_incarnation() -> u32 { return this->keys.get_payload_ptr()->incarnation; }
 
   auto get_key(const int &idx) -> u64 {
-    return keys.get_payload().get_key(idx);
+    return keys.get_payload_ptr()->get_key(idx);
   }
 
   auto get_value(const int &idx) -> Option<V> {
     // TODO: not check idx
     if (this->keys.get_payload().get_key(idx) != kInvalidKey) {
-      return values[idx].get_payload();
+      return *(values[idx].get_payload_ptr());
     }
     return {};
   }
@@ -77,7 +77,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
     Query method
    */
   auto search(const u64 &key) -> Option<u8> {
-    return keys.get_payload().search(key);
+    return keys.get_payload_ptr()->search(key);
   }
 
   auto insert(const u64 &key, const V &v, XNode<N, V> *candidate) -> bool {
@@ -105,7 +105,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   auto raw_insert(const u64 &key, const V &v, XNode<N, V> *candidate)
       -> bool { // lock the node for atomicity
     bool ret = false;
-    auto idx = this->keys.get_payload().add_key(key);
+    auto idx = this->keys.get_payload_ptr()->add_key(key);
     if (idx) {
       // in-place update
       this->values[idx.value()].reset(v);
@@ -119,18 +119,18 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
        */
 
       // 1. increment the incarnation
-      this->keys.get_payload().incarnation += 1;
+      this->keys.get_payload_ptr()->incarnation += 1;
       r2::compile_fence();
 
       // 2. move the pivot key
-      auto pivot_key_idx = this->keys.get_payload().find_median_key().value();
-      auto pivot_key = this->keys.get_payload().get_key(pivot_key_idx);
+      auto pivot_key_idx = this->keys.get_payload_ptr()->find_median_key().value();
+      auto pivot_key = this->keys.get_payload_ptr()->get_key(pivot_key_idx);
 
       // should not split
       auto r = candidate->raw_insert(
-          pivot_key, this->values[pivot_key_idx].get_payload(), nullptr);
+          pivot_key, *(this->values[pivot_key_idx].get_payload_ptr()), nullptr);
       ASSERT(r == false);
-      this->keys.get_payload().clear(pivot_key_idx);
+      this->keys.get_payload_ptr()->clear(pivot_key_idx);
 
       // 3. then, move other keys
       for (uint i = 0; i < N; ++i) {
@@ -138,9 +138,9 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
         if (k != kInvalidKey && k > pivot_key) {
           // insert
           auto r =
-              candidate->raw_insert(k, this->values[i].get_payload(), nullptr);
+              candidate->raw_insert(k, *(this->values[i].get_payload_ptr()), nullptr);
           ASSERT(r == false);
-          this->keys.get_payload().clear(i);
+          this->keys.get_payload_ptr()->clear(i);
         }
       }
 
