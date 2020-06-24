@@ -31,7 +31,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
     ASSERT(leaf != nullptr);
     auto idx = leaf->search(k);
     if (idx) {
-      return leaf->values[idx.value()].get_payload();
+      return *(leaf->values[idx.value()].get_payload_ptr());
     }
     return {};
   }
