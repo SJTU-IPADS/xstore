@@ -17,6 +17,13 @@ src = ["./tests/test_sampler.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest"]
 
 
+[[apps]]
+name = "test_logic"
+src = ["./tests/test_logic.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+
+
 ########################## end test apps ################################
 
 
