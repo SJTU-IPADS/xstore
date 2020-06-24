@@ -43,7 +43,7 @@ TEST(XNode, Nodeoffset) {
 
   WrappedType<Node::NodeK> *w = reinterpret_cast<WrappedType<Node::NodeK> *>(
       reinterpret_cast<char *>(&n) + n.keys_start_offset());
-  Node::NodeK *nks = &(w->get_payload());
+  Node::NodeK *nks = w->get_payload_ptr();
 
   for (uint i = 0; i < 16; ++i) {
     u64 key = rand.next();
@@ -62,7 +62,7 @@ TEST(XNode, Nodeoffset) {
 
   // check search
   for (auto k : check_keys) {
-    ASSERT_TRUE(n.keys.get_payload().search(k));
+    ASSERT_TRUE(n.keys.get_payload_ptr()->search(k));
   }
 }
 
@@ -81,9 +81,9 @@ TEST(XNode, Insert) {
   }
 
   for (auto k : check_keys) {
-    auto idx = n.keys.get_payload().search(k);
+    auto idx = n.keys.get_payload_ptr()->search(k);
     ASSERT_TRUE(idx);
-    ASSERT_EQ(k, n.values[idx.value()].get_payload());
+    ASSERT_EQ(k, *(n.values[idx.value()].get_payload_ptr()));
   }
 
   // check 1000 times
