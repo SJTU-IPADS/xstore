@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "../src/xtree/mod.hh"
 #include "../src/xtree/iter.hh"
 #include "../../deps/r2/src/random.hh"
 
 #include "../src/xalloc.hh"
 
-namespace test {
+    namespace test {
 
 using namespace xstore::xkv::xtree;
 using namespace xstore::xkv;
@@ -148,7 +150,6 @@ TEST(Tree, Iter) {
   // iter should find all keys
   ASSERT_EQ(counter, check_keys.size());
 }
-
 }
 
 int main(int argc, char **argv) {
