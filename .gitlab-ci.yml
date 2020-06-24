@@ -10,7 +10,6 @@ before_script:
   - git config --global user.name "wxd"
   - git submodule sync
   - git submodule update --init
-  - ./magic.py config -f  build-config.toml 
 
 # run tests using the binary built before
 test_xml:
@@ -40,5 +39,6 @@ test_xcomm:
     - cd xcomm; ./test.sh
 
   before_script:
+  - ./magic.py config -f  build-config.toml 
   - cmake .; make boost    
 
