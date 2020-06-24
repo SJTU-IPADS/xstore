@@ -11,7 +11,6 @@ before_script:
   - git submodule sync
   - git submodule update --init
   - ./magic.py config -f  build-config.toml 
-  - cmake .; make boost;
 
 # run tests using the binary built before
 test_xml:
@@ -20,6 +19,14 @@ test_xml:
   - rdma
   script:
     - cd x_ml; ./test.sh
+
+test_xkv:
+  stage: test
+  tags:
+  - rdma
+  script:
+    - cd xkv_core; ./test.sh
+
 
 test_xcomm:
   stage: test
@@ -31,4 +38,7 @@ test_xcomm:
 
   script:
     - cd xcomm; ./test.sh
+
+  before_script:
+  - cmake .; make boost    
 
