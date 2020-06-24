@@ -89,7 +89,7 @@ template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
 
   auto vals_at(const int &idx) -> Option<V> {
     if (likely(idx >= 0 && idx < size)) {
-      return val_ptr[idx].get_payload();
+      return *(val_ptr[idx].get_payload_ptr());
     }
     return {};
   }
