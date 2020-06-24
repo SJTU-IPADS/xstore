@@ -30,6 +30,10 @@ struct StepSampler : public SampleTrait<StepSampler> {
       cur_count = 0;
     }
   }
+
+  auto finalize_impl(std::vector<KeyType> &t_set, std::vector<u64> &l_set){
+    // do nothing
+  }
 };
 
 } // namespace xcache

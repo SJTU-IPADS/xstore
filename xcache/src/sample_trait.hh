@@ -21,6 +21,11 @@ template <class Derived> struct SampleTrait {
               std::vector<u64> &l_set) {
     return reinterpret_cast<Derived *>(this)->add_to_impl(k, l, t_set, l_set);
   }
+
+  auto finalize(std::vector<KeyType> &t_set,
+                std::vector<u64> &l_set) {
+    return reinterpret_cast<Derived *>(this)->finalize_impl(t_set, l_set);
+  }
 };
 
 /*!
@@ -31,6 +36,10 @@ struct DefaultSample : public SampleTrait<DefaultSample> {
               std::vector<u64> &l_set) {
     t_set.push_back(k);
     l_set.push_back(l);
+  }
+
+  auto finalize_impl(std::vector<KeyType> &t_set, std::vector<u64> &l_set){
+    // do nothing
   }
 };
 

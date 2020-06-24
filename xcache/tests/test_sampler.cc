@@ -1,6 +1,11 @@
 #include <gtest/gtest.h>
 
 #include "../src/samplers/step_sampler.hh"
+#include "../src/samplers/page_sampler.hh"
+
+#include "../../xkv_core/src/xtree/mod.hh"
+#include "../../xkv_core/src/xtree/page_iter.hh"
+#include "../../xkv_core/src/xtree/iter.hh"
 
 namespace test {
 
@@ -14,8 +19,8 @@ TEST(Sampler, step) {
 
   int num = 1024;
 
-  for (uint i = 0;i < num; ++i) {
-    s.add_to(i,i,t_set, labels);
+  for (uint i = 0; i < num; ++i) {
+    s.add_to(i, i, t_set, labels);
   }
 
   ASSERT_EQ(t_set.size(), labels.size());
@@ -48,7 +53,75 @@ TEST(Sampler, step) {
   ASSERT_EQ(t_set.size(), num / 4);
 }
 
+using namespace xstore::xkv::xtree;
+
+TEST(Sampler, Page) {
+
+  std::vector<KeyType> t_set;
+  std::vector<u64> labels;
+
+  using Tree = XTree<16, u64>;
+  Tree t;
+
+  const usize num_p = 4; // number of page in the Tree
+  for (uint i = 0; i < 16 * num_p; ++i) {
+    t.insert(i, i);
+  }
+
+  // add to the training-set
+
+  auto it = XTreeIter<16, u64>::from(t);
+  usize count_page = 0;
+  usize key_count = 0;
+
+  StepSampler s(1);
+  for (it.seek(0, t); it.has_next(); it.next()) {
+    // TODO
+    key_count += 1;
+    s.add_to(it.cur_key(), it.opaque_val(), t_set, labels);
+  }
+  ASSERT_EQ(key_count, 16 * num_p);
+  ASSERT_EQ(key_count, t_set.size());
+  ASSERT_EQ(t_set.size(), labels.size());
+
+  // test another
+
+  PageSampler p(16);
+  // first we sample all keys
+  usize key_count1 = 0;
+  auto it1 = XTreePageIter<16, u64>::from(t);
+  for (it1.seek(0, t); it1.has_next(); it1.next()) {
+    count_page += 1;
+    auto &p = it1.cur_node.value();
+    key_count1 += p.num_keys();
+    ASSERT_GE(p.num_keys(), 1);
+  }
+  ASSERT_EQ(it1.logic_page_id, count_page);
+  ASSERT_EQ(key_count, key_count1);
+
+  // then we check whether all the page sample add correct number of keys
+  // the assumption is that each node has more than 2 keys
+  t_set.clear();
+  labels.clear();
+
+  count_page = 0;
+  for (it1.seek(0, t); it1.has_next(); it1.next()) {
+    auto &page = it1.cur_node.value();
+    for (uint i = 0;i < 16; ++i) {
+      if (page.get_key(i) != kInvalidKey) {
+        // add
+        p.add_to(page.get_key(i), LogicAddr::encode_logic_addr(count_page, i),
+                 t_set,labels);
+      }
+    }
+    count_page += 1;
+  }
+  p.finalize(t_set,labels);
+  ASSERT_EQ(t_set.size(), labels.size()); // the label should have the same num as training-data
+  ASSERT_EQ(t_set.size(), count_page * 2);
 }
+
+} // namespace test
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
