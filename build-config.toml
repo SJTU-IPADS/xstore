@@ -10,7 +10,8 @@ mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",includ
 
 [installs]
 boost = {url = "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz", configure_cmd = "./bootstrap.sh  --with-libraries=system,coroutine,serialization", build_cmd = "./b2",install_cmd = "./b2 install",exports=["boost_system","boost_coroutine","boost_serialization"],include="include",lib="lib"}
-r2 = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git",exports=[],include=".",build = false}
+#r2 = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git",exports=[],include=".",build = false}
+r2 = {url="https://github.com/wxdwfc/r2.git",exports=[],include=".",build = false}
 tiny-dnn = {url = "https://github.com/tiny-dnn/tiny-dnn.git", exports=[], include=".", build=false}
 kvs-workload = {url = "https://ipads.se.sjtu.edu.cn:1312/weixd/kvsworkloads.git", exports=[], include=".", build=false}
 #rlib = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git",build = false,exports=[],include=".."}

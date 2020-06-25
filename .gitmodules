@@ -32,3 +32,6 @@
 [submodule "deps/rlib"]
 	path = deps/rlib
 	url = https://github.com/wxdwfc/rlibv2.git
+[submodule "deps/r2"]
+	path = deps/r2
+	url = https://github.com/wxdwfc/r2.git
