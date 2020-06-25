@@ -9,11 +9,6 @@
 #	url = https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git
     url = git@ipads.se.sjtu.edu.cn:weixd/r2.git
     branch = new
-[submodule "deps/rlib"]
-	path = deps/rlib
-#	url = https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git
-    url = git@ipads.se.sjtu.edu.cn:weixd/rib.git
-    branch = new_api
 [submodule "deps/jemalloc"]
 	path = deps/jemalloc
 	url = https://github.com/jemalloc/jemalloc.git

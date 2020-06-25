@@ -13,7 +13,8 @@ boost = {url = "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_
 r2 = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git",exports=[],include=".",build = false}
 tiny-dnn = {url = "https://github.com/tiny-dnn/tiny-dnn.git", exports=[], include=".", build=false}
 kvs-workload = {url = "https://ipads.se.sjtu.edu.cn:1312/weixd/kvsworkloads.git", exports=[], include=".", build=false}
-rlib = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git",build = false,exports=[],include=".."}
+#rlib = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git",build = false,exports=[],include=".."}
+rlib = {url = "", build=false, exports=[],include=".."}
 jemalloc={url="https://github.com/jemalloc/jemalloc.git",configure_cmd = "./autogen.sh; ./configure --with-jemalloc-prefix=je",build_cmd = "make -j12",install_cmd = "",exports=["jemalloc"],include="include",build=true,lib="lib"}
 
 [includes]
