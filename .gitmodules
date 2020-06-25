@@ -4,11 +4,7 @@
 [submodule "deps/cpptoml"]
 	path = deps/cpptoml
 	url = https://github.com/skystrife/cpptoml.git
-[submodule "deps/r2"]
-	path = deps/r2
-#	url = https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git
-    url = git@ipads.se.sjtu.edu.cn:weixd/r2.git
-    branch = new
+
 [submodule "deps/jemalloc"]
 	path = deps/jemalloc
 	url = https://github.com/jemalloc/jemalloc.git
