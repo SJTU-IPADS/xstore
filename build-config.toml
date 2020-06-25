@@ -15,7 +15,7 @@ tiny-dnn = {url = "https://github.com/tiny-dnn/tiny-dnn.git", exports=[], includ
 kvs-workload = {url = "https://ipads.se.sjtu.edu.cn:1312/weixd/kvsworkloads.git", exports=[], include=".", build=false}
 #rlib = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git",build = false,exports=[],include=".."}
 rlib = {url = "https://github.com/wxdwfc/rlibv2.git", build=false, exports=[],include=".."}
-jemalloc={url="https://github.com/jemalloc/jemalloc.git",configure_cmd = "./autogen.sh; ./configure --with-jemalloc-prefix=je",build_cmd = "make -j12",install_cmd = "",exports=["jemalloc"],include="include",build=true,lib="lib"}
+jemalloc={url="https://github.com/jemalloc/jemalloc.git",configure_cmd = "./autoconf; ./configure --with-jemalloc-prefix=je",build_cmd = "make -j12",install_cmd = "",exports=["jemalloc"],include="include",build=true,lib="lib"}
 
 [includes]
 ## cmake add subdirectory
