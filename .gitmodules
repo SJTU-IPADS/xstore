@@ -33,3 +33,6 @@
 [submodule "xcache/deps/ggtest"]
 	path = xcache/deps/ggtest
 	url = https://github.com/google/googletest.git
+[submodule "deps/rlib"]
+	path = deps/rlib
+	url = https://github.com/wxdwfc/rlibv2.git
