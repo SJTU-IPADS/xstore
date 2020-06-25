@@ -27,18 +27,20 @@ test_xkv:
     - cd xkv_core; ./test.sh
 
 
-test_xcomm:
-  stage: test
-  tags:
-  - rdma
-
-  cache:
-    key: "boost"
-
-  script:
-    - cd xcomm; ./test.sh
-
-  before_script:
-  - ./magic.py config -f  build-config.toml 
-  - cmake .; make boost    
+################################################
+# test_xcomm:                                  #
+#   stage: test                                #
+#   tags:                                      #
+#   - rdma                                     #
+#                                              #
+#   cache:                                     #
+#     key: "boost"                             #
+#                                              #
+#   script:                                    #
+#     - cd xcomm; ./test.sh                    #
+#                                              #
+#   before_script:                             #
+#   - ./magic.py config -f  build-config.toml  #
+#   - cmake .; make boost                      #
+################################################
 
