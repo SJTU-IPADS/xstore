@@ -1,8 +1,3 @@
-cache:
-  key: boost
-  paths:
-  - ./deps/boost
-
 before_script:
   - python -V  # Print out python version for debugging
   - pip install toml
@@ -10,6 +5,11 @@ before_script:
   - git config --global user.name "wxd"
   - git submodule sync
   - git submodule update --init
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - deps/
 
 # run tests using the binary built before
 test_xml:
