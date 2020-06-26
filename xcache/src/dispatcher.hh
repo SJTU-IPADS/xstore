@@ -26,7 +26,7 @@ template <class ML> struct Dispatcher {
   }
 
   template <class... Args>
-  Dispatcher(const usize &dn, Args... args) : Dispatcher(dn), model(args...) {}
+  Dispatcher(const usize &dn, Args... args) : dispatch_num(dn), model(args...) {}
 
   auto predict(const u64 &key, const u64 &max) -> usize {
     auto res = static_cast<int>(this->model.predict(key));
