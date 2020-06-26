@@ -6,3 +6,4 @@ cmake . ; make;
 ./test_logic
 ./test_rmi
 ./test_sampler
+./test_rmi_t

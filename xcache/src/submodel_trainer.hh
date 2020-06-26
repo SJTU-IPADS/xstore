@@ -56,14 +56,20 @@ struct XMLTrainer {
   template <class IT, class S, class SubML>
   auto train(typename IT::KV &kv, S &s, update_func f = default_update_func)
       -> XSubModel<SubML> {
+    auto iter = IT::from(kv);
+    return train_w_it(iter, s, f);
+  }
 
+  template <class IT, class S, class SubML>
+  auto train_w_it(typename IT &iter, S &s, update_func f = default_update_func)
+      -> XSubModel<SubML> {
     // TODO: model should be parameterized
     XSubModel<SubML> model;
 
     if (!this->need_train()) {
       return model;
     }
-    //LOG(4) << "train model w : " << this->start_key << " :" << this->end_key;
+    // LOG(4) << "train model w : " << this->start_key << " :" << this->end_key;
 
     // take a snapshot of the start/end key
     KeyType s_key;
@@ -78,20 +84,17 @@ struct XMLTrainer {
     std::vector<u64> train_set;
     std::vector<u64> train_label;
 
-    // 1. fill in the train_set/label
-    auto iter = IT::from(kv);
-
     // base is used to algin the labels start from 0
     u64 base = 0; // legacy
 
-    for (iter.seek(s_key,kv); iter.has_next(); iter.next()) {
+    for (iter.seek(s_key, kv); iter.has_next(); iter.next()) {
       if (iter.cur_key() > e_key) {
         break;
       }
       s.add_to(iter.cur_key(), iter.opaque_val() - base, train_set,
                train_label);
     }
-    s.finalize(train_set,train_label);
+    s.finalize(train_set, train_label);
 
     // 2. train the model
     model.train(train_set, train_label, f);

@@ -10,6 +10,11 @@ name = "test_rmi"
 src = ["./tests/test_rmi.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest", "mkl_rt"]
 
+[[apps]]
+name = "test_rmi_t"
+src = ["./tests/test_rmi_tree.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
 
 [[apps]]
 name = "test_sampler"

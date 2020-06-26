@@ -22,6 +22,10 @@ name = "test_logic"
 src = ["./tests/test_logic.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest"]
 
+[[apps]]
+name = "test_rmi_t"
+src = ["./tests/test_rmi_tree.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
 
 
 ########################## end test apps ################################

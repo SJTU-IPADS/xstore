@@ -119,6 +119,9 @@ TEST(RMI, Full) {
   }
 }
 
+TEST(RMI, Tree) {
+  // TODO
+}
 } // namespace test
 
 int main(int argc, char **argv) {
