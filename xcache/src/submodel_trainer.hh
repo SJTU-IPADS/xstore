@@ -91,6 +91,7 @@ struct XMLTrainer {
       s.add_to(iter.cur_key(), iter.opaque_val() - base, train_set,
                train_label);
     }
+    s.finalize(train_set,train_label);
 
     // 2. train the model
     model.train(train_set, train_label, f);

@@ -26,6 +26,13 @@ test_xkv:
   script:
     - cd xkv_core; ./test.sh
 
+test_xcache:
+    stage: test
+    tags:
+    - rdma
+    script:
+    - cd xcache; ./test.sh
+
 
 ################################################
 # test_xcomm:                                  #
