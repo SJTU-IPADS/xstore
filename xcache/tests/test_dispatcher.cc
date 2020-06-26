@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "../../xkv_core/src/xarray_iter.hh"
 
 #include "../../x_ml/src/lr/mod.hh"
