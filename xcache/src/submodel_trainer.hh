@@ -57,12 +57,12 @@ struct XMLTrainer {
   auto train(typename IT::KV &kv, S &s, update_func f = default_update_func)
       -> XSubModel<SubML> {
     auto iter = IT::from(kv);
-    return train_w_it(iter, s, f);
+    return train_w_it<IT, S, SubML>(iter, kv, s, f);
   }
 
   template <class IT, class S, class SubML>
-  auto train_w_it(typename IT &iter, S &s, update_func f = default_update_func)
-      -> XSubModel<SubML> {
+  auto train_w_it(IT &iter, typename IT::KV &kv, S &s,
+                  update_func f = default_update_func) -> XSubModel<SubML> {
     // TODO: model should be parameterized
     XSubModel<SubML> model;
 
