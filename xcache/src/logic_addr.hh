@@ -1,5 +1,7 @@
 #pragma once
 
+#include <climits> // CHAR_BIT
+
 #include "../../deps/r2/src/common.hh"
 
 namespace xstore {
