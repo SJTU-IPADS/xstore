@@ -32,6 +32,7 @@ test_xcache:
     - rdma
     script:
     - cd xcache; ./test.sh
+    - cd xcache; ./test_sampler
 
 
 ################################################

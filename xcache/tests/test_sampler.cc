@@ -103,22 +103,27 @@ TEST(Sampler, Page) {
   // the assumption is that each node has more than 2 keys
   t_set.clear();
   labels.clear();
-
-  count_page = 0;
-  for (it1.seek(0, t); it1.has_next(); it1.next()) {
-    auto &page = it1.cur_node.value();
-    for (uint i = 0;i < 16; ++i) {
-      if (page.get_key(i) != kInvalidKey) {
-        // add
-        p.add_to(page.get_key(i), LogicAddr::encode_logic_addr<16>(count_page, i),
-                 t_set,labels);
+  {
+    PageSampler<16> p;
+    count_page = 0;
+    for (it1.seek(0, t); it1.has_next(); it1.next()) {
+      auto &page = it1.cur_node.value();
+      for (uint i = 0; i < 16; ++i) {
+        if (page.get_key(i) != kInvalidKey) {
+          // add
+          p.add_to(page.get_key(i),
+                   LogicAddr::encode_logic_addr<16>(count_page, i), t_set,
+                   labels);
+        }
       }
+      count_page += 1;
     }
-    count_page += 1;
+    p.finalize(t_set, labels);
+    ASSERT_EQ(
+        t_set.size(),
+        labels.size()); // the label should have the same num as training-data
+    ASSERT_EQ(t_set.size(), count_page * 2);
   }
-  p.finalize(t_set,labels);
-  ASSERT_EQ(t_set.size(), labels.size()); // the label should have the same num as training-data
-  ASSERT_EQ(t_set.size(), count_page * 2);
 }
 
 } // namespace test
