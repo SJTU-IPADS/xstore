@@ -20,62 +20,73 @@ namespace xcache {
   The unit test file is in ../../tests/test_sampler.cc
  */
 
-struct PageSampler : public SampleTrait<PageSampler> {
-  const usize N;
-  Option<u64> initial_logic_addr = {};
+template <usize N>
+struct PageSampler : public SampleTrait<PageSampler<N>> {
+  Option<KeyType> min_key_in_page = {};
+  Option<u64> min_key_label = {};
 
-  // current iterated key
-  Option<KeyType> iter_key = {};
-  Option<u64> iter_logic_addr = {};
+  Option<KeyType> max_key_in_page = {};
+  Option<u64> max_key_label = {};
 
-  explicit PageSampler(const usize &N) : N(N) {}
+  PageSampler() = default;
 
+  /*!
+    \note: keys in one page may be not sorted, so we explicitly sort them
+   */
   auto add_to_impl(const KeyType &k, const u64 &l, std::vector<KeyType> &t_set,
                    std::vector<u64> &l_set) {
-    if (!initial_logic_addr) {
-      // add
-      t_set.push_back(k);
-      l_set.push_back(l);
+    if (!min_key_in_page) {
+      // the start case
+      this->min_key_in_page = k;
+      this->min_key_label = l;
+      return;
+    }
 
-      initial_logic_addr = l;
+    // iterating
+    // 1. check whether we enter the next page?
+    if (LogicAddr::decode_logic_id<N>(l) !=
+        LogicAddr::decode_logic_id<N>(this->min_key_in_page.value())) {
+      // first add the current
+      this->add_cur(t_set, l_set);
+
+      // reset
+      this->min_key_in_page = k;
+      this->min_key_label = l;
+      this->max_key_label = {};
+      this->max_key_in_page = {};
     } else {
-      // check if current iter_logic_addr is the last one
-      if (LogicAddr::decode_logic_id(l) !=
-          LogicAddr::decode_logic_id(initial_logic_addr.value())) {
-        // add the previous storing iter_logic_addr
-        auto init = initial_logic_addr.value();
-        auto end = iter_logic_addr.value();
-        ASSERT(LogicAddr::decode_logic_id(init) ==
-               LogicAddr::decode_logic_id(end));
+      // we only need to update the min_max in this case
+      if (!this->max_key_in_page || k > this->max_key_in_page.value()) {
+        this->max_key_in_page = k;
+        this->max_key_label = l;
+      }
+      if (this->min_key_in_page.value() > k) {
+        this->min_key_in_page = k;
+        this->min_key_label = l;
+      }
+    }
+  }
 
-        if (LogicAddr::decode_off(init) != LogicAddr::decode_off(end)) {
-          // add if different
-          t_set.push_back(iter_key.value());
-          l_set.push_back(end);
-        }
-
-        // re-set
-        initial_logic_addr = l;
-        iter_key = {};
-        iter_logic_addr = {};
-
-        t_set.push_back(k);
-        l_set.push_back(l);
-
-      } else {
-        // this key can be temporally not added to the training-set
-        // record it in iter_key, iter_logic_addr
-        iter_key = k;
-        iter_logic_addr = l;
+  auto add_cur(std::vector<KeyType> &t_set,std::vector<u64> &l_set) {
+    if (this->min_key_in_page) {
+      t_set.push_back(this->min_key_in_page.value());
+      l_set.push_back(this->min_key_label.value());
+    }
+    if (this->max_key_in_page) {
+      // they must be in the same leaf node!
+      ASSERT(LogicAddr::decode_logic_id<N>(this->max_key_label.value()) ==
+             LogicAddr::decode_logic_id<N>(this->min_key_label.value()));
+      if (LogicAddr::decode_off<N>(this->max_key_label.value()) !=
+          LogicAddr::decode_off<N>(this->max_key_label.value())) {
+        // add because they have different offset
+        t_set.push_back(this->max_key_in_page.value());
+        l_set.push_back(this->max_key_label.value());
       }
     }
   }
 
   auto finalize_impl(std::vector<KeyType> &t_set, std::vector<u64> &l_set) {
-    if (iter_key) {
-      t_set.push_back(iter_key.value());
-      l_set.push_back(iter_logic_addr.value());
-    }
+    this->add_cur(t_set, l_set);
   }
 };
 

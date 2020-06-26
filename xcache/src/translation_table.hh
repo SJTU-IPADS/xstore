@@ -18,6 +18,8 @@ template <typename EntryType> struct TT {
   auto add(const EntryType &e) { entries.push_back(e); }
 
   auto size() -> usize { return entries.size(); }
+
+  auto clear() { entries.clear(); }
 };
 } // namespace xcache
 } // namespace xstore

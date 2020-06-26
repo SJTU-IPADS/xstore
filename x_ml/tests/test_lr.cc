@@ -96,6 +96,17 @@ TEST(LR, Serialize) {
   ASSERT_EQ(mlr2.base, mlr.base);
   ASSERT_EQ(mlr2.lr.w, mlr.lr.w);
   ASSERT_EQ(mlr2.lr.w, mlr.lr.w);
+
+  // serialize LR
+  {
+    LR lr;
+    lr.train(train_set, labels);
+    auto s = lr.serialize();
+    LR lr1;
+    lr1.from_serialize(s);
+    ASSERT_EQ(lr1.w, lr.w);
+    ASSERT_EQ(lr1.b, lr.b);
+  }
 }
 
 }

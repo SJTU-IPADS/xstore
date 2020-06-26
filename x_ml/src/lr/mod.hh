@@ -5,6 +5,8 @@
 
 #include "../ml_trait.hh"
 
+#include "../../../xutils/marshal.hh"
+
 namespace xstore {
 
 namespace xml {
@@ -71,12 +73,11 @@ struct __attribute__((packed))  LR : public MLTrait<LR> {
   }
 
   auto serialize_impl() -> std::string {
-    ASSERT(false) << "not implemented";
-    return "";
+    return ::xstore::util::MarshalT<LR>::serialize(*this);
   }
 
   void from_serialize_impl(const std::string &data) {
-    ASSERT(false) << "not implemented";
+    *this = ::xstore::util::MarshalT<LR>::deserialize(data).value();
   }
 };
 

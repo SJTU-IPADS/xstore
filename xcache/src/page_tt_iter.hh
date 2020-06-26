@@ -26,8 +26,9 @@ template <usize N, typename V>
 struct XCacheTreeIter : public KeyIterTrait<XCacheTreeIter<N, V>, XTree<N, V>> {
   // a user must provide a function to generate TT entries upon iterating
   // through a new node
-  // FIXME: should we change the fn to fn (XNode<N,V> *, XNode<N,V> &snap) -> TTEntryType ?
-  // Since the training may be on the snapshot (which is a local copy)
+  // FIXME: should we change the fn to fn (XNode<N,V> *, XNode<N,V> &snap) ->
+  // TTEntryType ? Since the training may be on the snapshot (which is a local
+  // copy)
   using TTEntryGenF = std::function<TTEntryType(XNode<N, V> *)>;
 
   TTEntryGenF gen_f = [](XNode<N, V> *n_ptr) -> TTEntryType {
@@ -65,28 +66,52 @@ struct XCacheTreeIter : public KeyIterTrait<XCacheTreeIter<N, V>, XTree<N, V>> {
   auto has_next_impl() -> bool { return this->core_iter.has_next(); }
 
   auto seek_impl(const KeyType &k, XTree<N, V> &kv) {
+    this->logic_page_id = 0;
     this->prev_node = nullptr;
     this->core_iter.seek(k, kv);
     this->reset_old_ptr();
   }
 
-  auto cur_key_impl() -> KeyType { return this->core_iter.cur_key(); }
+  auto cur_key_impl() -> KeyType {
+    return this->core_iter.cur_key();
+  }
 
   auto opaque_val_impl() -> u64 {
-    return LogicAddr::encode_logic_addr(this->logic_page_id,
-                                        this->core_iter.idx);
+    // return LogicAddr::encode_logic_addr(this->logic_page_id,
+    // this->core_iter.idx);
+    ASSERT(this->logic_page_id > 0);
+    return LogicAddr::encode_logic_addr<N>(this->logic_page_id - 1,
+                                           this->core_iter.idx);
   }
 
   auto reset_old_ptr() {
     if (core_iter.has_next()) {
       if (core_iter.cur_node_ptr != this->prev_node) {
-        this->prev_node = core_iter.cur_node_ptr;
         // add to TT
-        tt->add(this->gen_f(this->prev_node));
+        tt->add(this->gen_f(core_iter.cur_node_ptr));
+        this->prev_node = core_iter.cur_node_ptr;
         this->logic_page_id += 1;
       }
     }
   }
 };
+
+template <usize N>
+inline std::pair<int, int>
+page_update_func(const u64 &label, const u64 &predict, const int &cur_min,
+                 const int &cur_max) {
+  // no need to predict even they are different
+  if (LogicAddr::decode_logic_id<N>(label) ==
+      LogicAddr::decode_logic_id<N>(predict)) {
+    return std::make_pair(cur_min, cur_max);
+  }
+
+  auto min_error =
+      std::min(static_cast<int>(cur_min), static_cast<int>(label - predict));
+  auto max_error =
+      std::max(static_cast<int>(cur_max), static_cast<int>(label - predict));
+  return std::make_pair(min_error, max_error);
+}
+
 } // namespace xcache
 } // namespace xstore

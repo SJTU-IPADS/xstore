@@ -86,7 +86,7 @@ TEST(Sampler, Page) {
 
   // test another
 
-  PageSampler p(16);
+  PageSampler<16> p;
   // first we sample all keys
   usize key_count1 = 0;
   auto it1 = XTreePageIter<16, u64>::from(t);
@@ -110,7 +110,7 @@ TEST(Sampler, Page) {
     for (uint i = 0;i < 16; ++i) {
       if (page.get_key(i) != kInvalidKey) {
         // add
-        p.add_to(page.get_key(i), LogicAddr::encode_logic_addr(count_page, i),
+        p.add_to(page.get_key(i), LogicAddr::encode_logic_addr<16>(count_page, i),
                  t_set,labels);
       }
     }

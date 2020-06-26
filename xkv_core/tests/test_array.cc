@@ -20,7 +20,7 @@ r2::util::FastRandom rand(0xdeadbeaf);
 
 auto gen_keys(const usize &num) -> std::vector<u64> {
   std::vector<u64> all_keys;
-  const usize num_keys = 120;
+  const usize num_keys = num;
   for (uint i = 0; i < num_keys; ++i) {
     all_keys.push_back(rand.next());
   }

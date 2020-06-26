@@ -43,25 +43,30 @@ template <typename DispatchML, typename SubML> struct LocalTwoRMI {
     return this->second_layer[model].get_predict_range(k);
   }
 
+  template <class IT>
+  auto dispatch_keys_to_trainers(typename IT::KV &kv)
+      -> std::vector<XMLTrainer> {
+    std::vector<XMLTrainer> trainers(this->second_layer.size());
+    auto it = IT::from(kv);
+    for (it.begin(); it.has_next(); it.next()) {
+      auto model = this->select_sec_model(it.cur_key());
+      //      LOG(4) << "update m:" << model << " w key: "<< it.cur_key();
+      ASSERT(model >= 0 && model < trainers.size()) << "invalid model n: " << model
+                                                    << "; max: " << this->first_layer.up_bound;
+      trainers[model].update_key(it.cur_key());
+    }
+    return trainers;
+  }
+
   template <class IT, class S>
   auto train_second_models(typename IT::KV &kv, S &s, Statics &statics,
                            update_func f = default_update_func) {
     auto it = IT::from(kv);
 
-    std::vector<XMLTrainer> trainers(this->second_layer.size());
-    // iterator through all the models to dispatch keys to second layer model
-    // trainers
-
-    for (it.begin(); it.has_next(); it.next()) {
-      auto model = this->select_sec_model(it.cur_key());
-      //      LOG(4) << "update m:" << model << " w key: "<< it.cur_key();
-      ASSERT(model >= 0 && model < trainers.size());
-      trainers[model].update_key(it.cur_key());
-    }
-
+    auto trainers = this->dispatch_keys_to_trainers<IT>(kv);
     // dispatch done
     for (uint i = 0; i < second_layer.size(); ++i) {
-      this->second_layer[i] = trainers[i].train<IT, S, SubML>(kv, s, f);
+      this->second_layer[i] = trainers[i].template train<IT, S, SubML>(kv, s, f);
     }
     // done
   }

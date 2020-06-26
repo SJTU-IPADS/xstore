@@ -33,6 +33,7 @@ template <typename R> static constexpr R bitmask(unsigned int const onecount) {
          (static_cast<R>(-1) >> ((sizeof(R) * CHAR_BIT) - onecount));
 }
 
+/*
 struct LogicAddr {
 
   static auto encode_logic_addr(const u64 &id, const u64 &off) -> u64 {
@@ -46,6 +47,28 @@ struct LogicAddr {
   static auto decode_off(const u64 &encoded) -> u64 {
     auto msk = bitmask<u64>(off_bits);
     return encoded & msk;
+  }
+  };*/
+
+/*!
+  switch to a simpler logic addr
+ */
+struct LogicAddr {
+
+  template <usize N>
+  static auto encode_logic_addr(const u64 &id, const u64 &off) -> u64 {
+    ASSERT(off < N);
+    return (id  * N) + off;
+  }
+
+  template <usize N>
+  static auto decode_logic_id(const u64 &encoded) -> u64 {
+    return encoded / N;
+  }
+
+  template <usize N>
+  static auto decode_off(const u64 &encoded) -> u64 {
+    return encoded % N;
   }
 };
 
