@@ -26,6 +26,8 @@ template <usize N, typename V>
 struct XCacheTreeIter : public KeyIterTrait<XCacheTreeIter<N, V>, XTree<N, V>> {
   // a user must provide a function to generate TT entries upon iterating
   // through a new node
+  // FIXME: should we change the fn to fn (XNode<N,V> *, XNode<N,V> &snap) -> TTEntryType ?
+  // Since the training may be on the snapshot (which is a local copy)
   using TTEntryGenF = std::function<TTEntryType(XNode<N, V> *)>;
 
   TTEntryGenF gen_f = [](XNode<N, V> *n_ptr) -> TTEntryType {
