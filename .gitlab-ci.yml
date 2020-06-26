@@ -1,6 +1,6 @@
 before_script:
   - python -V  # Print out python version for debugging
-  - pip install toml
+  - pip --cache-dir=.pip install toml
   - git config --global user.email "wxdwfc@gmail.com"
   - git config --global user.name "wxd"
   - git submodule sync
@@ -10,6 +10,7 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - deps/
+    - .pip
 
 # run tests using the binary built before
 test_xml:
