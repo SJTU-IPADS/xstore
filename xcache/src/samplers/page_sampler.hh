@@ -45,7 +45,7 @@ struct PageSampler : public SampleTrait<PageSampler<N>> {
     // iterating
     // 1. check whether we enter the next page?
     if (LogicAddr::decode_logic_id<N>(l) !=
-        LogicAddr::decode_logic_id<N>(this->min_key_in_page.value())) {
+        LogicAddr::decode_logic_id<N>(this->min_key_label.value())) {
       // first add the current
       this->add_cur(t_set, l_set);
 
@@ -68,6 +68,7 @@ struct PageSampler : public SampleTrait<PageSampler<N>> {
   }
 
   auto add_cur(std::vector<KeyType> &t_set,std::vector<u64> &l_set) {
+
     if (this->min_key_in_page) {
       t_set.push_back(this->min_key_in_page.value());
       l_set.push_back(this->min_key_label.value());
@@ -76,7 +77,7 @@ struct PageSampler : public SampleTrait<PageSampler<N>> {
       // they must be in the same leaf node!
       ASSERT(LogicAddr::decode_logic_id<N>(this->max_key_label.value()) ==
              LogicAddr::decode_logic_id<N>(this->min_key_label.value()));
-      if (LogicAddr::decode_off<N>(this->max_key_label.value()) !=
+      if (LogicAddr::decode_off<N>(this->min_key_label.value()) !=
           LogicAddr::decode_off<N>(this->max_key_label.value())) {
         // add because they have different offset
         t_set.push_back(this->max_key_in_page.value());

@@ -33,6 +33,11 @@ test_xcache:
     script:
     - cd xcache; ./test.sh
     - ./test_sampler
+    - ./test_rmi;
+    - ./test_rmi_t;
+    - ./test_logic;
+    - ./test_dispatcher;
+
 
 
 ################################################

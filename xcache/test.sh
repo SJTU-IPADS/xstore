@@ -2,12 +2,3 @@
 
 cmake . ; make;
 
-./test_dispatcher;
-
-./test_logic;
-
-./test_rmi;
-
-./test_sampler;
-
-./test_rmi_t;
