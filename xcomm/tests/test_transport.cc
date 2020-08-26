@@ -107,7 +107,10 @@ TEST(rpc, basic) {
 
   // trying to send
   t.send(MemBlock((void *)"okk",4));
-  receiver->reg_channel(t.core);
+  using RingS = RRingTransport<ring_entry, ring_sz, max_msg_sz>::RingS;
+  auto wrap =
+    Arc<RingS>(t.core, [](RingS *) {});
+  receiver->reg_channel(wrap);
 
   sleep(1);
 

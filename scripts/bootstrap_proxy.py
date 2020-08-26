@@ -397,7 +397,7 @@ def main():
             continue
 
         if p.get("local","no") == "yes":
-            subprocess.run(p["cmd"].split(" "))
+            subprocess.run(("cd " + p["path"] + ";" + p["cmd"]).split(" "))
             pass
         else:
             res = cr.execute_w_channel(p["cmd"] + " " + global_configs,

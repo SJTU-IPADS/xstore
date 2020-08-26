@@ -14,6 +14,7 @@ using namespace r2::ring_msg;
 
 /*!
   This file provides a wrapper of R2::ring_msg, making it implement the trait
+  The r2_ring messages implements a simplfied version of FaRM message (FaRM@NSDI'14)
  */
 template <usize R, usize kRingSz, usize kMaxMsg>
 struct RRingTransport : public STrait<RRingTransport<R, kRingSz, kMaxMsg>> {
@@ -25,10 +26,11 @@ struct RRingTransport : public STrait<RRingTransport<R, kRingSz, kMaxMsg>> {
     So there would be a memory leakage.
     Maybe we can add an explict method to let user free it?
    */
-  Arc<RingS> core = nullptr;
+  //Arc<RingS> core = nullptr;
+  RingS *core = nullptr;
 
   // methods
-  explicit RRingTransport(RingS *c) : core(c, [](RingS *p) { /* do nothing! */ }) {}
+  explicit RRingTransport(RingS *c) : core(c) {}
 
   RRingTransport(const u16 &id, Arc<RNic> nic, const QPConfig &config,
                  ibv_cq *cq, Arc<AbsRecvAllocator> alloc)
@@ -44,6 +46,11 @@ struct RRingTransport : public STrait<RRingTransport<R, kRingSz, kMaxMsg>> {
   auto send_impl(const MemBlock &msg, const double &timeout = 1000000)
       -> Result<std::string> {
     return core->send_unsignaled(msg);
+  }
+
+  auto send_w_key_impl(const MemBlock &msg, const u32 &key, const double &timeout = 1000000)
+      -> Result<std::string> {
+    return ::rdmaio::Err("not implemented!");
   }
 };
 

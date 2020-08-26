@@ -22,6 +22,11 @@ src = ["./tests/test_transport.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest", "ibverbs"]
 
 [[apps]]
+name = "test_ud"
+src = ["./tests/test_ud_transport.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs","boost_system"]
+
+[[apps]]
 name = "test_rpc"
 src = ["./tests/test_rpc.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest", "ibverbs"]

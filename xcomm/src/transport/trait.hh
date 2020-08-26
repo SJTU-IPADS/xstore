@@ -26,6 +26,13 @@ public:
       -> Result<std::string> {
     return reinterpret_cast<Derived *>(this)->send_impl(msg, timeout);
   }
+
+  // RDMA should pass a lkey so that the RNIC is able to access the message
+  // leave an explict function to all it
+  auto send_w_key(const MemBlock &msg, const u32 &lkey,const double &timeout = 1000000)
+      -> Result<std::string> {
+    return reinterpret_cast<Derived *>(this)->send_w_key_impl(msg, timeout);
+  }
 };
 
 // Recv Trait
@@ -46,6 +53,10 @@ public:
 
   auto reply_entry() -> ST {
     return reinterpret_cast<Derived *>(this)->reply_entry_impl();
+  }
+
+  auto reply_entry_ptr() -> ST * {
+    return reinterpret_cast<Derived *>(this)->reply_entry_ptr_impl();
   }
 };
 
