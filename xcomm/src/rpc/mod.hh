@@ -13,9 +13,12 @@ namespace rpc {
   An RPC framework assuming a given SendTrait, and RecvTrait
   for sending and receiving RPC messages.
  */
-template <class SendTrait, class RecvTrait> struct RPCCore {
+template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
   using rpc_func_t = std::function<void(
       const Header &rpc_header, const MemBlock &args, SendTrait *replyc)>;
+
+  SessionManager<Manager, SendTrait,RecvTrait> session_manager;
+
   ReplyStation reply_station;
   std::vector<rpc_func_t> callbacks;
 
@@ -60,6 +63,10 @@ template <class SendTrait, class RecvTrait> struct RPCCore {
         // pass
         auto ret = this->reply_station.append_reply(h.cor_id, payload);
         ASSERT(ret);
+      }
+        break;
+      case Connect: {
+        // not implemented
       }
         break;
       default:

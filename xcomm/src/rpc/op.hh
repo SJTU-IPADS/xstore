@@ -40,6 +40,11 @@ struct RPCOp {
     return *this;
   }
 
+  auto set_connect() -> RPCOp &{
+    this->header.type = Connect;
+    return *this;
+  }
+
   auto set_reply() -> RPCOp & {
     this->header.type = Reply;
     return *this;

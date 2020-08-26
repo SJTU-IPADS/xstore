@@ -51,8 +51,22 @@ public:
     return reinterpret_cast<Derived *>(this)->cur_msg_impl();
   }
 
+  auto cur_session_id() -> u32 {
+    return reinterpret_cast<Derived *>(this)->cur_session_id_impl();
+  }
+
   auto reply_entry() -> ST {
     return reinterpret_cast<Derived *>(this)->reply_entry_impl();
+  }
+};
+
+template <class Derived, class SendTrait, class RecvTrait>
+struct SessionManager {
+  std::unordered_map<u32, std::unique_ptr<SendTrait>> incoming_sesions;
+
+  // TODO: how to delete?
+  auto add_new_session(const MemBlock &raw_connect_data, RecvTrait &recv_trait) -> Result<> {
+    return reinterpret_cast<Derived *>(this)->add_impl(raw_connect_data, recv_trait);
   }
 };
 

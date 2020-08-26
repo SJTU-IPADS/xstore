@@ -2,9 +2,10 @@
 
 #include <unordered_map>
 
+#include "../../../deps/r2/src/msg/ud_session.hh"
 #include "../../../deps/rlib/core/lib.hh"
 #include "../../../deps/rlib/core/qps/ud.hh"
-#include "../../../deps/r2/src/msg/ud_session.hh"
+#include "../../../deps/rlib/core/qps/recv_iter.hh"
 
 #include "./trait.hh"
 
@@ -69,19 +70,34 @@ struct UDTransport : public STrait<UDTransport> {
 };
 
 // TODO: recv end point not implemented
+template <usize es>
 struct UDRecvTransport : public RTrait<UDRecvTransport, UDTransport> {
 
   std::unordered_map<u32, UDTransport> incoming_sessions;
-#if 0
-  void begin_impl() { core.begin(); }
 
-  void next_impl() { return core.next(); }
+  Arc<UD> qp;
+  Arc<RecvEntries<es>> recv_entries;
 
-  auto has_msgs_impl() -> bool { return core.has_msgs(); }
+  RecvIter<UD, es> iter;
+
+  u32 cur_session_id = 0;
+
+  UDRecvTransport(Arc<UD> qp, Arc<RecvEntries<es>> e)
+      : qp(qp), recv_entries(e), iter(qp, e) {
+  }
+
+  void begin_impl() { iter.begin(); }
+
+  void next_impl() { return iter.next(); }
+
+  auto has_msgs_impl() -> bool { return iter.has_msgs(); }
 
   auto cur_msg_impl() -> MemBlock { return core.cur_msg(); }
-#endif
 };
 }
+
+// TODO: session manager impl
+
+
 
 } // namespace xstore

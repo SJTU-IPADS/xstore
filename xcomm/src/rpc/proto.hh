@@ -16,8 +16,9 @@ using namespace r2;
   Define the msg type that can be exchanged
  */
 enum MsgType {
-  Req = 1, // RPC request
-  Reply    // RPC reply
+  Req = 1,      // RPC request
+  Reply = 2,    // RPC reply
+  Connect = 3,  // msg connect
 };
 
 /*!
