@@ -3,6 +3,12 @@ name = "bench_local"
 src = ["./benchs/main.cc", "../deps/r2/src/logging.cc"]
 extra = ["boost_system","boost_coroutine", "pthread"]
 
+[[apps]]
+name = "bench_ud"
+src = ["./benchs/bench_ud.cc", "../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread"]
+
+
 ######################### start test apps ################################
 ## test apps
 [[apps]]
