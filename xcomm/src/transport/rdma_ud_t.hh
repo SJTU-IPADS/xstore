@@ -17,19 +17,18 @@ using namespace rdmaio::qp;
 
 struct UDTransport : public STrait<UDTransport> {
 
-  Arc<UD> qp;
   // session wraps the qp
-  std::unique_ptr<r2::UDSession> session;
-
-  UDTransport(Arc<RNic> nic, const QPConfig &config)
-      : qp(UD::create(nic, config).value()), session(nullptr) {}
+  // TODO: may have memory leckage
+  r2::UDSession *session = nullptr;
 
   // multiplex an existing QP
   // UD can multi-cast
-  explicit UDTransport(Arc<UD> qp) : qp(qp), session(nullptr) {}
+  explicit UDTransport(UDSession *t) : session(t) {}
+
+  UDTransport() = default;
 
   auto connect_impl(const std::string &addr, const std::string &s_name,
-                    const u32 &my_id) -> Result<> {
+                    const u32 &my_id, Arc<UD> qp) -> Result<> {
 
     // avoid re-connect
     // re-connect must establish a new QP
@@ -52,7 +51,7 @@ struct UDTransport : public STrait<UDTransport> {
 
     auto ud_attr = std::get<1>(fetch_qp_attr_res.desc);
 
-    this->session = std::make_unique<UDSession>(my_id, qp, ud_attr);
+    this->session = new UDSession(my_id, qp, ud_attr);
 
     // TODO: send an extra connect message to the server
     return ::rdmaio::Ok();

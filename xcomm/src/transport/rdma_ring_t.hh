@@ -1,7 +1,10 @@
 #pragma once
 
-#include "../../../deps/r2/src/ring_msg/mod.hh"
+#include <unordered_map>
+
 #include "./trait.hh"
+
+#include "../../../deps/r2/src/ring_msg/mod.hh"
 
 #include "../../../deps/rlib/core/qps/config.hh"
 
@@ -61,7 +64,8 @@ template <usize R, usize kRingSz, usize kMaxMsg>
 struct RRingRecvTransport
     : public RTrait<RRingRecvTransport<R, kRingSz, kMaxMsg>,
                     RRingTransport<R, kRingSz, kMaxMsg>> {
-  RingRecvIter<R,kRingSz, kMaxMsg> core;
+  using ST = RRingTransport<R, kRingSz, kMaxMsg>;
+  RingRecvIter<R, kRingSz, kMaxMsg> core;
 
   explicit RRingRecvTransport(Arc<Receiver<R, kRingSz, kMaxMsg>> &r)
       : core(r) {}
@@ -74,7 +78,7 @@ struct RRingRecvTransport
 
   auto cur_msg_impl() -> MemBlock { return core.cur_msg(); }
 
-  auto reply_entry_impl() -> RRingTransport<R, kRingSz, kMaxMsg> {
+  auto reply_entry_impl() -> ST {
     return RRingTransport<R, kRingSz, kMaxMsg>(core.cur_session());
   }
 };

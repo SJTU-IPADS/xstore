@@ -54,10 +54,6 @@ public:
   auto reply_entry() -> ST {
     return reinterpret_cast<Derived *>(this)->reply_entry_impl();
   }
-
-  auto reply_entry_ptr() -> ST * {
-    return reinterpret_cast<Derived *>(this)->reply_entry_ptr_impl();
-  }
 };
 
 } // namespace transport

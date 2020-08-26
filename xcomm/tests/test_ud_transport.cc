@@ -9,9 +9,9 @@ TEST(transport, UDBasic) {
   RCtrl ctrl(8888);
 
   auto nic_for_sender = RNic::create(RNicInfo::query_dev_names().at(0)).value();
-  UDTransport t(nic_for_sender, QPConfig());
-  ASSERT(t.connect("localhost:8888","test_server",73) == IOCode::Ok) << " connect failure";
-
+  auto qp = UD::create(nic_for_sender, QPConfig()).value();
+  UDTransport t;
+  ASSERT(t.connect("localhost:8888","test_server",73, qp) == IOCode::Ok) << " connect failure";
 }
 
 int main(int argc, char **argv) {
