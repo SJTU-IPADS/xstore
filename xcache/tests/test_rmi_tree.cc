@@ -138,7 +138,7 @@ TEST(RMI, Tree) {
     ASSERT_TRUE(found);
   }
 
-  // now use counter iterator to test t he accuracy of training
+  // now use counter iterator to test the accuracy of training
   LocalTwoRMI<LR, LR> rmi_idx1(num_rmi);
   // avoid training
   rmi_idx1.first_layer.model_from_serialize(rmi_idx.first_layer.model.serialize());
