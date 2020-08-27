@@ -59,7 +59,7 @@ struct UDTransport : public STrait<UDTransport> {
 
   auto send_impl(const MemBlock &msg, const double &timeout = 1000000)
       -> Result<std::string> {
-    return session->send_pending(msg);
+    return session->send_unsignaled(msg);
   }
 
   auto send_w_key_impl(const MemBlock &msg, const u32 &key,
@@ -77,20 +77,26 @@ struct UDRecvTransport : public RTrait<UDRecvTransport<es>, UDTransport> {
 
   RecvIter<UD, es> iter;
 
-  u32 cur_session_id = 0;
-
   UDRecvTransport(Arc<UD> qp, Arc<RecvEntries<es>> e)
       : qp(qp), recv_entries(e), iter(qp, e) {
   }
 
   void begin_impl() { iter.begin(); }
 
-  void next_impl() { return iter.next(); }
+  void next_impl() {
+    if (this->has_msgs()) {
+      // should post recv if there is current msg slot
+      // TODO
+    }
+    return iter.next();
+  }
 
   auto has_msgs_impl() -> bool { return iter.has_msgs(); }
 
   // 4000: a UD packet can store at most 4K bytes
-  auto cur_msg_impl() -> MemBlock { return MemBlock(std::get<1>(iter.cur_msg()), 4000); }
+  auto cur_msg_impl() -> MemBlock {
+    return MemBlock(std::get<1>(iter.cur_msg().value()) + kGRHSz, 4000);
+  }
 };
 }
 
