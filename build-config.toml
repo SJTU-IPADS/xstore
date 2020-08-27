@@ -2,7 +2,6 @@
 ## The external libs are libs which donot built/cloned by the tool
 mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",include="include"}
 
-
 #[tests]
 #src   = ["deps/r2/src/logging.cc","tests/*.cc","src/stores/*.cc"]
 #extra = ["rocksdb","mkl_rt","boost_serialization","jemalloc"]

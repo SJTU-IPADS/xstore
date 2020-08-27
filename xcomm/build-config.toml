@@ -29,7 +29,7 @@ extra = ["gtest", "ibverbs","boost_system"]
 [[apps]]
 name = "test_rpc"
 src = ["./tests/test_rpc.cc", "../deps/r2/src/logging.cc"]
-extra = ["gtest", "ibverbs"]
+extra = ["gtest", "ibverbs", "boost_system"]
 
 [[apps]]
 name = "test_remote_rw"

@@ -17,7 +17,7 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
   using rpc_func_t = std::function<void(
       const Header &rpc_header, const MemBlock &args, SendTrait *replyc)>;
 
-  SessionManager<Manager, SendTrait,RecvTrait> session_manager;
+  SessionManager<Manager, SendTrait, RecvTrait> session_manager;
 
   ReplyStation reply_station;
   std::vector<rpc_func_t> callbacks;
@@ -42,19 +42,27 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
     usize num = 0;
     for (recv->begin(); recv->has_msgs(); recv->next()) {
       num += 1;
-
       auto cur_msg = recv->cur_msg();
+      auto session_id = recv->cur_session_id();
       ASSERT(cur_msg.sz >= sizeof(Header));
 
+      // parse the RPC header
       Header &h = *(reinterpret_cast<Header *>(cur_msg.mem_ptr));
-      ASSERT(h.payload + sizeof(Header) == cur_msg.sz); // sanity check header and content
+      LOG(4) << h;
+      ASSERT(h.payload + sizeof(Header) <= cur_msg.sz)
+          << "cur msg sz: " << cur_msg.sz
+          << "; payload: " << h.payload
+          << "; session id: " << session_id; // sanity check header and content
+
       MemBlock payload((char *)cur_msg.mem_ptr + sizeof(Header), h.payload);
+      LOG(4) << "Recv req type: " << h.type;
 
       switch (h.type) {
       case Req: {
         try {
-          auto reply_channel = recv->reply_entry();
-          callbacks[h.rpc_id](h, payload, &reply_channel);
+          auto reply_channel =
+              this->session_manager.incoming_sesions[session_id].get();
+          callbacks[h.rpc_id](h, payload, reply_channel);
         } catch (...) {
           ASSERT(false) << "rpc called failed with rpc id " << h.rpc_id;
         }
@@ -66,13 +74,13 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
       }
         break;
       case Connect: {
-        // not implemented
-      }
-        break;
+        this->session_manager.add_new_session(session_id, payload, *recv);
+      } break;
       default:
         ASSERT(false) << "not implemented";
       }
     }
+    recv->end();
     return num;
   }
 };

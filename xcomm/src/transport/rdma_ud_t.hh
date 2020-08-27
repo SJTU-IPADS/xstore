@@ -59,11 +59,23 @@ struct UDTransport : public STrait<UDTransport> {
 
   auto send_impl(const MemBlock &msg, const double &timeout = 1000000)
       -> Result<std::string> {
+    LOG(4) << "send sz: " << msg.sz;
     return session->send_unsignaled(msg);
+  }
+
+  auto get_connect_data_impl() -> r2::Option<std::string> {
+    if (this->session) {
+      std::string ret(sizeof(QPAttr),'0');
+      auto attr = this->session->ud->my_attr();
+      memcpy((void *)ret.data(), &attr, sizeof(QPAttr));
+      return ret;
+    }
+    return {};
   }
 
   auto send_w_key_impl(const MemBlock &msg, const u32 &key,
                        const double &timeout = 1000000) -> Result<std::string> {
+    LOG(4) << "send sz: " << msg.sz << "; key: " << key;
     return session->send_unsignaled(msg,key);
   }
 };
@@ -78,30 +90,56 @@ struct UDRecvTransport : public RTrait<UDRecvTransport<es>, UDTransport> {
   RecvIter<UD, es> iter;
 
   UDRecvTransport(Arc<UD> qp, Arc<RecvEntries<es>> e)
-      : qp(qp), recv_entries(e), iter(qp, e) {
+      : qp(qp), recv_entries(e) {
+    // manally set the entries
+    iter.set_meta(qp, recv_entries);
   }
 
-  void begin_impl() { iter.begin(); }
+  void begin_impl() {
+    iter.begin(qp, recv_entries->wcs);
+  }
+
+  void end_impl() {
+    // post recvs
+    iter.clear();
+  }
 
   void next_impl() {
-    if (this->has_msgs()) {
-      // should post recv if there is current msg slot
-      // TODO
-    }
     return iter.next();
   }
 
   auto has_msgs_impl() -> bool { return iter.has_msgs(); }
 
+  auto cur_session_id_impl() -> u32 {
+    return std::get<0>(iter.cur_msg().value());
+  }
+
   // 4000: a UD packet can store at most 4K bytes
   auto cur_msg_impl() -> MemBlock {
-    return MemBlock(std::get<1>(iter.cur_msg().value()) + kGRHSz, 4000);
+    return MemBlock(
+        reinterpret_cast<char *>(std::get<1>(iter.cur_msg().value())) + kGRHSz,
+        4000);
   }
 };
+
+template <usize es>
+struct UDSessionManager : public SessionManager<UDSessionManager<es>, UDTransport,
+                                                UDRecvTransport<es>> {
+  // assumption: the id is not in the incoming_sessions
+  auto add_impl(const u32 &id, const MemBlock &raw_connect_data, UDRecvTransport<es> &recv_trait) -> Result<> {
+    // should parse this as a UDPtr
+    auto attr_ptr = raw_connect_data.interpret_as<QPAttr>(0);
+    ASSERT(attr_ptr != nullptr);
+
+    auto transport =
+        std::make_unique<UDTransport>(new UDSession(id, recv_trait.qp, *attr_ptr));
+
+    this->incoming_sesions.insert(std::make_pair(id, std::move(transport)));
+
+    return ::rdmaio::Ok();
+  }
+};
+
 }
-
-// TODO: session manager impl
-
-
 
 } // namespace xstore

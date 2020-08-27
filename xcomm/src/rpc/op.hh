@@ -79,8 +79,18 @@ struct RPCOp {
     return true;
   }
 
+  auto add_opaque(const std::string &data) -> bool {
+    if (unlikely(data.size() + this->cur_sz() > this->msg.sz)) {
+      return false;
+    }
+    memcpy(this->cur_ptr, data.data(), data.size());
+    this->cur_ptr += data.size();
+    return true;
+  }
+
   auto finalize() -> RPCOp & {
     this->header.payload = this->cur_sz() - sizeof(Header);
+    LOG(4) << "At sender: " << this->header;
     *(reinterpret_cast<Header *>(this->msg.mem_ptr)) = this->header;
     this->msg.sz = this->header.payload + sizeof(Header);
     return *this;
@@ -91,7 +101,19 @@ struct RPCOp {
     return s->send(this->finalize().msg);
   }
 
+  template <typename SendTrait>
+  auto execute_w_key(SendTrait *s, const u32 &lkey) -> Result<std::string> {
+    return s->send_w_key(this->finalize().msg,lkey);
+  }
+
   auto cur_sz() -> usize { return cur_ptr - (char *)msg.mem_ptr; }
+
+  static auto get_connect_op(const MemBlock &msg, const std::string &opaque_data)
+      -> RPCOp {
+    RPCOp op;
+    op.set_msg(msg).set_connect().add_opaque(opaque_data);
+    return op;
+  }
 };
 
 } // namespace rpc

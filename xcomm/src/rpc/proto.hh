@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "../../../deps/r2/src/common.hh"
 
 /*!
@@ -39,6 +41,11 @@ struct __attribute__((packed)) Header {
   u32 rpc_id : 5;
   u32 payload : 18;
   u32 cor_id : 7;
+
+  friend std::ostream &operator<<(std::ostream &os, const Header &h) {
+    os << "type:" << h.type << "; rpc_id: " << h.rpc_id << "; payload:"  << h.payload
+       << " cor_id: " << h.cor_id;
+  }
 } __attribute__((aligned(sizeof(u64))));
 
 } // namespace rpc
