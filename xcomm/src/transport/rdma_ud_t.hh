@@ -54,7 +54,6 @@ struct UDTransport : public STrait<UDTransport> {
 
     this->session = new UDSession(my_id, qp, ud_attr);
 
-    // TODO: send an extra connect message to the server
     return ::rdmaio::Ok();
   }
 
@@ -71,9 +70,7 @@ struct UDTransport : public STrait<UDTransport> {
 
 // TODO: recv end point not implemented
 template <usize es>
-struct UDRecvTransport : public RTrait<UDRecvTransport, UDTransport> {
-
-  std::unordered_map<u32, UDTransport> incoming_sessions;
+struct UDRecvTransport : public RTrait<UDRecvTransport<es>, UDTransport> {
 
   Arc<UD> qp;
   Arc<RecvEntries<es>> recv_entries;
@@ -92,7 +89,8 @@ struct UDRecvTransport : public RTrait<UDRecvTransport, UDTransport> {
 
   auto has_msgs_impl() -> bool { return iter.has_msgs(); }
 
-  auto cur_msg_impl() -> MemBlock { return core.cur_msg(); }
+  // 4000: a UD packet can store at most 4K bytes
+  auto cur_msg_impl() -> MemBlock { return MemBlock(std::get<1>(iter.cur_msg()), 4000); }
 };
 }
 

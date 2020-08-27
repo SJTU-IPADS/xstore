@@ -16,8 +16,4 @@ host = "val2"
 path = "/cock/xstore/xcomm"
 cmd  = "./test_ud"
 
-[[pass]]
-host = "val2"
-path = "/cock/xstore/xcomm"
-cmd  = "./test_transport;"
 

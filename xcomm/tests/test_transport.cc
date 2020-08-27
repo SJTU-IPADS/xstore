@@ -3,6 +3,8 @@
 #include "../src/transport/rdma_ring_t.hh"
 #include "../../xutils/huge_region.hh"
 
+#if 0
+
 namespace test {
 
 using namespace r2;
@@ -51,7 +53,6 @@ template <typename Nat> Nat align(const Nat &x, const Nat &a) {
 
 TEST(rpc, basic) {
   // This test has been abandoned due to trait API changes
-#if 0
   RCtrl ctrl(8888);
   RingManager<128> rm(ctrl);
 
@@ -150,8 +151,8 @@ TEST(rpc, basic) {
   }
   LOG(4) << "Total:" << count  * 2<< " msgs transfered";
 }
-#endif
 }
+#endif
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
