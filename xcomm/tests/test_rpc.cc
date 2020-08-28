@@ -129,12 +129,12 @@ TEST_F(RPC, basic) {
   while (true) {
     // recv rpc calls
     counter += rpc.recv_event_loop(&recv);
-    LOG(4) << "execute: " << counter << " rpcs"; sleep(1);
+    //LOG(4) << "execute: " << counter << " rpcs"; sleep(1);
     // recv reply
     rpc.recv_event_loop(&recv_s);
 #if 1
     if (rpc.reply_station.cor_ready(2)) {
-      LOG(4) << "coroutine ready!";
+      //LOG(4) << "coroutine ready!";
       // we have received the reply
       RPCOp op;
       op.set_msg(MemBlock((char *)send_buf + 2048, 2048))

@@ -48,14 +48,12 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
 
       // parse the RPC header
       Header &h = *(reinterpret_cast<Header *>(cur_msg.mem_ptr));
-      LOG(4) << h;
       ASSERT(h.payload + sizeof(Header) <= cur_msg.sz)
           << "cur msg sz: " << cur_msg.sz
           << "; payload: " << h.payload
           << "; session id: " << session_id; // sanity check header and content
 
       MemBlock payload((char *)cur_msg.mem_ptr + sizeof(Header), h.payload);
-      LOG(4) << "Recv req type: " << h.type;
 
       switch (h.type) {
       case Req: {

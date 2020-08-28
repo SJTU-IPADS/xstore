@@ -90,7 +90,6 @@ struct RPCOp {
 
   auto finalize() -> RPCOp & {
     this->header.payload = this->cur_sz() - sizeof(Header);
-    LOG(4) << "At sender: " << this->header;
     *(reinterpret_cast<Header *>(this->msg.mem_ptr)) = this->header;
     this->msg.sz = this->header.payload + sizeof(Header);
     return *this;

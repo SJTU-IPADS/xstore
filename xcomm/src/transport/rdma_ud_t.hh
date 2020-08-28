@@ -59,7 +59,6 @@ struct UDTransport : public STrait<UDTransport> {
 
   auto send_impl(const MemBlock &msg, const double &timeout = 1000000)
       -> Result<std::string> {
-    LOG(4) << "send sz: " << msg.sz;
     return session->send_unsignaled(msg);
   }
 
@@ -75,7 +74,6 @@ struct UDTransport : public STrait<UDTransport> {
 
   auto send_w_key_impl(const MemBlock &msg, const u32 &key,
                        const double &timeout = 1000000) -> Result<std::string> {
-    LOG(4) << "send sz: " << msg.sz << "; key: " << key;
     return session->send_unsignaled(msg,key);
   }
 };
