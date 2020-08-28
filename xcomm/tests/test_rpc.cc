@@ -152,6 +152,7 @@ TEST_F(RPC, basic) {
     }
   }
   ASSERT_LE(counter, 102400);
+  LOG(4) << "done; total: " << counter << " processed";
 }
 } // namespace test
 
