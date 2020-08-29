@@ -8,6 +8,11 @@ name = "bench_ud"
 src = ["./benchs/bench_ud.cc", "../deps/r2/src/logging.cc"]
 extra = ["boost_system","boost_coroutine", "pthread"]
 
+[[apps]]
+name = "rpc_server"
+src = ["./benchs/rpc_server.cc", "../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
+
 
 ######################### start test apps ################################
 ## test apps
@@ -47,6 +52,10 @@ name = "test_con_rw"
 src = ["./tests/test_local_concurrent.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest","pthread"]
 ########################## end test apps ################################
+
+[includes]
+## cmake add subdirectory
+ggflags = {url = "https://github.com/gflags/gflags.git",include="include"}
 
 
 [externals]
