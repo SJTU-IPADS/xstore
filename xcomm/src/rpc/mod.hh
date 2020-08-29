@@ -113,7 +113,7 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
         case Reply: {
           // pass
           auto ret = this->reply_station.append_reply(h.cor_id, payload);
-          ASSERT(ret);
+          ASSERT(ret) << "add reply for: " << h.cor_id << " error";
 
           if (this->reply_station.cor_ready(h.cor_id)) {
             sshed.addback_coroutine(h.cor_id);

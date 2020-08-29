@@ -12,6 +12,7 @@ namespace bench {
 
 using namespace xstore::rpc;
 using namespace xstore::transport;
+using namespace test;
 
 // prepare the sender transport
 using SendTrait = UDTransport;
@@ -32,7 +33,7 @@ void bench_callback(const Header &rpc_header, const MemBlock &args,
   char reply_buf[64];
   op.set_msg(MemBlock(reply_buf, 64))
       .set_reply()
-      .set_corid(2)
+      .set_corid(rpc_header.cor_id)
       .add_arg<u64>(73 + 1);
   auto ret = op.execute(replyc);
   ASSERT(ret == IOCode::Ok);
@@ -60,11 +61,31 @@ int main(int argc, char **argv) {
       auto nic_for_recv = RNic::create(RNicInfo::query_dev_names().at(0)).value();
       auto qp_recv = UD::create(nic_for_recv, QPConfig()).value();
 
+      // some bootstrap code
+      // prepare UD recv buffer
+      auto mem_region = HugeRegion::create(64 * 1024 * 1024).value();
+      auto mem = mem_region->convert_to_rmem().value();
+
+      auto handler = RegHandler::create(mem, nic_for_recv).value();
+      SimpleAllocator alloc(mem, handler->get_reg_attr().value());
+
+      auto recv_rs_at_recv =
+          RecvEntriesFactory<SimpleAllocator, 2048, 4096>::create(alloc);
+      {
+        auto res = qp_recv->post_recvs(*recv_rs_at_recv, 2048);
+        RDMA_ASSERT(res == IOCode::Ok);
+      }
+
       ctrl.registered_qps.reg("b" + std::to_string(thread_id), qp_recv);
       LOG(4) << "server thread #" << thread_id << " started!";
 
+      RPCCore<SendTrait, RecvTrait, SManager> rpc(12);
+      rpc.reg_callback(bench_callback);
+      UDRecvTransport<2048> recv(qp_recv, recv_rs_at_recv);
+
       usize epoches = 0;
       while (1) {
+        rpc.recv_event_loop(&recv);
         epoches += 1;
         if (epoches > 100) {
           break;
