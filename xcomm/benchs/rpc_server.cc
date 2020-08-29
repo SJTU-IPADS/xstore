@@ -39,6 +39,14 @@ void bench_callback(const Header &rpc_header, const MemBlock &args,
   ASSERT(ret == IOCode::Ok);
 }
 
+volatile bool running = true;
+
+// this benchmark simply returns a null reply
+void bench_stop(const Header &rpc_header, const MemBlock &args,
+                    SendTrait *replyc) {
+  running = false;
+}
+
 RCtrl ctrl(8888);
 
 }
@@ -81,16 +89,14 @@ int main(int argc, char **argv) {
 
       RPCCore<SendTrait, RecvTrait, SManager> rpc(12);
       rpc.reg_callback(bench_callback);
+      rpc.reg_callback(bench_stop);
+
       UDRecvTransport<2048> recv(qp_recv, recv_rs_at_recv);
 
       usize epoches = 0;
-      while (1) {
+      while (running) {
+        r2::compile_fence();
         rpc.recv_event_loop(&recv);
-        epoches += 1;
-        if (epoches > 100) {
-          break;
-        }
-        sleep(1);
       }
 
       return 0;

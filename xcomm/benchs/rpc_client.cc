@@ -76,31 +76,55 @@ int main(int argc, char **argv) {
           SScheduler ssched;
           rpc.reg_poll_future(ssched, &recv_s);
 
+          usize total_processed = 0;
+
           // TODO: spawn coroutines for sending the reqs
           for (uint i = 0; i < FLAGS_coros; ++i) {
-            ssched.spawn([&sender, &rpc, lkey, send_buf](R2_ASYNC) {
+            ssched.spawn([&total_processed,&sender, &rpc, lkey, send_buf](R2_ASYNC) {
               char reply_buf[1024];
-              RPCOp op;
-              op.set_msg(MemBlock((char *)send_buf + 2048, 2048))
-                  .set_req()
-                  .set_rpc_id(0)
-                  .set_corid(R2_COR_ID())
-                  .add_one_reply(rpc.reply_station,
-                                 {.mem_ptr = reply_buf, .sz = 1024})
-                  .add_arg<u64>(73);
-              ASSERT(rpc.reply_station.cor_ready(R2_COR_ID()) == false);
-              auto ret = op.execute_w_key(&sender, lkey);
-              ASSERT(ret == IOCode::Ok);
 
-              // yield the coroutine to wait for reply
-              R2_PAUSE_AND_YIELD;
-              // the reply is done
-              ASSERT(false) << "recv rpc reply: " << *((u64 *)reply_buf);
+              while (1) {
+                RPCOp op;
+                op.set_msg(MemBlock((char *)send_buf + 2048, 2048))
+                    .set_req()
+                    .set_rpc_id(0)
+                    .set_corid(R2_COR_ID())
+                    .add_one_reply(rpc.reply_station,
+                                   {.mem_ptr = reply_buf, .sz = 1024})
+                    .add_arg<u64>(73);
+                ASSERT(rpc.reply_station.cor_ready(R2_COR_ID()) == false);
+                auto ret = op.execute_w_key(&sender, lkey);
+                ASSERT(ret == IOCode::Ok);
 
+                // yield the coroutine to wait for reply
+                R2_PAUSE_AND_YIELD;
+                // the reply is done
+                // ASSERT(false) << "recv rpc reply: " << *((u64 *)reply_buf);
+                total_processed += 1;
+                if (total_processed > 100000) {
+                  break;
+                }
+              }
+
+              LOG(4) << "coros: " << R2_COR_ID() << " exit";
+
+              if (R2_COR_ID() == FLAGS_coros) {
+                // send an RPC to stop the server
+                RPCOp op;
+                op.set_msg(MemBlock((char *)send_buf + 2048, 2048))
+                    .set_req()
+                    .set_rpc_id(1) // stop
+                    .set_corid(R2_COR_ID());
+                auto ret = op.execute_w_key(&sender, lkey);
+                ASSERT(ret == IOCode::Ok);
+
+                R2_STOP();
+              }
               R2_RET;
             });
           }
           ssched.run();
+          LOG(4) << "after run, total processed: " << total_processed << " at client: " << thread_id;
 
           return 0;
         })));
@@ -114,6 +138,6 @@ int main(int argc, char **argv) {
     w->join();
   }
 
-  LOG(4) << "rpc server finishes";
+  LOG(4) << "rpc client finishes";
   return 0;
 }
