@@ -3,10 +3,11 @@
 #include "../tests/transport_util.hh"
 
 #include "../src/rpc/mod.hh"
-
 #include "../src/transport/rdma_ud_t.hh"
 
 #include "../../deps/r2/src/thread.hh"
+
+#include "../../benchs/reporter.hh"
 
 namespace bench {
 
@@ -23,6 +24,7 @@ using SManager = UDSessionManager<2048>;
 } // namespace bench
 
 using namespace bench;
+using namespace xstore::bench;
 
 DEFINE_int64(threads, 1, "num client thread used");
 DEFINE_int64(coros, 1, "num client coroutine used per threads");
@@ -36,9 +38,11 @@ int main(int argc, char **argv) {
 
   std::vector<std::unique_ptr<XThread>> workers;
 
+  std::vector<Statics> statics(FLAGS_threads);
+
   for (uint thread_id = 0; thread_id < FLAGS_threads; ++thread_id) {
     workers.push_back(
-        std::move(std::make_unique<XThread>([thread_id]() -> usize {
+        std::move(std::make_unique<XThread>([&statics, thread_id]() -> usize {
           auto nic_for_sender =
               RNic::create(RNicInfo::query_dev_names().at(0)).value();
           auto qp = UD::create(nic_for_sender, QPConfig()).value();
@@ -80,7 +84,8 @@ int main(int argc, char **argv) {
 
           // TODO: spawn coroutines for sending the reqs
           for (uint i = 0; i < FLAGS_coros; ++i) {
-            ssched.spawn([&total_processed,&sender, &rpc, lkey, send_buf](R2_ASYNC) {
+            ssched.spawn([&statics, &total_processed, &sender, &rpc, lkey,
+                          send_buf, thread_id](R2_ASYNC) {
               char reply_buf[1024];
 
               while (1) {
@@ -101,7 +106,8 @@ int main(int argc, char **argv) {
                 // the reply is done
                 // ASSERT(false) << "recv rpc reply: " << *((u64 *)reply_buf);
                 total_processed += 1;
-                if (total_processed > 100000) {
+                statics[thread_id].increment();
+                if (total_processed > 10000000) {
                   break;
                 }
               }
@@ -124,7 +130,8 @@ int main(int argc, char **argv) {
             });
           }
           ssched.run();
-          LOG(4) << "after run, total processed: " << total_processed << " at client: " << thread_id;
+          LOG(4) << "after run, total processed: " << total_processed
+                 << " at client: " << thread_id;
 
           return 0;
         })));
@@ -133,6 +140,8 @@ int main(int argc, char **argv) {
   for (auto &w : workers) {
     w->start();
   }
+
+  Reporter::report_thpt(statics, 10);
 
   for (auto &w : workers) {
     w->join();
