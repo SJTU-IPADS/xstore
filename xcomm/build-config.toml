@@ -13,6 +13,11 @@ name = "rpc_server"
 src = ["./benchs/rpc_server.cc", "../deps/r2/src/logging.cc"]
 extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
 
+[[apps]]
+name = "rpc_client"
+src = ["./benchs/rpc_client.cc", "../deps/r2/src/logging.cc", "../deps/r2/src/sshed.cc"]
+extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
+
 
 ######################### start test apps ################################
 ## test apps

@@ -55,9 +55,29 @@ int main(int argc, char **argv) {
   std::vector<std::unique_ptr<XThread>> workers;
 
   for (uint i = 0; i < FLAGS_threads; ++i) {
-    workers.push_back(
-        std::move(std::make_unique<XThread>([]() -> usize { return 0; })));
+    workers.push_back(std::move(std::make_unique<XThread>([i]() -> usize {
+      auto thread_id = i;
+      auto nic_for_recv = RNic::create(RNicInfo::query_dev_names().at(0)).value();
+      auto qp_recv = UD::create(nic_for_recv, QPConfig()).value();
+
+      ctrl.registered_qps.reg("b" + std::to_string(thread_id), qp_recv);
+      LOG(4) << "server thread #" << thread_id << " started!";
+
+      usize epoches = 0;
+      while (1) {
+        epoches += 1;
+        if (epoches > 100) {
+          break;
+        }
+        sleep(1);
+      }
+
+      return 0;
+    })));
   }
+
+  ctrl.start_daemon();
+
   for (auto &w : workers) {
     w->start();
   }
