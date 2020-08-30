@@ -27,3 +27,9 @@ cpptoml =  {url = "https://github.com/skystrife/cpptoml.git" }
 
 [config]
 std = "c++17"
+
+[[apps]]
+name = "rw_client"
+src = ["./benchs/bench_basic_rw.cc", "./deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
+
