@@ -25,6 +25,7 @@ public:
       ASSERT(false);
       return ::rdmaio::Err();
     }
+    dest.sz = sizeof(WrappedType<T>);
 
   retry:
     this->retry_cnt = 0;
@@ -36,7 +37,7 @@ public:
 
     // 2. check consistent
     r2::compile_fence();
-    // unsafe code
+    // check consistency
     WrappedType<T> *v_p = reinterpret_cast<WrappedType<T> *>(dest.mem_ptr);
     if (unlikely(!v_p->consistent())) {
       // if (vs->seq != pseq) {

@@ -20,6 +20,7 @@ template <typename T> struct __attribute__((packed)) WrappedType {
   volatile u32 seq = kInvalidSeq + 1;
   T payload;
   volatile u32 seq_check;
+
  public:
   WrappedType(const T &p) : payload(p) {
     this->init();
@@ -50,23 +51,27 @@ template <typename T> struct __attribute__((packed)) WrappedType {
   }
 
   inline bool consistent() const {
-    return this->seq == this->seq_check;
+    return (this->seq == this->seq_check) && (this->seq != kInvalidSeq);
   }
 
   /*
     To perform an update on the object atomically,
     one must first call the before write, and then call the done write
    */
-  inline void begin_write() {
-    this->seq_check += 1;
+  inline auto begin_write() -> u32 {
+    auto ret = this->seq_check;
+    this->seq_check = kInvalidSeq;
     this->seq = kInvalidSeq;
     ::r2::compile_fence();
+    return ret;
   }
 
-  inline void done_write() {
+  // seq must be the return value of begin_write
+  inline void done_write(const u32 &seq) {
     // the update of *seqs* should after previous writes
     ::r2::compile_fence();
-    this->seq = this->seq_check;
+    this->seq = seq + 1;
+    this->seq_check = this->seq;
     ::r2::compile_fence();
   }
 } __attribute__((aligned(64)));

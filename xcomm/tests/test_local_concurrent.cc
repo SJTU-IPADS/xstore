@@ -49,7 +49,7 @@ TEST(AtomicRW, local_concurrent_rw_64) {
 
           r2::compile_fence();
           // update
-          o.begin_write();
+          auto res = o.begin_write();
           {
             LocalRWOp().write(MemBlock(o.get_payload().data, str.size()),
                               MemBlock((char *)str.data(), str.size()));
@@ -57,7 +57,7 @@ TEST(AtomicRW, local_concurrent_rw_64) {
             o.get_payload().checksum = checksum;
             ASSERT(!o.consistent());
           }
-          o.done_write();
+          o.done_write(res);
           auto re_checksum = ::test::simple_checksum(o.get_payload().data,
                                                      o.get_payload().sz());
           ASSERT(re_checksum == checksum) << re_checksum << " " << checksum;
@@ -79,7 +79,6 @@ TEST(AtomicRW, local_concurrent_rw_64) {
 
         MemBlock src(&o, sizeof(Obj64));
         MemBlock dst(new char[sizeof(Obj64)], sizeof(Obj64));
-
 
         while (!update_exit) {
           //op.read(src, dst);  // shoud fail

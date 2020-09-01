@@ -55,7 +55,7 @@ TEST(AtomicRW, RemoteRWConcurrent) {
   using TestThread = r2::Thread<usize>;
 
   // main test body
-  using TO = TestObj<32>;
+  using TO = TestObj<100>;
   using Obj64 = WrappedType<TO>;
   LOG(4) << "test obj sz:" << sizeof(Obj64)
          << "; internal obj sz: " << sizeof(TO);
@@ -85,15 +85,16 @@ TEST(AtomicRW, RemoteRWConcurrent) {
 
           r2::compile_fence();
           // update
-          o->begin_write();
+          auto res = o->begin_write();
           {
-            LocalRWOp().write(MemBlock(o->get_payload().data, str.size()),
+            LocalRWOp().write(MemBlock(o->get_payload_ptr()->data, str.size()),
                               MemBlock((char *)str.data(), str.size()));
 
             o->get_payload().checksum = checksum;
             ASSERT(!o->consistent());
           }
-          o->done_write();
+          r2::compile_fence();
+          o->done_write(res);
           auto re_checksum = ::test::simple_checksum(o->get_payload().data,
                                                      o->get_payload().sz());
           ASSERT(re_checksum == checksum) << re_checksum << " " << checksum;

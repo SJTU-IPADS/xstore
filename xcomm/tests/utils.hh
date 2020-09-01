@@ -17,7 +17,7 @@ template <usize N> struct __attribute__((packed))  TestObj {
   char data[N];
   u64 checksum = 0;
   inline auto sz() -> usize { return N; }
-};
+} __attribute__((aligned(sizeof(u64))));
 
 // random string generator from
 // https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
