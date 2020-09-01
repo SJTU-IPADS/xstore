@@ -3,7 +3,6 @@
 - `cmake .;`
 - `make -j12;`
 
-
 #### Unit tests
 Check `./build-config.toml` for test apps.
 
