@@ -7,6 +7,7 @@
 
 DEFINE_int64(threads, 1, "num client thread to use");
 DEFINE_int64(coros, 1, "num client coroutine used per threads");
+DEFINE_int64(payload, 8, "value payload the client would fetch");
 DEFINE_string(addr, "localhost:8888", "server address");
 
 namespace bench {}

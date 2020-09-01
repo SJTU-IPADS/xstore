@@ -55,7 +55,7 @@ TEST(AtomicRW, RemoteRWConcurrent) {
   using TestThread = r2::Thread<usize>;
 
   // main test body
-  using TO = TestObj<256>;
+  using TO = TestObj<32>;
   using Obj64 = WrappedType<TO>;
   LOG(4) << "test obj sz:" << sizeof(Obj64)
          << "; internal obj sz: " << sizeof(TO);
@@ -91,6 +91,7 @@ TEST(AtomicRW, RemoteRWConcurrent) {
                               MemBlock((char *)str.data(), str.size()));
 
             o->get_payload().checksum = checksum;
+            ASSERT(!o->consistent());
           }
           o->done_write();
           auto re_checksum = ::test::simple_checksum(o->get_payload().data,
@@ -108,15 +109,17 @@ TEST(AtomicRW, RemoteRWConcurrent) {
         std::make_unique<TestThread>([&o, &succ_read_cnt, &update_exit, qpp, dst_loc]() -> usize {
         LocalRWOp op;
         OrderedRWOp op1;
-        RDMARWOp op2(qpp);
 
         MemBlock src(reinterpret_cast<void *>(0), sizeof(Obj64));
         MemBlock dst(dst_loc, sizeof(Obj64));
 
         while (!update_exit) {
+          RDMARWOp op2(qpp);
+
           //op.read(src, dst);  // shoud fail
           AtomicRW().atomic_read<TO>(op2, src, dst); // should work
-          //op2.read(src,dst);
+          //AtomicRW().atomic_read<TO>(op, src, dst); // should work
+          // op2.read(src,dst);
           Obj64 *ro = reinterpret_cast<Obj64 *>(dst.mem_ptr);
           const usize ccc = ::test::simple_checksum(ro->get_payload().data,
                                                     ro->get_payload().sz());
@@ -124,7 +127,7 @@ TEST(AtomicRW, RemoteRWConcurrent) {
           ASSERT(ccc == compare)
               << "ccc: " << ccc << " " << compare << "; " << 0x0 << " "
               << ro->seq << "; seqs: " << ro->seq_check;
-          //ASSERT(ro->consistent());
+          ASSERT(ro->consistent());
           succ_read_cnt += 1;
         }
         LOG(4) << "succ read cnt: " << succ_read_cnt;
