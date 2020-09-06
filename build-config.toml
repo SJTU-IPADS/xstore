@@ -33,3 +33,8 @@ name = "rw_client"
 src = ["./benchs/bench_basic_rw.cc", "./deps/r2/src/logging.cc"]
 extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
 
+[[apps]]
+name = "rw_server"
+src = ["./benchs/basic_rw_server.cc", "./deps/r2/src/logging.cc"]
+extra = ["gflags","ibverbs"]
+
