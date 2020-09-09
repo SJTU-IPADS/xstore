@@ -5,11 +5,11 @@
 
 #include <gflags/gflags.h>
 
-#include "../xcomm/src/lib.hh"
 #include "../xcomm/src/atomic_rw/rdma_rw_op.hh"
+#include "../xcomm/src/lib.hh"
 
-#include "./reporter.hh"
 #include "../deps/r2/src/thread.hh"
+#include "./reporter.hh"
 
 #include "../deps/rlib/core/lib.hh"
 
@@ -18,6 +18,8 @@ DEFINE_int64(coros, 1, "num client coroutine used per threads");
 DEFINE_int64(nic_idx, 0, "which RNIC to use");
 DEFINE_int64(payload, 8, "value payload the client would fetch");
 DEFINE_string(addr, "localhost:8888", "server address");
+DEFINE_string(client_name, "xx", "Unique client name");
+DEFINE_int64(reg_mem_name, 73, "The name to register an MR at rctrl.");
 
 namespace bench {
 
@@ -26,9 +28,10 @@ using namespace xcomm;
 using namespace xstore::bench;
 using namespace r2;
 using namespace rdmaio;
+using namespace rdmaio::qp;
 
 using XThread = ::r2::Thread<usize>;
-}
+} // namespace bench
 
 using namespace bench;
 
@@ -41,12 +44,54 @@ int main(int argc, char **argv) {
   std::vector<Statics> statics(FLAGS_threads);
 
   for (uint thread_id = 0; thread_id < FLAGS_threads; ++thread_id) {
-    workers.push_back(
-        std::move(std::make_unique<XThread>([&statics, thread_id]() -> usize {
-          auto nic = RNic::create(RNicInfo::query_dev_names().at(FLAGS_nic_idx)).value();
+    workers.push_back(std::move(std::make_unique<XThread>([&statics,
+                                                           thread_id]()
+                                                              -> usize {
+      auto nic =
+          RNic::create(RNicInfo::query_dev_names().at(FLAGS_nic_idx)).value();
 
-          return 0;
-        })));
+      auto qp = RC::create(nic, QPConfig()).value();
+
+      // 2. create the pair QP at server using CM
+      ConnectManager cm(FLAGS_addr);
+      if (cm.wait_ready(1000000, 2) ==
+          IOCode::Timeout) // wait 1 second for server to ready, retry 2 times
+        RDMA_ASSERT(false) << "cm connect to server timeout";
+
+      auto qp_res =
+          cm.cc_rc(FLAGS_client_name + " thread-qp" + std::to_string(thread_id),
+                   qp, FLAGS_nic_idx, QPConfig());
+      RDMA_ASSERT(qp_res == IOCode::Ok) << std::get<0>(qp_res.desc);
+
+      auto key = std::get<1>(qp_res.desc);
+      RDMA_LOG(4) << "t-" << thread_id << " fetch QP authentical key: " << key;
+
+      auto local_mem = Arc<RMem>(new RMem(1024 * 1024 * 20)); // 20M
+      auto local_mr = RegHandler::create(local_mem, nic).value();
+
+      auto fetch_res = cm.fetch_remote_mr(FLAGS_reg_mem_name);
+      RDMA_ASSERT(fetch_res == IOCode::Ok) << std::get<0>(fetch_res.desc);
+      rmem::RegAttr remote_attr = std::get<1>(fetch_res.desc);
+
+      qp->bind_remote_mr(remote_attr);
+      qp->bind_local_mr(local_mr->get_reg_attr().value());
+
+      SScheduler ssched;
+      r2::compile_fence();
+      for (int i = 0; i < FLAGS_coros; ++i) {
+        ssched.spawn([qp, i, &remote_attr](R2_ASYNC) {
+          while (true) {
+            // TODO:impl
+            if (i == FLAGS_coros - 1)
+              R2_STOP();
+            R2_RET;
+          }
+        });
+      }
+      ssched.run();
+
+      return 0;
+    })));
   }
 
   for (auto &w : workers) {
