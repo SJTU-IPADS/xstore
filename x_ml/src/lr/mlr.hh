@@ -9,20 +9,23 @@ namespace xml {
 
 /*!
   Unlike LR, MLR(multi-variate LR) would predict a value from [0:base)
+  BT:  type of the area; usually is usize;
+  LRT: a base LR model for prediction;
+  Key: the key used to predict.
  */
 // BT states for BaseType
-template <typename BT = u32, typename LRT = CompactLR>
-struct __attribute__((packed)) MLR : public MLTrait<MLR<BT,LRT>> {
-  using Self = MLR<BT,LRT>;
-  LRT       lr;
-  BT        base;
+template <typename BT = u32, template<typename> class LRT = CompactLR, typename Key = XKey>
+struct __attribute__((packed)) MLR : public MLTrait<MLR<BT,LRT,Key>, Key> {
+  using Self = MLR<BT,LRT,Key>;
+  LRT<Key>       lr;
+  BT             base;
 
   void set_base(const BT &b) {
     this->base = b;
   }
 
-  auto predict_impl(const u64 &key) -> double {
-    auto res = this->lr.predict_impl(key);
+  auto predict_impl(const Key &key) -> double {
+    auto res = this->lr.predict(key);
     if (res < 0) {
       res = 0;
     } else if (res > base) {
@@ -31,9 +34,9 @@ struct __attribute__((packed)) MLR : public MLTrait<MLR<BT,LRT>> {
     return res;
   }
 
-  void train_impl(std::vector<u64> &train_data, std::vector<u64> &train_label,
+  void train_impl(std::vector<Key> &train_data, std::vector<u64> &train_label,
                   int step) {
-    this->lr.train_impl(train_data, train_label,step);
+    this->lr.train(train_data, train_label,step);
   }
 
   auto serialize_impl() -> std::string {

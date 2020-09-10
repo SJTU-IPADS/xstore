@@ -8,24 +8,25 @@
 
 namespace test {
 
+using namespace xstore;
 using namespace xstore::xml;
 using namespace xstore::util;
 
 TEST(XML, LR) {
-  std::vector<u64> train_set;
+  std::vector<XKey> train_set;
   std::vector<u64> labels;
 
   double w = 73;
   double b = 0xdeadbeaf;
 
-  LR base(w,b);
+  LR<XKey> base(w,b);
 
   for (uint i = 0;i < 120; ++ i) {
-    train_set.push_back(i);
-    labels.push_back(base.predict(i));
+    train_set.push_back(XKey(i));
+    labels.push_back(base.predict(XKey(i)));
   }
 
-  LR trained;
+  LR<XKey> trained;
   ASSERT_NE(trained.w, base.w);
   trained.train(train_set, labels);
 
@@ -35,20 +36,20 @@ TEST(XML, LR) {
 
 TEST(LR, OTHERS) {
   // test other LR
-  std::vector<u64> train_set;
+  std::vector<XKey> train_set;
   std::vector<u64> labels;
 
   double w = 73;
   double b = 0xdeadbeaf;
 
-  LR base(w, b);
+  LR<XKey> base(w, b);
 
   for (uint i = 0; i < 120; ++i) {
-    train_set.push_back(i);
-    labels.push_back(base.predict(i));
+    train_set.push_back(XKey(i));
+    labels.push_back(base.predict(XKey(i)));
   }
 
-  CompactLR clr;
+  CompactLR<XKey> clr;
   clr.train(train_set, labels);
   ASSERT_NEAR(static_cast<double>(clr.w), w,0.01);
   ASSERT_NEAR(static_cast<double>(clr.b), b, 100);
@@ -62,10 +63,15 @@ TEST(LR, OTHERS) {
 }
 
 TEST(MLR, basic) {
-  using MLRT = MLR<u32, CompactLR>;
+  using MLRT = MLR<u32, CompactLR,XKey>;
   MLRT mlr;
 
-  std::vector<u64> train_set = {0, 1, 2, 9, 10};
+  std::vector<u64> keys = {0, 1, 2, 9, 10};
+  std::vector<XKey> train_set;
+  for (auto k : keys) {
+    train_set.push_back(XKey(k));
+  }
+
   std::vector<u64> labels = {0, 1, 2, 3, 4};
 
   mlr.train(train_set, labels);
@@ -79,10 +85,15 @@ TEST(MLR, basic) {
 
 TEST(LR, Serialize) {
 
-  using MLRT = MLR<u32, CompactLR>;
+  using MLRT = MLR<u32, CompactLR,XKey>;
   MLRT mlr;
 
-  std::vector<u64> train_set = {0, 1, 2, 9, 10};
+  std::vector<u64> keys = {0, 1, 2, 9, 10};
+  std::vector<XKey> train_set;
+  for (auto k : keys) {
+    train_set.push_back(XKey(k));
+  }
+
   std::vector<u64> labels = {0, 1, 2, 3, 4};
 
   mlr.train(train_set, labels);
@@ -99,10 +110,10 @@ TEST(LR, Serialize) {
 
   // serialize LR
   {
-    LR lr;
+    LR<XKey> lr;
     lr.train(train_set, labels);
     auto s = lr.serialize();
-    LR lr1;
+    LR<XKey> lr1;
     lr1.from_serialize(s);
     ASSERT_EQ(lr1.w, lr.w);
     ASSERT_EQ(lr1.b, lr.b);

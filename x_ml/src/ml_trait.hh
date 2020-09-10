@@ -15,13 +15,13 @@ namespace xml {
   It also abstracts away methods for serializing so that we can
   pass this model to different processes (possibly on a different machine).
  */
-template <class Derived> class MLTrait {
+template <class Derived, typename Key> class MLTrait {
 public:
-  auto predict(const u64 &key) -> double {
+  auto predict(const Key &key) -> double {
     return reinterpret_cast<Derived *>(this)->predict_impl(key);
   }
 
-  void train(std::vector<u64> &train_data, std::vector<u64> &train_label,
+  void train(std::vector<Key> &train_data, std::vector<u64> &train_label,
              int step = 1) {
     return reinterpret_cast<Derived *>(this)->train_impl(train_data,
                                                          train_label, step);
@@ -39,6 +39,6 @@ public:
   }
 };
 
-} // namespace ml
+} // namespace xml
 
 } // namespace xstore

@@ -14,7 +14,8 @@ namespace xml {
 /*!
   Core LR Model, leverage MKL for training
  */
-struct __attribute__((packed))  LR : public MLTrait<LR> {
+template <typename Key>
+struct __attribute__((packed)) LR : public MLTrait<LR<Key>, Key> {
   double w;
   double b;
 
@@ -22,11 +23,12 @@ struct __attribute__((packed))  LR : public MLTrait<LR> {
 
   LR(const double &w, const double &b) : w(w), b(b) {}
 
-  auto predict_impl(const u64 &key) -> double {
-    return static_cast<double>(key) * w + b;
+  auto predict_impl(const Key &key) -> double {
+    const auto feature = key.to_feature();
+    return feature.at(0) * w + b;
   }
 
-  void train_impl(std::vector<u64> &train_data, std::vector<u64> &train_label,
+  void train_impl(std::vector<Key> &train_data, std::vector<u64> &train_label,
                   int step = 1) {
     ASSERT(train_data.size() == train_label.size());
     if (train_data.empty()) {
@@ -45,7 +47,8 @@ struct __attribute__((packed))  LR : public MLTrait<LR> {
 
     num_rows = 0;
     for (uint i = 0, j = 0; i < train_data.size(); i += step, j += 1) {
-      flatted_matrix_A[j * lr_parameter] = static_cast<double>(train_data[i]);
+      const auto feature = train_data[i].to_feature();
+      flatted_matrix_A[j * lr_parameter] = feature.at(0);
       flatted_matrix_A[j * lr_parameter + 1] = 1;
 
       flatted_matrix_B[j] = static_cast<double>(train_label[i]);
@@ -54,7 +57,7 @@ struct __attribute__((packed))  LR : public MLTrait<LR> {
 
     if (num_rows == 1) {
       flatted_matrix_A[num_rows * lr_parameter] =
-          static_cast<double>(train_data[num_rows]);
+          train_data[num_rows].to_feature().at(0);
       flatted_matrix_A[num_rows * lr_parameter + 1] = 1;
 
       flatted_matrix_B[num_rows] = static_cast<double>(train_label[num_rows]);
