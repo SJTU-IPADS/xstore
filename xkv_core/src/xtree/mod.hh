@@ -103,7 +103,6 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
       }
 
     } else {
-      // not implemented yet
       bool whether_split = false;
       auto new_root = reinterpret_cast<Inner *>(this->root)
                           ->insert(k, v, this->depth, whether_split, new_leaf);

@@ -3,13 +3,11 @@
 #include <string>
 #include <vector>
 
-#include "../../deps/r2/src/common.hh"
+#include "../../lib.hh"
 
 namespace xstore {
 
 namespace xml {
-
-using namespace r2;
 
 /*!
   An ML trait abstracts a machine learning model,
