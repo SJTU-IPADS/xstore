@@ -37,8 +37,8 @@ inline std::pair<int, int> default_update_func(const u64 &label,
   return std::make_pair(new_min,new_max); // not implemented
 }
 
-template <class ML> struct XSubModel {
-  ML ml;
+template <template<typename> class ML,typename Key> struct XSubModel {
+  ML<Key> ml;
   /*! right now we use int to record errors, since
     this xsubmodel is only used at the server
   */
@@ -52,7 +52,7 @@ template <class ML> struct XSubModel {
   // direct forward the init parameters to the ML
   template <typename... Args> XSubModel(Args... args) : ml(args...) {}
 
-  auto get_point_predict(const u64 &k) -> int {
+  auto get_point_predict(const Key &k) -> int {
     return static_cast<int>(
         std::max(static_cast<int>(this->ml.predict(k)), static_cast<int>(0)));
   }
@@ -61,7 +61,7 @@ template <class ML> struct XSubModel {
     return this->err_max - this->err_min;
   }
 
-  auto get_predict_range(const u64 &k) -> std::pair<int,int> {
+  auto get_predict_range(const Key &k) -> std::pair<int,int> {
     auto p = this->get_point_predict(k);
     auto p_start = std::max(0, p + this->err_min);
     auto p_end   = std::min(this->max, p + this->err_max);
@@ -72,7 +72,7 @@ template <class ML> struct XSubModel {
     Train the ml, and use calculate the min_max according to the train_label,
     update the min-max according to *f*
    */
-  void train(std::vector<u64> &train_data, std::vector<u64> &train_label,
+  void train(std::vector<Key> &train_data, std::vector<u64> &train_label,
              update_func f = default_update_func) {
     ASSERT(train_data.size() == train_label.size());
     // first train ml

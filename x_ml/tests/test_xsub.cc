@@ -2,20 +2,21 @@
 
 #include <algorithm>
 
-#include "../src/lr/mod.hh"
 #include "../src/lr/compact.hh"
+#include "../src/lr/mod.hh"
 //#include "../src/nn.hh"
 #include "../src/xmodel.hh"
 
 #include "../../deps/kvs-workload/ycsb/hash.hh"
 
-    namespace test {
+namespace test {
 
 using namespace xstore::xml;
+using namespace xstore;
 
 TEST(XML, XModel) {
-  XSubModel<LR> x;
-  //XSubModel<NN> x1(4);
+  XSubModel<LR,XKey> x;
+  // XSubModel<NN> x1(4);
   // TODO
 
   std::vector<u64> keys;
@@ -23,29 +24,33 @@ TEST(XML, XModel) {
 
   const int insert_num = 1000;
 
-  for (uint i = 0;i < insert_num; ++i) {
+  for (uint i = 0; i < insert_num; ++i) {
     u64 key = ::kvs_workloads::ycsb::Hasher::hash(i);
-    //u64 key = i;
+    // u64 key = i;
     keys.push_back(key);
     labels.push_back(i);
   }
 
   std::sort(keys.begin(), keys.end());
+  std::vector<XKey> train_set;
+  for (auto k : keys) {
+    train_set.push_back(XKey(k));
+  }
 
   // start prepareing the training-set
-  x.train(keys,labels);
+  x.train(train_set, labels);
   LOG(4) << "Err min:  " << x.err_min << "; max:" << x.err_max;
 
-  XSubModel<CompactLR> x1;
-  x1.train(keys, labels);
+  XSubModel<CompactLR,XKey> x1;
+  x1.train(train_set, labels);
   LOG(4) << "Err min:  " << x1.err_min << "; max:" << x1.err_max;
 
   // sanity check correctness
-  for (uint i = 0;i < keys.size(); ++i) {
+  for (uint i = 0; i < keys.size(); ++i) {
     auto k = keys[i];
-    auto range = x.get_predict_range(k);
-    ASSERT_GE(i,std::get<0>(range));
-    ASSERT_LE(i,std::get<1>(range));
+    auto range = x.get_predict_range(XKey(k));
+    ASSERT_GE(i, std::get<0>(range));
+    ASSERT_LE(i, std::get<1>(range));
   }
 
   /* fogort NN now, its too costly to train
