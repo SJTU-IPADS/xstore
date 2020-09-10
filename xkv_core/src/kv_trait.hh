@@ -10,7 +10,7 @@ namespace xkv {
 
 using namespace r2;
 
-template <class Derived, typename V> class KVTrait {
+template <class Derived, typename KeyType, typename V> class KVTrait {
  public:
   auto get(const KeyType &k) -> Option<V> {
     return reinterpret_cast<Derived *>(this)->get_impl(k);

@@ -10,17 +10,17 @@ namespace xkv {
 /*!
   Implements the key iterate trait to XArray
  */
-template <typename V>
-struct ArrayIter : public KeyIterTrait<ArrayIter<V>, XArray<V>> {
+template <typename KeyType, typename V>
+struct ArrayIter : public KeyIterTrait<ArrayIter<KeyType,V>, XArray<KeyType,V>, KeyType> {
 
   // members
-  using Self = ArrayIter<V>;
+  using Self = ArrayIter<KeyType,V>;
   usize cur_idx = 0;
-  XArray<V> *kv;
+  XArray<KeyType, V> *kv;
 
-  static auto from_impl(XArray<V> &kv) -> Self { return Self(kv); }
+  static auto from_impl(XArray<KeyType, V> &kv) -> Self { return Self(kv); }
 
-  ArrayIter(XArray<V> &kv) : cur_idx(0), kv(&kv) {}
+  ArrayIter(XArray<KeyType,V> &kv) : cur_idx(0), kv(&kv) {}
 
   auto begin_impl() { this->cur_idx = 0; }
 
@@ -32,7 +32,7 @@ struct ArrayIter : public KeyIterTrait<ArrayIter<V>, XArray<V>> {
 
   auto opaque_val_impl() -> u64 { return cur_idx; }
 
-  auto seek_impl(const KeyType &k, XArray<V> &) {
+  auto seek_impl(const KeyType &k, XArray<KeyType, V> &) {
     auto pos = kv->pos(k);
     if (pos) {
       this->cur_idx = pos.value();

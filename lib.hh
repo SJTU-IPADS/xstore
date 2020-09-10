@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../r2/src/common.hh"
+#include "deps/r2/src/common.hh"
 
 namespace xstore {
 
@@ -44,6 +44,12 @@ struct __attribute__((packed))  XKey : public KeyType<XKey> {
     ret.push_back(static_cast<double>(d));
     return ret;
   }
+
+  auto operator==(const XKey &b) const -> bool { return this->d == b.d; }
+
+  auto operator>=(const XKey &b) const -> bool { return this->d >= b.d; }
+
+  auto operator<(const XKey &b) const  -> bool { return this->d < b.d; }
 };
 
 static_assert(sizeof(XKey) == sizeof(u64), "Not zero-cost abstraction");

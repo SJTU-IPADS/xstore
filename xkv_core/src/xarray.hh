@@ -2,9 +2,9 @@
 
 #include <map>
 
-#include "./kv_trait.hh"
 #include "../../deps/r2/src/common.hh"
 #include "../../xcomm/src/atomic_rw/wrapper_type.hh"
+#include "./kv_trait.hh"
 
 // Memblock, which abstract away a raw pointer
 #include "../../deps/r2/src/mem_block.hh"
@@ -16,10 +16,10 @@ namespace xstore {
 
 namespace xkv {
 
-using namespace r2;
 using namespace ::xstore::xcomm::rw;
 
-template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
+template <typename KeyType, typename V>
+struct XArray : public KVTrait<XArray<KeyType, V>, KeyType, V> {
 
   using VType = WrappedType<V>;
 
@@ -37,7 +37,7 @@ template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
 
   XArray(const MemBlock &key_mem, const MemBlock &val_mem)
       : key_array(key_mem), val_array(val_mem),
-        key_ptr(reinterpret_cast<u64 *>(key_mem.mem_ptr)),
+        key_ptr(reinterpret_cast<KeyType *>(key_mem.mem_ptr)),
         val_ptr(reinterpret_cast<WrappedType<V> *>(val_mem.mem_ptr)) {}
 
   explicit XArray(const usize &max_num_k)
@@ -53,7 +53,8 @@ template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
     val_mem is out of space
     2. the k is smaller than the current key, because the array must be sorted
    */
-  auto insert_w_index(const KeyType &k, const V &v, bool add_idx = false) -> bool {
+  auto insert_w_index(const KeyType &k, const V &v, bool add_idx = false)
+      -> bool {
     if (size != 0) {
       // check prev key
       if (this->keys_at(size - 1).value() >= k) {
@@ -114,8 +115,8 @@ template <typename V> struct XArray : public KVTrait<XArray<V>, V> {
     return {};
   }
 
-  auto insert_impl(const KeyType &k, const V &v){
-    return this->insert_w_index(k, v,true);
+  auto insert_impl(const KeyType &k, const V &v) {
+    return this->insert_w_index(k, v, true);
   }
 };
 

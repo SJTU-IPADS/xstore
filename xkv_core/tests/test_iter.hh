@@ -5,10 +5,10 @@
 
 namespace test {
 
-using namespace r2;
+using namespace xstore;
 
 template <typename Iter>
-auto test_iter(const std::vector<u64> &all_keys, Iter &iter) {
+auto test_iter(const std::vector<XKey> &all_keys, Iter &iter) {
   usize count = 0;
   for (iter.begin(); iter.has_next(); iter.next()) {
     auto key = iter.cur_key();

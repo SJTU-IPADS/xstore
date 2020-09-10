@@ -1,3 +1,4 @@
+// TODO: this is legacy, should switch to KeyType
 #pragma once
 
 #include "../deps/tiny-dnn/tiny_dnn/tiny_dnn.h"

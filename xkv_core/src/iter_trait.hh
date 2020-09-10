@@ -9,7 +9,7 @@ namespace xkv {
 using namespace r2;
 
 // an iterator to find all keys
-template <class Derived, class KV_> struct KeyIterTrait {
+template <class Derived, class KV_, typename KeyType> struct KeyIterTrait {
   using KV = KV_;
   static auto from(KV_ &kv) -> Derived { return Derived::from_impl(kv); }
 
