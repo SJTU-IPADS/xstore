@@ -17,7 +17,9 @@ namespace xtree {
 
 using namespace ::xstore::xcomm::rw;
 
+#ifndef SIZEOF_TYPE
 #define SIZEOF_TYPE(X) (((X *)0) + 1)
+#endif
 
 /*!
   - N: max keys in this node
@@ -25,11 +27,11 @@ using namespace ::xstore::xcomm::rw;
   FIXME: what if the V is a pointer? usually its trivially to adapt,
   but how to program it in a nice format ?
  */
-template <usize N, typename V> struct __attribute__((packed)) XNode {
+template <usize N, typename K, typename V> struct __attribute__((packed)) XNode {
 
   CompactSpinLock lock;
 
-  using NodeK = XNodeKeys<N>;
+  using NodeK = XNodeKeys<N,K>;
 
   // keys
   WrappedType<NodeK> keys;
@@ -42,7 +44,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   WrappedType<V> values[N];
 
   // next pointer
-  XNode<N, V> *next = nullptr;
+  XNode<N, K, V> *next = nullptr;
 
   // methods
   XNode() = default;
@@ -51,7 +53,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
 
   auto get_incarnation() -> u32 { return this->keys.get_payload_ptr()->incarnation; }
 
-  auto get_key(const int &idx) -> u64 {
+  auto get_key(const int &idx) -> K {
     return keys.get_payload_ptr()->get_key(idx);
   }
 
@@ -76,11 +78,11 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
   /*!
     Query method
    */
-  auto search(const u64 &key) -> Option<u8> {
+  auto search(const K &key) -> Option<u8> {
     return keys.get_payload_ptr()->search(key);
   }
 
-  auto insert(const u64 &key, const V &v, XNode<N, V> *candidate) -> bool {
+  auto insert(const K &key, const V &v, XNode<N, K, V> *candidate) -> bool {
     this->lock.lock();
     auto ret = this->raw_insert(key, v, candidate);
     this->lock.unlock();
@@ -89,7 +91,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
 
   void print() {
     for (uint i = 0;i < N; ++i) {
-      if (this->get_key(i) != kInvalidKey) {
+      if (this->get_key(i) != K(kInvalidKey)) {
         LOG(4) << "keys: #" << i << " " << this->get_key(i);
       }
     }
@@ -102,7 +104,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
     insertion thread, and we will use raw_insert on candidate \ret: true ->
     this node has splitted, the splitted node is stored in the candidate
    */
-  auto raw_insert(const u64 &key, const V &v, XNode<N, V> *candidate)
+  auto raw_insert(const K &key, const V &v, XNode<N,K,V> *candidate)
       -> bool { // lock the node for atomicity
     bool ret = false;
     auto idx = this->keys.get_payload_ptr()->add_key(key);
@@ -135,7 +137,7 @@ template <usize N, typename V> struct __attribute__((packed)) XNode {
       // 3. then, move other keys
       for (uint i = 0; i < N; ++i) {
         auto k = this->get_key(i);
-        if (k != kInvalidKey && k > pivot_key) {
+        if (k != K(kInvalidKey) && k > pivot_key) {
           // insert
           auto r =
               candidate->raw_insert(k, *(this->values[i].get_payload_ptr()), nullptr);

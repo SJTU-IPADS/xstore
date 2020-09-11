@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 
 #include "deps/r2/src/common.hh"
@@ -18,26 +19,23 @@ template <class Derived> struct KeyType {
   }
 
   auto from_u64(const u64 &k) {
-    return reinterpret_cast<Derived *>(this)->from_u64_impl();
+    return reinterpret_cast<Derived *>(this)->from_u64_impl(k);
   }
 
-  auto feature_sz() -> usize {
-    return this->to_feature().size();
-  }
+  static auto min() -> KeyType { return Derived::min(); }
+
+  auto feature_sz() -> usize { return this->to_feature().size(); }
 };
 
 // Default XStore key type
-struct __attribute__((packed))  XKey : public KeyType<XKey> {
+struct __attribute__((packed)) XKey : public KeyType<XKey> {
   u64 d;
 
   XKey() = default;
 
-  explicit XKey(const u64 &k) : d(k) {
-  }
+  explicit XKey(const u64 &k) : d(k) {}
 
-  auto from_u64_impl(const u64 &k) {
-    this->d = k;
-  }
+  auto from_u64_impl(const u64 &k) { this->d = k; }
 
   auto to_feature_impl() const -> FeatureV {
     auto ret = FeatureV();
@@ -45,11 +43,19 @@ struct __attribute__((packed))  XKey : public KeyType<XKey> {
     return ret;
   }
 
+  static auto min()->XKey { return XKey(0); }
+
   auto operator==(const XKey &b) const -> bool { return this->d == b.d; }
 
   auto operator>=(const XKey &b) const -> bool { return this->d >= b.d; }
 
-  auto operator<(const XKey &b) const  -> bool { return this->d < b.d; }
+  auto operator!=(const XKey &b) const -> bool { return this->d != b.d; }
+
+  auto operator<(const XKey &b) const -> bool { return this->d < b.d; }
+
+  auto operator>(const XKey &b) const -> bool { return this->d > b.d; }
+
+  friend std::ostream &operator<<(std::ostream &out, const XKey &k) { return out << k.d; }
 };
 
 static_assert(sizeof(XKey) == sizeof(u64), "Not zero-cost abstraction");

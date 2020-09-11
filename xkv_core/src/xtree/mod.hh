@@ -15,10 +15,10 @@ namespace xtree {
   N : fanout
   V : the value type
  */
-template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
+template <usize N, typename K, typename V> struct XTree : public KVTrait<XTree<N, K, V>, K, V> {
 
-  using Inner = TreeInner<N>;
-  using Leaf = XNode<N, V>;
+  using Inner = TreeInner<N,K>;
+  using Leaf = XNode<N, K, V>;
 
   // data structure
   int depth = 0;
@@ -26,7 +26,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
   static __thread Leaf *pre_alloc_leaf_node;
 
   // impl the public trait
-  auto get_impl(const u64 &k) -> Option<V> {
+  auto get_impl(const K &k) -> Option<V> {
     auto leaf = this->find_leaf(k);
     ASSERT(leaf != nullptr);
     auto idx = leaf->search(k);
@@ -36,7 +36,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
     return {};
   }
 
-  auto find_leaf(const u64 &k) -> Leaf * {
+  auto find_leaf(const K &k) -> Leaf * {
     auto cur_node = root;
     auto cur_depth = depth;
 
@@ -51,13 +51,13 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
     return reinterpret_cast<Leaf *>(cur_node);
   }
 
-  auto insert_impl(const u64 &k, const V &v) {
+  auto insert_impl(const K &k, const V &v) {
     ::xstore::xkv::TrivalAlloc<sizeof(Leaf)> alloc;
     this->insert_w_alloc(k, v, alloc);
   }
 
   template <class Alloc>
-  auto insert_w_alloc(const u64 &k, const V &v, Alloc &alloc) -> bool {
+  auto insert_w_alloc(const K &k, const V &v, Alloc &alloc) -> bool {
     // 1. initialize the pre_alloc_leaf_node
     if (unlikely(this->pre_alloc_leaf_node == nullptr)) {
       init_pre_alloced_leaf(alloc);
@@ -78,7 +78,7 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
     alloc: allocator that implements AllocTrait<sizeof(Leaf)>
     \ret: whether the underlying leaf has split
    */
-  auto insert_core(const u64 &k, const V &v, Leaf *new_leaf) -> bool {
+  auto insert_core(const K &k, const V &v, Leaf *new_leaf) -> bool {
     bool ret = false;
     if (unlikely(this->root == nullptr)) {
       this->root = reinterpret_cast<raw_ptr_t>(new_leaf);
@@ -142,8 +142,8 @@ template <usize N, typename V> struct XTree : public KVTrait<XTree<N, V>, V> {
 };
 
 // static member init
-template <usize N, typename V>
-__thread XNode<N, V> *XTree<N, V>::pre_alloc_leaf_node = nullptr;
+template <usize N, typename K, typename V>
+__thread XNode<N, K, V> *XTree<N, K, V>::pre_alloc_leaf_node = nullptr;
 } // namespace xtree
 } // namespace xkv
 
