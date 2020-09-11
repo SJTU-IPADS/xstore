@@ -28,6 +28,8 @@ TEST(Tree, Basic) {
     t.insert(XKey(i), i);
   }
 
+  LOG(4) << "insert done";
+
   for (uint i = 0; i < insert_cnt; ++i) {
     auto v = t.get(XKey(i));
     if (!v) {
