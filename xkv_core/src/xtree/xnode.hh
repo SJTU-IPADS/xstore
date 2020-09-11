@@ -59,7 +59,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
 
   auto get_value(const int &idx) -> Option<V> {
     // TODO: not check idx
-    if (this->keys.get_payload().get_key(idx) != kInvalidKey) {
+    if (this->keys.get_payload().get_key(idx) != XKey(kInvalidKey)) {
       return *(values[idx].get_payload_ptr());
     }
     return {};

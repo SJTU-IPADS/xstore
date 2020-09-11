@@ -75,7 +75,7 @@ template <usize N, typename K> struct __attribute__((packed)) XNodeKeys {
     return offsetof(T, keys) + sizeof(u64) * idx;}
 
   auto find_median_key() -> Option<u8> {
-    std::vector<std::pair<XKey, int>> temp;
+    std::vector<std::pair<K, int>> temp;
     for (uint i = 0;i < N;++i) {
       temp.push_back(std::make_pair(this->keys[i], i));
     }
