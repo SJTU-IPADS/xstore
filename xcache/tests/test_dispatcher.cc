@@ -19,7 +19,7 @@ using namespace r2;
 r2::util::FastRandom rand(0xdeadbeaf);
 
 TEST(XCache, Dispatcher) {
-  using DT = Dispatcher<LR<XKey>, XKey>;
+  using DT = Dispatcher<LR, XKey>;
   using A = XArray<XKey,u64>;
 
   char *key_buf = new char[sizeof(XKey) * 1200];

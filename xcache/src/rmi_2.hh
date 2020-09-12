@@ -15,7 +15,9 @@ namespace xcache {
   We hard-coded to use a two-layer index.
  */
 
-template <typename DispatchML, typename SubML, typename KeyType> struct LocalTwoRMI {
+template <template<typename> class DispatchML, template <typename> class SubML,
+          typename KeyType>
+struct LocalTwoRMI {
   Dispatcher<DispatchML,KeyType> first_layer;
   std::vector<XSubModel<SubML,KeyType>> second_layer;
 
@@ -45,8 +47,8 @@ template <typename DispatchML, typename SubML, typename KeyType> struct LocalTwo
 
   template <class IT>
   auto dispatch_keys_to_trainers(typename IT::KV &kv)
-      -> std::vector<XMLTrainer> {
-    std::vector<XMLTrainer> trainers(this->second_layer.size());
+      -> std::vector<XMLTrainer<KeyType>> {
+    std::vector<XMLTrainer<KeyType>> trainers(this->second_layer.size());
     auto it = IT::from(kv);
     for (it.begin(); it.has_next(); it.next()) {
       auto model = this->select_sec_model(it.cur_key());
@@ -58,8 +60,8 @@ template <typename DispatchML, typename SubML, typename KeyType> struct LocalTwo
     return trainers;
   }
 
-  template <class IT, class S>
-  auto train_second_models(typename IT::KV &kv, S &s, Statics &statics,
+  template <class IT, template<typename> class S>
+  auto train_second_models(typename IT::KV &kv, S<KeyType> &s, Statics &statics,
                            update_func f = default_update_func) {
     auto it = IT::from(kv);
 

@@ -15,8 +15,8 @@ using namespace xstore::xkv;
   The dispatcher will route a key to some number between [1,n),
   using an ML model.
  */
-template <class ML, typename KeyType> struct Dispatcher {
-  ML model;
+template <template <typename> class ML, typename KeyType> struct Dispatcher {
+  ML<KeyType> model;
   const usize dispatch_num;
   usize       up_bound = 0;
 

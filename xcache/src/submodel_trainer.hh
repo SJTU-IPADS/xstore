@@ -25,7 +25,7 @@ struct XMLTrainer {
 
   // This model is responsible for predicting [start_key, end_key]
   KeyType start_key = KeyType::max();
-  KeyType end_key = 0;
+  KeyType end_key = KeyType::min();
 
   /*! seqs which used to define whether this model need to retrain
     the model will train if and only if h_watermark > l_watermark
@@ -54,16 +54,17 @@ struct XMLTrainer {
     \note: assumption this method will only be called in a single-threaded
     context
   */
-  template <class IT, class S, class SubML>
-  auto train(typename IT::KV &kv, S &s, update_func f = default_update_func)
-      -> XSubModel<SubML,KeyType> {
+  template <class IT, template<typename> class S, template <typename>  class SubML>
+  auto train(typename IT::KV &kv, S<KeyType> &s, update_func f = default_update_func)
+      -> XSubModel<SubML, KeyType> {
     auto iter = IT::from(kv);
     return train_w_it<IT, S, SubML>(iter, kv, s, f);
   }
 
-  template <class IT, class S, class SubML>
-  auto train_w_it(IT &iter, typename IT::KV &kv, S &s,
-                  update_func f = default_update_func) -> XSubModel<SubML,KeyType> {
+  template <class IT, template <typename> class S, template <typename>  class SubML>
+  auto train_w_it(IT &iter, typename IT::KV &kv, S<KeyType> &s,
+                  update_func f = default_update_func)
+      -> XSubModel<SubML, KeyType> {
     // TODO: model should be parameterized
     XSubModel<SubML,KeyType> model;
 
