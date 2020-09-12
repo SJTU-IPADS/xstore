@@ -122,7 +122,6 @@ template <usize N, typename K, typename V> struct XTree : public KVTrait<XTree<N
     alloc: allocator that implements AllocTrait<sizeof(Leaf)>
     \ret: the leaf
    */
-
   template <class Alloc> auto init_pre_alloced_leaf(Alloc &alloc) {
     pre_alloc_leaf_node =
         new (reinterpret_cast<Leaf *>(alloc.alloc().value())) Leaf();
@@ -138,6 +137,28 @@ template <usize N, typename K, typename V> struct XTree : public KVTrait<XTree<N
     auto ret = pre_alloc_leaf_node;
     init_pre_alloced_leaf(alloc); // re-set
     return ret;
+  }
+
+  /*!
+    Tree sz of the inner nodes
+   */
+  auto sz_inner() -> usize {
+    return sz_inner_impl(this->root, this->depth);
+  }
+
+  auto sz_inner_impl(const raw_ptr_t &node, const int &depth) -> usize {
+    auto cur_sz = 0;
+    if (node != nullptr) {
+      if (depth > 0) {
+        cur_sz += sizeof(Inner);
+        Inner *inner = reinterpret_cast<Inner *>(node);
+
+        for (uint i = 0;i <= inner->num_keys; ++i) {
+          cur_sz += sz_inner_impl(inner->childrens[i], depth - 1);
+        }
+      }
+    }
+    return cur_sz;
   }
 };
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../../x_ml/src/lr/mod.hh"
+#include "../../x_ml/src/lr/compact.hh"
 #include "../../xkv_core/src/xarray_iter.hh"
 
 #include "../src/rmi_2.hh"
@@ -45,8 +46,9 @@ TEST(RMI, Sub_array) {
 
   // train
   DefaultSample<XKey> s;
-  auto model = trainer.train<ArrayIter<XKey,u64>, DefaultSample, LR>(array, s);
-  LOG(4) << "error: " << model.total_error();
+  auto model = trainer.train<ArrayIter<XKey, u64>, DefaultSample, CompactLR>(array, s);
+  LOG(4) << "error: " << model.total_error()
+         << " for training: " << all_keys.size() << " tuples using a single LR";
 
   for (auto k : all_keys) {
     // check whether we can find the key using the model

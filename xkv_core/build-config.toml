@@ -8,6 +8,11 @@ name = "test_array"
 src = ["../deps/r2/src/logging.cc" , "./tests/test_array.cc"]
 extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
 
+[[apps]]
+name = "test_tree_sz"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_tree_sz.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
 
 [[apps]]
 name = "test_node"

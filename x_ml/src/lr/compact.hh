@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./ml_trait.hh"
 #include "./mod.hh"
 
 namespace xstore {
