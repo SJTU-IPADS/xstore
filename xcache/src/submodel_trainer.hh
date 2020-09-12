@@ -18,12 +18,13 @@ using namespace xstore::xml;
   This file implements a traininer for training the second-layer submodel,
   defined in ../../x_ml/src/xmodel.hh
  */
+template <typename KeyType>
 struct XMLTrainer {
   // the trainer may be trained in a (background) thread
   std::mutex guard;
 
   // This model is responsible for predicting [start_key, end_key]
-  KeyType start_key = std::numeric_limits<KeyType>::max();
+  KeyType start_key = KeyType::max();
   KeyType end_key = 0;
 
   /*! seqs which used to define whether this model need to retrain
@@ -55,16 +56,16 @@ struct XMLTrainer {
   */
   template <class IT, class S, class SubML>
   auto train(typename IT::KV &kv, S &s, update_func f = default_update_func)
-      -> XSubModel<SubML> {
+      -> XSubModel<SubML,KeyType> {
     auto iter = IT::from(kv);
     return train_w_it<IT, S, SubML>(iter, kv, s, f);
   }
 
   template <class IT, class S, class SubML>
   auto train_w_it(IT &iter, typename IT::KV &kv, S &s,
-                  update_func f = default_update_func) -> XSubModel<SubML> {
+                  update_func f = default_update_func) -> XSubModel<SubML,KeyType> {
     // TODO: model should be parameterized
-    XSubModel<SubML> model;
+    XSubModel<SubML,KeyType> model;
 
     if (!this->need_train()) {
       return model;
@@ -81,7 +82,7 @@ struct XMLTrainer {
       this->l_watermark += 1;
     }
 
-    std::vector<u64> train_set;
+    std::vector<KeyType> train_set;
     std::vector<u64> train_label;
 
     // base is used to algin the labels start from 0

@@ -15,9 +15,9 @@ namespace xcache {
   We hard-coded to use a two-layer index.
  */
 
-template <typename DispatchML, typename SubML> struct LocalTwoRMI {
-  Dispatcher<DispatchML> first_layer;
-  std::vector<XSubModel<SubML>> second_layer;
+template <typename DispatchML, typename SubML, typename KeyType> struct LocalTwoRMI {
+  Dispatcher<DispatchML,KeyType> first_layer;
+  std::vector<XSubModel<SubML,KeyType>> second_layer;
 
   explicit LocalTwoRMI(const usize &num_sec)
       : second_layer(num_sec), first_layer(num_sec) {}

@@ -76,8 +76,8 @@ template <class ML, typename KeyType> struct Dispatcher {
   // the default sampler will train all the keys
   template <class IT>
   auto default_train(typename IT::KV &kv) -> usize {
-    DefaultSample s;
-    return this->train<IT, DefaultSample>(kv, s);
+    DefaultSample<KeyType> s;
+    return this->train<IT, DefaultSample<KeyType>>(kv, s);
   }
 };
 

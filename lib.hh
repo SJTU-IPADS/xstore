@@ -47,6 +47,8 @@ struct __attribute__((packed)) XKey : public KeyType<XKey> {
 
   static auto min()->XKey { return XKey(0); }
 
+  static auto max() -> XKey { return XKey(std::numeric_limits<u64>::max()); }
+
   auto operator==(const XKey &b) const -> bool { return this->d == b.d; }
 
   auto operator>=(const XKey &b) const -> bool { return this->d >= b.d; }

@@ -14,7 +14,7 @@ namespace xml {
   Key: the key used to predict.
  */
 // BT states for BaseType
-template <typename BT = u32, template<typename> class LRT = CompactLR, typename Key = XKey>
+template <typename BT, template<typename> class LRT, typename Key>
 struct __attribute__((packed)) MLR : public MLTrait<MLR<BT,LRT,Key>, Key> {
   using Self = MLR<BT,LRT,Key>;
   LRT<Key>       lr;
