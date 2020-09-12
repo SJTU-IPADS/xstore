@@ -24,6 +24,8 @@ template <class Derived> struct KeyType {
 
   static auto min() -> KeyType { return Derived::min(); }
 
+  static auto max() -> KeyType { return Derived::max(); }
+
   auto feature_sz() -> usize { return this->to_feature().size(); }
 };
 

@@ -20,16 +20,19 @@ namespace xtree {
   xcache/tests/test_sampler.cc
  */
 template <usize N, typename KeyType, typename V>
-struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>, XTree<N,KeyType, V>> {
+struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>,
+                                           XTree<N, KeyType, V>, KeyType> {
   using Self = XTreePageIter<N, KeyType, V>;
 
-  Option<XNodeKeys<N>> cur_node = {};
-  XNode<N, V> *cur_node_ptr = nullptr;
+  Option<XNodeKeys<N,KeyType>> cur_node = {};
+  XNode<N,KeyType,V> *cur_node_ptr = nullptr;
   usize logic_page_id = 0;
 
   static auto from_impl(XTree<N, KeyType, V> &kv) -> Self { return Self(kv); }
 
-  XTreePageIter(XTree<N, KeyType, V> &kv) : logic_page_id(0) { this->seek(0, kv); }
+  XTreePageIter(XTree<N, KeyType, V> &kv) : logic_page_id(0) {
+    this->seek(KeyType::min(), kv);
+  }
 
   // impl traits
   auto begin_impl() {}
@@ -47,7 +50,7 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>, XTree<N
   // TODO: what if the KeyType is not u64?
   auto cur_key_impl() -> KeyType { return K(logic_page_id); }
 
-  auto seek_impl(const KeyType &k, XTree<N, V> &kv) {
+  auto seek_impl(const KeyType &k, XTree<N, KeyType, V> &kv) {
     this->cur_node_ptr = kv.find_leaf(k);
     this->logic_page_id = 0;
     this->read_from(this->cur_node_ptr);
@@ -57,7 +60,7 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>, XTree<N
     return reinterpret_cast<u64>(this->cur_node_ptr);
   }
 
-  auto read_from(XNode<N, KeyType, V> *node){
+  auto read_from(XNode<N, KeyType, V> *node) {
     if (node != nullptr) {
       // read
     retry:

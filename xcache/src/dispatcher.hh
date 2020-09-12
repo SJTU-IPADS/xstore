@@ -9,14 +9,13 @@ namespace xstore {
 
 namespace xcache {
 
-using namespace r2;
 using namespace xstore::xkv;
 
 /*!
   The dispatcher will route a key to some number between [1,n),
   using an ML model.
  */
-template <class ML> struct Dispatcher {
+template <class ML, typename KeyType> struct Dispatcher {
   ML model;
   const usize dispatch_num;
   usize       up_bound = 0;
@@ -32,7 +31,7 @@ template <class ML> struct Dispatcher {
     this->model.from_serialize(s);
   }
 
-  auto predict(const u64 &key, const u64 &max) -> usize {
+  auto predict(const KeyType &key,const usize &max) -> usize {
     auto res = static_cast<int>(this->model.predict(key));
     if (res < 0) {
       res = 0;
@@ -62,6 +61,7 @@ template <class ML> struct Dispatcher {
     // FIXME: assumes the totoal KVS is smaller than usize's limit
     usize count = 0;
     for (it.begin(); it.has_next(); it.next()) {
+      // filter whether we should ad the key
       s.add_to(it.cur_key(), count, train_set, train_label);
       count += 1;
       up_bound = std::max<usize>(up_bound, count);
@@ -73,6 +73,7 @@ template <class ML> struct Dispatcher {
     return train_set.size();
   }
 
+  // the default sampler will train all the keys
   template <class IT>
   auto default_train(typename IT::KV &kv) -> usize {
     DefaultSample s;

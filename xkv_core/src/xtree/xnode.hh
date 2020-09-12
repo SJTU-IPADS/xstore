@@ -17,6 +17,9 @@ namespace xtree {
 
 using namespace ::xstore::xcomm::rw;
 
+// TODO: current not implemented a sorted node key, but it is trivial
+const bool kKeysSorted = false;
+
 #ifndef SIZEOF_TYPE
 #define SIZEOF_TYPE(X) (((X *)0) + 1)
 #endif

@@ -20,8 +20,8 @@ namespace xcache {
   The unit test file is in ../../tests/test_sampler.cc
  */
 
-template <usize N>
-struct PageSampler : public SampleTrait<PageSampler<N>> {
+template <usize N, typename KeyType>
+struct PageSampler : public SampleTrait<PageSampler<N,KeyType>,KeyType> {
   Option<KeyType> min_key_in_page = {};
   Option<u64> min_key_label = {};
 
@@ -32,6 +32,7 @@ struct PageSampler : public SampleTrait<PageSampler<N>> {
 
   /*!
     \note: keys in one page may be not sorted, so we explicitly sort them
+    // l: the label
    */
   auto add_to_impl(const KeyType &k, const u64 &l, std::vector<KeyType> &t_set,
                    std::vector<u64> &l_set) {
