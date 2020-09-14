@@ -19,7 +19,7 @@ using namespace xstore::xkv;
   The sampler also allows to doing extra jobs when adding the training-set,
   e.g., recording the translation table.
  */
-template <class Derived> struct SampleTrait {
+template <class Derived,typename KeyType> struct SampleTrait {
   auto add_to(const KeyType &k, const u64 &l, std::vector<KeyType> &t_set,
               std::vector<u64> &l_set) {
     return reinterpret_cast<Derived *>(this)->add_to_impl(k, l, t_set, l_set);
@@ -34,7 +34,8 @@ template <class Derived> struct SampleTrait {
 /*!
   The default sample method will add all K,L to the training-set
  */
-struct DefaultSample : public SampleTrait<DefaultSample> {
+template <typename KeyType>
+struct DefaultSample : public SampleTrait<DefaultSample<KeyType>,KeyType> {
   auto add_to(const KeyType &k, const u64 &l, std::vector<KeyType> &t_set,
               std::vector<u64> &l_set) {
     t_set.push_back(k);

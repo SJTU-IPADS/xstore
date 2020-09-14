@@ -11,7 +11,8 @@ namespace xcache {
   For example, if the training data is [0,1,2,4], and the StepSampler is initialized with step 2,
   then it will init the training-set to [0,2].
  */
-struct StepSampler : public SampleTrait<StepSampler> {
+template<typename KeyType>
+struct StepSampler : public SampleTrait<StepSampler<KeyType>,KeyType> {
   const usize step = 1;
   usize cur_count = 0;
 

@@ -4,6 +4,7 @@
 
 #include "../src/lr/compact.hh"
 #include "../src/lr/mod.hh"
+#include "../src/lr/mlr.hh"
 //#include "../src/nn.hh"
 #include "../src/xmodel.hh"
 
@@ -14,8 +15,16 @@ namespace test {
 using namespace xstore::xml;
 using namespace xstore;
 
+template <typename K> using MLRX = MLR<u32, LR, K>;
+
 TEST(XML, XModel) {
+
   XSubModel<LR,XKey> x;
+
+  MLRX<XKey> mlr;
+  ASSERT_EQ(mlr.predict(XKey(0)), 0);
+  XSubModel<MLRX, XKey> xm;
+
   // XSubModel<NN> x1(4);
   // TODO
 
@@ -39,6 +48,7 @@ TEST(XML, XModel) {
 
   // start prepareing the training-set
   x.train(train_set, labels);
+  xm.train(train_set, labels);
   LOG(4) << "Err min:  " << x.err_min << "; max:" << x.err_max;
 
   XSubModel<CompactLR,XKey> x1;

@@ -14,22 +14,26 @@ namespace xtree {
   Note: currently, keys in the same node is not sorted.
   Consequently, we need to sort it otherwise
  */
-template <usize N, typename V>
-struct XTreeIter : public KeyIterTrait<XTreeIter<N, V>, XTree<N, V>> {
-  using Self = XTreeIter<N, V>;
+template <usize N, typename KeyType, typename V>
+struct XTreeIter : public KeyIterTrait<XTreeIter<N, KeyType, V>,
+                                       XTree<N, KeyType, V>, KeyType> {
+  using Self = XTreeIter<N, KeyType, V>;
 
-  Option<XNodeKeys<N>> cur_node = {};
-  XNode<N, V> *cur_node_ptr = nullptr;
-  XNode<N, V> *next_ptr = nullptr;
-  usize idx = 0; // cur idx in the cur node
+  Option<XNodeKeys<N, KeyType>> cur_node = {};
+  XNode<N, KeyType, V> *cur_node_ptr = nullptr;
+  XNode<N, KeyType, V> *next_ptr = nullptr;
+  usize idx = 0;     // cur idx in the cur node
   usize counter = 0; // how many keys have been iterated
 
-  static auto from_impl(XTree<N, V> &kv) -> Self { return Self(kv); }
+  static auto from_impl(XTree<N, KeyType, V> &kv) -> Self { return Self(kv); }
 
-  XTreeIter(XTree<N, V> &kv) { this->seek(0, kv); }
+  XTreeIter(XTree<N, KeyType, V> &kv) { this->seek(KeyType::min(), kv); }
 
   // impl traits
-  auto begin_impl() { counter = 0; idx = 0;}
+  auto begin_impl() {
+    counter = 0;
+    idx = 0;
+  }
 
   auto next_impl() {
     this->idx += 1;
@@ -58,7 +62,7 @@ struct XTreeIter : public KeyIterTrait<XTreeIter<N, V>, XTree<N, V>> {
 
   auto cur_key_impl() -> KeyType { return this->cur_node.value().get_key(idx); }
 
-  auto read_from(XNode<N, V> *node) {
+  auto read_from(XNode<N, KeyType, V> *node) {
     if (node != nullptr) {
       // read
     retry:
@@ -78,7 +82,7 @@ struct XTreeIter : public KeyIterTrait<XTreeIter<N, V>, XTree<N, V>> {
     }
   }
 
-  auto seek_impl(const KeyType &k, XTree<N, V> &kv) {
+  auto seek_impl(const KeyType &k, XTree<N, KeyType, V> &kv) {
     auto node = kv.find_leaf(k);
     this->read_from(node);
 
@@ -91,13 +95,13 @@ struct XTreeIter : public KeyIterTrait<XTreeIter<N, V>, XTree<N, V>> {
 
   auto seek_idx() {
     while (this->idx < N &&
-           this->cur_node.value().get_key(idx) == kInvalidKey) {
+           this->cur_node.value().get_key(idx) == KeyType(kInvalidKey)) {
       this->idx += 1;
     }
   }
 
   auto opaque_val_impl() -> u64 {
-    //return reinterpret_cast<u64>(this->cur_node_ptr);
+    // return reinterpret_cast<u64>(this->cur_node_ptr);
     return counter;
   }
 };

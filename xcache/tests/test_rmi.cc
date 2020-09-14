@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../../x_ml/src/lr/mod.hh"
+#include "../../x_ml/src/lr/compact.hh"
 #include "../../xkv_core/src/xarray_iter.hh"
 
 #include "../src/rmi_2.hh"
@@ -10,13 +11,14 @@
 
 namespace test {
 
+using namespace xstore;
 using namespace xstore::xcache;
 using namespace xstore::xml;
 using namespace r2;
 
 r2::util::FastRandom rand(0xdeadbeaf);
 
-using A = XArray<u64>;
+using A = XArray<XKey,u64>;
 
 // test the correctness of submodel impl
 TEST(RMI, Sub_array) {
@@ -33,29 +35,30 @@ TEST(RMI, Sub_array) {
   A array(num_keys);
 
   for (auto k : all_keys) {
-    array.insert(k, k);
+    array.insert(XKey(k), k);
   }
 
   // init
   ASSERT_FALSE(all_keys.empty());
-  XMLTrainer trainer;
-  trainer.update_key(all_keys[0]);
-  trainer.update_key(all_keys[all_keys.size() - 1]);
+  XMLTrainer<XKey> trainer;
+  trainer.update_key(XKey(all_keys[0]));
+  trainer.update_key(XKey(all_keys[all_keys.size() - 1]));
 
   // train
-  DefaultSample s;
-  auto model = trainer.train<ArrayIter<u64>, DefaultSample, LR>(array, s);
-  LOG(4) << "error: " << model.total_error();
+  DefaultSample<XKey> s;
+  auto model = trainer.train<ArrayIter<XKey, u64>, DefaultSample, CompactLR>(array, s);
+  LOG(4) << "error: " << model.total_error()
+         << " for training: " << all_keys.size() << " tuples using a single LR";
 
   for (auto k : all_keys) {
     // check whether we can find the key using the model
-    auto predict = model.get_point_predict(k);
+    auto predict = model.get_point_predict(XKey(k));
 
     bool found = false;
-    auto p_range = model.get_predict_range(k);
+    auto p_range = model.get_predict_range(XKey(k));
     for (int i = std::get<0>(p_range); i <= std::get<1>(p_range); ++i) {
       auto res = array.keys_at(i);
-      if (res && res.value() == k) {
+      if (res && res.value() == XKey(k)) {
         found = true;
         break;
       }
@@ -78,19 +81,19 @@ TEST(RMI, Full) {
   A array(num_keys);
 
   for (auto k : all_keys) {
-    array.insert(k, k);
+    array.insert(XKey(k), k);
   }
 
   // init
   ASSERT_FALSE(all_keys.empty());
 
   const usize num_rmi = 12;
-  LocalTwoRMI<LR, LR> rmi_idx(num_rmi);
-  rmi_idx.default_train_first<ArrayIter<u64>>(array);
+  LocalTwoRMI<LR, LR, XKey> rmi_idx(num_rmi);
+  rmi_idx.default_train_first<ArrayIter<XKey,u64>>(array);
 
-  DefaultSample s;
+  DefaultSample<XKey> s;
   Statics statics;
-  rmi_idx.train_second_models<ArrayIter<u64>,DefaultSample>(array,s,statics);
+  rmi_idx.train_second_models<ArrayIter<XKey,u64>,DefaultSample>(array,s,statics);
 
   for (uint i = 0; i < num_rmi; ++i) {
     LOG(4) << "model #" << i
@@ -102,10 +105,10 @@ TEST(RMI, Full) {
   for (auto k : all_keys) {
 
     bool found = false;
-    auto p_range = rmi_idx.get_predict_range(k);
+    auto p_range = rmi_idx.get_predict_range(XKey(k));
     for (int i = std::get<0>(p_range); i <= std::get<1>(p_range); ++i) {
       auto res = array.keys_at(i);
-      if (res && res.value() == k) {
+      if (res && res.value() == XKey(k)) {
         found = true;
         break;
       }

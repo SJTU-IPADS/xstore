@@ -17,7 +17,7 @@ using namespace xstore::xkv;
 
 TEST(Tree, Basic) {
 
-  using Tree = XTree<16, u64>;
+  using Tree = XTree<16, XKey, u64>;
   Tree t;
 
   /*
@@ -25,11 +25,13 @@ TEST(Tree, Basic) {
    */
   auto insert_cnt = 150000;
   for (uint i = 0; i < insert_cnt; ++i) {
-    t.insert(i, i);
+    t.insert(XKey(i), i);
   }
 
+  LOG(4) << "insert done";
+
   for (uint i = 0; i < insert_cnt; ++i) {
-    auto v = t.get(i);
+    auto v = t.get(XKey(i));
     if (!v) {
       LOG(4) << "faild to find key: " << i << "; tree depth: " << t.depth;
     }
@@ -49,18 +51,18 @@ TEST(Tree, Stress) {
 
   for (uint i = 0; i < 10; ++i) {
 
-    using Tree = XTree<16, u64>;
+    using Tree = XTree<16,XKey, u64>;
     Tree t;
 
     std::vector<u64> check_keys;
     for (uint i = 0; i < key_scale; ++i) {
       auto key = rand.next();
       check_keys.push_back(key);
-      t.insert(key, key + 73);
+      t.insert(XKey(key), key + 73);
     }
 
     for (auto k : check_keys) {
-      auto v = t.get(k);
+      auto v = t.get(XKey(k));
       ASSERT_TRUE(v);
       ASSERT_EQ(v.value(), k + 73);
     }
@@ -70,7 +72,7 @@ TEST(Tree, Stress) {
 
 TEST(Tree, allocation) {
   // test that there is no double alloc
-  using Tree = XTree<16, u64>;
+  using Tree = XTree<16, XKey, u64>;
   Tree t;
 
   auto total_keys = 1000000;
@@ -82,7 +84,7 @@ TEST(Tree, allocation) {
 
   int split_num = 0;
   for (int i = 0; i < total_keys; ++i) {
-    auto ret = t.insert_w_alloc(i, i, alloc);
+    auto ret = t.insert_w_alloc(XKey(i), i, alloc);
     if (ret) {
       split_num += 1;
     }
@@ -96,18 +98,18 @@ TEST(Tree, Iter) {
 
   r2::util::FastRandom rand(0xdeadbeaf);
 
-  using Tree = XTree<16, u64>;
+  using Tree = XTree<16, XKey, u64>;
   Tree t;
 
   std::vector<u64> check_keys;
   for (uint i = 0; i < key_scale; ++i) {
     auto key = rand.next();
     check_keys.push_back(key);
-    t.insert(key, key + 73);
+    t.insert(XKey(key), key + 73);
   }
 
   for (auto k : check_keys) {
-    auto v = t.get(k);
+    auto v = t.get(XKey(k));
     ASSERT_TRUE(v);
     ASSERT_EQ(v.value(), k + 73);
   }
@@ -115,7 +117,7 @@ TEST(Tree, Iter) {
   std::sort(check_keys.begin(), check_keys.end());
   // using the iterator
 
-  auto it = XTreeIter<16, u64>::from(t);
+  auto it = XTreeIter<16,XKey, u64>::from(t);
   usize counter = 0;
 
   LOG(4) << "f key: " << it.cur_key() << " " << check_keys[0]
@@ -169,15 +171,19 @@ TEST(Tree, Iter1) {
   const usize num_keys = 120;
   auto all_keys = gen_keys(num_keys);
 
-  using Tree = XTree<16, u64>;
+  using Tree = XTree<16, XKey, u64>;
   Tree t;
 
   for (auto k : all_keys) {
-    t.insert(k,k);
+    t.insert(XKey(k),k);
   }
 
-  auto it = XTreeIter<16, u64>::from(t);
-  test_iter(all_keys, it);
+  auto it = XTreeIter<16,XKey,u64>::from(t);
+  std::vector<XKey> all_keys_w;
+  for (auto k : all_keys) {
+    all_keys_w.push_back(XKey(k));
+  }
+  test_iter(all_keys_w, it);
 }
 } // namespace test
 

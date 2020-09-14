@@ -54,7 +54,7 @@ TEST(LR, OTHERS) {
   ASSERT_NEAR(static_cast<double>(clr.w), w,0.01);
   ASSERT_NEAR(static_cast<double>(clr.b), b, 100);
 
-  using MLRT =  MLR<u32, CompactLR>;
+  using MLRT =  MLR<u32, CompactLR, XKey>;
   MLRT mlr;
   mlr.train(train_set,labels);
   ASSERT_NEAR(clr.w, mlr.lr.w, 0.001);

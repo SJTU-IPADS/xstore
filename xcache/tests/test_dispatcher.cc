@@ -11,6 +11,7 @@
 
 namespace test {
 
+using namespace xstore;
 using namespace xstore::xcache;
 using namespace xstore::xml;
 using namespace r2;
@@ -18,20 +19,20 @@ using namespace r2;
 r2::util::FastRandom rand(0xdeadbeaf);
 
 TEST(XCache, Dispatcher) {
-  using DT = Dispatcher<LR>;
-  using A = XArray<u64>;
+  using DT = Dispatcher<LR, XKey>;
+  using A = XArray<XKey,u64>;
 
-  char *key_buf = new char[sizeof(u64) * 1200];
+  char *key_buf = new char[sizeof(XKey) * 1200];
   char *val_buf = new char[sizeof(A::VType) * 1200];
 
-  A array(MemBlock(key_buf, sizeof(u64) * 1200),
+  A array(MemBlock(key_buf, sizeof(XKey) * 1200),
           MemBlock(val_buf, sizeof(A::VType) * 1200));
 
   const usize d_num = 4;
   DT dt(d_num);
   DT dt1(d_num);
 
-  std::vector<u64> train_set;
+  std::vector<XKey> train_set;
   std::vector<u64> labels;
 
   std::vector<usize> dispatcher_counts(d_num, 0);
@@ -45,8 +46,8 @@ TEST(XCache, Dispatcher) {
   std::sort(all_keys.begin(), all_keys.end());
 
   for (uint i = 0; i < all_keys.size(); ++i) {
-    array.insert(all_keys[i],all_keys[i]);
-    train_set.push_back(all_keys[i]);
+    array.insert(XKey(all_keys[i]),all_keys[i]);
+    train_set.push_back(XKey(all_keys[i]));
     labels.push_back(i);
   }
 
@@ -56,7 +57,7 @@ TEST(XCache, Dispatcher) {
 
   // dispatch
   for (uint i = 0; i < all_keys.size(); ++i) {
-    auto d = dt.predict(all_keys[i], all_keys.size());
+    auto d = dt.predict(XKey(all_keys[i]), all_keys.size());
     //LOG(4) << "predict :" << all_keys[i] << " val:" << d;
 
     ASSERT_GE(d, 0);
@@ -77,7 +78,7 @@ TEST(XCache, Dispatcher) {
   }
 
   // train w the array
-  auto sz = dt1.default_train<ArrayIter<u64>>(array);
+  auto sz = dt1.default_train<ArrayIter<XKey,u64>>(array);
   ASSERT_EQ(sz, 1200);
 
   // check the train result

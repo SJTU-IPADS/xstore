@@ -5,6 +5,7 @@
 
 #include <gflags/gflags.h>
 
+#include "../xcomm/src/atomic_rw/rdma_async_rw_op.hh"
 #include "../xcomm/src/atomic_rw/rdma_rw_op.hh"
 #include "../xcomm/src/lib.hh"
 
@@ -76,16 +77,24 @@ int main(int argc, char **argv) {
       qp->bind_remote_mr(remote_attr);
       qp->bind_local_mr(local_mr->get_reg_attr().value());
 
+      ::r2::util::FastRandom rand(0xdeadbeaf + thread_id);
+
       SScheduler ssched;
       r2::compile_fence();
       for (int i = 0; i < FLAGS_coros; ++i) {
-        ssched.spawn([qp, i, &remote_attr](R2_ASYNC) {
+        ssched.spawn([qp, i,&local_mem, &remote_attr,&rand](R2_ASYNC) {
           while (true) {
-            // TODO:impl
-            if (i == FLAGS_coros - 1)
-              R2_STOP();
-            R2_RET;
+            r2::MemBlock src((void *)(rand.next() % 1024 * 1024 * 1024L),
+                              FLAGS_payload); // rdma_addr is 0
+            r2::MemBlock dst((void *)(local_mem->raw_ptr + 4096 * i), src.sz);
+
+            // read src to dst
+            auto ret = AsyncRDMARWOp(qp).read(src, dst, R2_ASYNC_WAIT);
+            ASSERT(ret == ::rdmaio::IOCode::Ok);
           }
+          if (i == FLAGS_coros - 1)
+            R2_STOP();
+          R2_RET;
         });
       }
       ssched.run();

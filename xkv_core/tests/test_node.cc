@@ -2,16 +2,19 @@
 
 #include <vector>
 
+#include "../../lib.hh"
+
 #include "../src/xtree/xnode.hh"
 
 #include "../../deps/r2/src/random.hh"
 
 namespace test {
 
+using namespace xstore;
 using namespace xstore::xkv::xtree;
 
 TEST(XNode, offset) {
-  using Node = XNodeKeys<16>;
+  using Node = XNodeKeys<16,XKey>;
 
   Node n;
 
@@ -20,22 +23,22 @@ TEST(XNode, offset) {
 
   for (uint i = 0; i < 16; ++i) {
     u64 key = rand.next();
-    ASSERT_TRUE(n.add_key(key));
+    ASSERT_TRUE(n.add_key(XKey(key)));
     check_keys.push_back(key);
   }
 
   // now check
   for (uint i = 0; i < check_keys.size(); ++i) {
     auto key = check_keys[i];
-    u64 *node_k_ptr =
-        reinterpret_cast<u64 *>(reinterpret_cast<char *>(&n) + n.key_offset(i));
-    ASSERT_EQ(*node_k_ptr, key);
+    XKey *node_k_ptr =
+        reinterpret_cast<XKey *>(reinterpret_cast<char *>(&n) + n.key_offset(i));
+    ASSERT_EQ(node_k_ptr->d, key);
   }
 }
 
 TEST(XNode, Nodeoffset) {
 
-  using Node = XNode<16, u64>;
+  using Node = XNode<16, XKey, u64>;
   Node n;
 
   std::vector<u64> check_keys;
@@ -47,27 +50,27 @@ TEST(XNode, Nodeoffset) {
 
   for (uint i = 0; i < 16; ++i) {
     u64 key = rand.next();
-    ASSERT_TRUE(nks->add_key(key));
+    ASSERT_TRUE(nks->add_key(XKey(key)));
     check_keys.push_back(key);
   }
 
   // now check
   for (uint i = 0; i < check_keys.size(); ++i) {
     auto key = check_keys[i];
-    u64 *node_k_ptr = reinterpret_cast<u64 *>(reinterpret_cast<char *>(nks) +
+    auto node_k_ptr = reinterpret_cast<XKey *>(reinterpret_cast<char *>(nks) +
                                               nks->key_offset(i));
-    ASSERT_EQ(*node_k_ptr, key);
-    ASSERT_EQ(n.get_key(i), key);
+    ASSERT_EQ(node_k_ptr->d, key);
+    ASSERT_EQ(n.get_key(i).d, key);
   }
 
   // check search
   for (auto k : check_keys) {
-    ASSERT_TRUE(n.keys.get_payload_ptr()->search(k));
+    ASSERT_TRUE(n.keys.get_payload_ptr()->search(XKey(k)));
   }
 }
 
 TEST(XNode, Insert) {
-  using Node = XNode<16, u64>;
+  using Node = XNode<16, XKey, u64>;
   Node n;
 
   std::vector<u64> check_keys;
@@ -76,12 +79,12 @@ TEST(XNode, Insert) {
   // first check that we have enough space for the insertions
   for (uint i = 0; i < 16; ++i) {
     u64 key = rand.next();
-    n.insert(key, key, nullptr);
+    n.insert(XKey(key), key, nullptr);
     check_keys.push_back(key);
   }
 
   for (auto k : check_keys) {
-    auto idx = n.keys.get_payload_ptr()->search(k);
+    auto idx = n.keys.get_payload_ptr()->search(XKey(k));
     ASSERT_TRUE(idx);
     ASSERT_EQ(k, *(n.values[idx.value()].get_payload_ptr()));
   }
@@ -104,10 +107,10 @@ TEST(XNode, Insert) {
       check_keys.push_back(key);
       if (!pivot_key) {
         // n1 has not been inserted
-        if (n.insert(key, key, &n1)) {
+        if (n.insert(XKey(key), key, &n1)) {
           // split
-          pivot_key = n1.get_key(0);
-          ASSERT_NE(n1.get_key(0), kInvalidKey);
+          pivot_key = n1.get_key(0).d;
+          ASSERT_NE(n1.get_key(0), XKey(kInvalidKey));
           // LOG(4) << "split done for key: "<< key;
         }
       } else {
@@ -115,9 +118,9 @@ TEST(XNode, Insert) {
           LOG(0) << "insert at pivot: " << key
                  << " ; num keys: " << n1.num_keys()
                  << "; n0: " << n.num_keys();
-          ASSERT_FALSE(n1.insert(key, key, nullptr)); // should not split!
+          ASSERT_FALSE(n1.insert(XKey(key), key, nullptr)); // should not split!
         } else {
-          ASSERT_FALSE(n.insert(key, key, nullptr));
+          ASSERT_FALSE(n.insert(XKey(key), key, nullptr));
         }
       }
       // end insert all keys
@@ -125,13 +128,13 @@ TEST(XNode, Insert) {
 
     // then check
     for (auto k : check_keys) {
-      ASSERT_TRUE(n.search(k) || n1.search(k));
-      ASSERT_TRUE((!(n.search(k))) ||
-                  (!(n1.search(k)))); // should not exist simuatously
+      ASSERT_TRUE(n.search(XKey(k)) || n1.search(XKey(k)));
+      ASSERT_TRUE((!(n.search(XKey(k)))) ||
+                  (!(n1.search(XKey(k))))); // should not exist simuatously
       ASSERT_EQ(insert_num, n.num_keys() + n1.num_keys());
-      auto idx = n.search(k);
+      auto idx = n.search(XKey(k));
       if (!idx) {
-        idx = n1.search(k);
+        idx = n1.search(XKey(k));
         ASSERT_EQ(k, n1.get_value(idx.value()).value());
       } else {
         ASSERT_TRUE(idx);
