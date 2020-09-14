@@ -2,6 +2,8 @@
 
 #include "../deps/rlib/core/lib.hh"
 
+#include "../xutils/huge_region.hh"
+
 DEFINE_int64(port, 8888, "Server listener (UDP) port.");
 DEFINE_int64(use_nic_idx, 0, "Which NIC to create QP");
 DEFINE_int64(reg_nic_name, 0, "The name to register an opened NIC at rctrl.");
@@ -11,6 +13,7 @@ DEFINE_uint64(alloc_mem_m, 64, "The size of memory to register (in size of MB)."
 
 using namespace rdmaio;
 using namespace rdmaio::rmem;
+using namespace xstore::util;
 
 int main(int argc, char **argv) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -32,10 +35,15 @@ int main(int argc, char **argv) {
     }
 
     {
-        // allocate a memory so that remote QP can access it
-        RDMA_ASSERT(ctrl.registered_mrs.create_then_reg(
-            FLAGS_reg_mem_name, Arc<RMem>(new RMem(FLAGS_alloc_mem_m * MB)),
-            ctrl.opened_nics.query(FLAGS_reg_nic_name).value()));
+      auto mem = HugeRegion::create(FLAGS_alloc_mem_m * 1024 * 1024).value();
+      ctrl.registered_mrs.create_then_reg(
+          FLAGS_reg_mem_name, mem->convert_to_rmem().value(),
+          ctrl.opened_nics.query(FLAGS_reg_nic_name).value());
+
+      // allocate a memory so that remote QP can access it
+      //RDMA_ASSERT(ctrl.registered_mrs.create_then_reg(
+      //FLAGS_reg_mem_name, Arc<RMem>(new RMem(FLAGS_alloc_mem_m * MB)),
+      //ctrl.opened_nics.query(FLAGS_reg_nic_name).value()));
     }
 
     // initialzie the value so as client can sanity check its content
