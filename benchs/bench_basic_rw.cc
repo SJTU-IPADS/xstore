@@ -91,6 +91,8 @@ int main(int argc, char **argv) {
             // read src to dst
             auto ret = AsyncRDMARWOp(qp).read(src, dst, R2_ASYNC_WAIT);
             ASSERT(ret == ::rdmaio::IOCode::Ok);
+
+            statics[thread_id].increment();
           }
           if (i == FLAGS_coros - 1)
             R2_STOP();
