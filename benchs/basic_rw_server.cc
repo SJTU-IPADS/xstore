@@ -4,7 +4,7 @@
 
 DEFINE_int64(port, 8888, "Server listener (UDP) port.");
 DEFINE_int64(use_nic_idx, 0, "Which NIC to create QP");
-DEFINE_int64(reg_nic_name, 73, "The name to register an opened NIC at rctrl.");
+DEFINE_int64(reg_nic_name, 0, "The name to register an opened NIC at rctrl.");
 DEFINE_int64(reg_mem_name, 73, "The name to register an MR at rctrl.");
 DEFINE_uint64(magic_num, 0xdeadbeaf, "The magic number read by the client");
 DEFINE_uint64(alloc_mem_m, 64, "The size of memory to register (in size of MB).");
@@ -19,6 +19,8 @@ int main(int argc, char **argv) {
     RCtrl ctrl(FLAGS_port);
     RDMA_LOG(4) << "Pingping server listenes at localhost:" << FLAGS_port;
 
+    const usize MB = 1024 * 1024;
+
     // first we open the NIC
     {
         auto nic =
@@ -32,7 +34,7 @@ int main(int argc, char **argv) {
     {
         // allocate a memory so that remote QP can access it
         RDMA_ASSERT(ctrl.registered_mrs.create_then_reg(
-            FLAGS_reg_mem_name, Arc<RMem>(new RMem(FLAGS_alloc_mem_m)),
+            FLAGS_reg_mem_name, Arc<RMem>(new RMem(FLAGS_alloc_mem_m * MB)),
             ctrl.opened_nics.query(FLAGS_reg_nic_name).value()));
     }
 

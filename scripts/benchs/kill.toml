@@ -1,0 +1,4 @@
+[[pass]]
+host = "val1"
+path = '/cock/xstore'
+cmd  = 'pkill rw_server'

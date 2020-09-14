@@ -1,0 +1,4 @@
+[[pass]]
+host = "val1"
+path = ''
+cmd  = 'cd /cock/xstore; make rw_client; make rw_server;'

@@ -9,7 +9,9 @@
 #include "../xcomm/src/atomic_rw/rdma_rw_op.hh"
 #include "../xcomm/src/lib.hh"
 
-#include "../deps/r2/src/thread.hh"
+#include "../../deps/r2/src/random.hh"
+#include "../../deps/r2/src/thread.hh"
+
 #include "./reporter.hh"
 
 #include "../deps/rlib/core/lib.hh"
@@ -26,6 +28,7 @@ namespace bench {
 
 using namespace xstore;
 using namespace xcomm;
+using namespace rw;
 using namespace xstore::bench;
 using namespace r2;
 using namespace rdmaio;
@@ -82,15 +85,17 @@ int main(int argc, char **argv) {
       SScheduler ssched;
       r2::compile_fence();
       for (int i = 0; i < FLAGS_coros; ++i) {
-        ssched.spawn([qp, i,&local_mem, &remote_attr,&rand](R2_ASYNC) {
+        ssched.spawn([thread_id, qp, i, &statics, &local_mem, &remote_attr,&rand](R2_ASYNC) {
           while (true) {
-            r2::MemBlock src((void *)(rand.next() % 1024 * 1024 * 1024L),
-                              FLAGS_payload); // rdma_addr is 0
+            r2::MemBlock src((void *)(rand.next() % 1024 * 1024 * 64),
+                             FLAGS_payload); // rdma_addr is 0
+            //r2::MemBlock src((void *)(0),
+            //FLAGS_payload); // rdma_addr is 0
             r2::MemBlock dst((void *)(local_mem->raw_ptr + 4096 * i), src.sz);
 
             // read src to dst
             auto ret = AsyncRDMARWOp(qp).read(src, dst, R2_ASYNC_WAIT);
-            ASSERT(ret == ::rdmaio::IOCode::Ok);
+            ASSERT(ret == ::rdmaio::IOCode::Ok) << "error";
 
             statics[thread_id].increment();
           }

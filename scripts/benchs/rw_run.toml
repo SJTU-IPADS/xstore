@@ -1,0 +1,10 @@
+[[pass]]
+host = "val1"
+path = '/cock/xstore'
+cmd  = './rw_server --alloc_mem_m 2048' ## server reg 2G mem
+
+
+[[pass]]
+host = "val0"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=1'

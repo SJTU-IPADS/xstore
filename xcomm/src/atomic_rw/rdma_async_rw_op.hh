@@ -29,7 +29,6 @@ public:
       // size not match
       return ::rdmaio::Err();
     }
-
     op.set_rdma_addr(reinterpret_cast<u64>(src.mem_ptr), qp->remote_mr.value())
         .set_read()
         .set_payload(static_cast<const u64 *>(dest.mem_ptr), dest.sz,
