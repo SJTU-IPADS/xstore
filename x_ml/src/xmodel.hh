@@ -20,6 +20,7 @@ namespace xml {
   User must provides an updating function, during training to
   let XSubmodel defines how to calculate the error.
  */
+// TODO: should handle overflow for complex keys
 using update_func = std::function<std::pair<int, int>(
     const u64 &label, const u64 &predict, const int &cur_min,
     const int &cur_max)>;
