@@ -5,6 +5,8 @@
 
 #include <gflags/gflags.h>
 
+#include "../lib.hh"
+
 #include "../xcomm/src/atomic_rw/rdma_async_rw_op.hh"
 #include "../xcomm/src/atomic_rw/rdma_rw_op.hh"
 #include "../xcomm/src/lib.hh"
@@ -41,13 +43,18 @@ using XThread = ::r2::Thread<usize>;
 
 using namespace bench;
 
+using TestTreeNode = ::xstore::xkv::xtree::XNode<16, ::xstore::XKey, u64>;
+
 int main(int argc, char **argv) {
-
-
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   std::vector<std::unique_ptr<XThread>> workers;
+
+  TestTreeNode node;
+  LOG(4) << "Check node, keys:  " << node.keys_start_offset()
+         << "; value starts:" << node.value_start_offset()
+         << "; total:" << sizeof(TestTreeNode);
 
   std::vector<Statics> statics(FLAGS_threads);
 
@@ -95,7 +102,7 @@ int main(int argc, char **argv) {
                              FLAGS_payload); // rdma_addr is 0
             //r2::MemBlock src((void *)(0),
             //FLAGS_payload); // rdma_addr is 0
-            r2::MemBlock dst((void *)(local_mem->raw_ptr + 4096 * i), src.sz);
+            r2::MemBlock dst((void *)((char *)(local_mem->raw_ptr) + 4096 * i), src.sz);
 
             // read src to dst
             auto ret = AsyncRDMARWOp(qp).read(src, dst, R2_ASYNC_WAIT);

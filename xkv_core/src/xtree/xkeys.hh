@@ -34,7 +34,7 @@ template <usize N, typename K> struct __attribute__((packed)) XNodeKeys {
   /*!
     \ret: the index installed
    */
-  auto add_key(const K &key) -> Option<u8> {
+  auto add_key(const K &key) -> ::r2::Option<u8> {
     for (uint i = 0; i < N; ++i) {
       if (this->keys[i] == K(kInvalidKey)) {
         this->keys[i] = key;
@@ -44,7 +44,7 @@ template <usize N, typename K> struct __attribute__((packed)) XNodeKeys {
     return {};
   }
 
-  auto search(const K &key) -> Option<u8> {
+  auto search(const K &key) -> ::r2::Option<u8> {
     for (uint i = 0; i < N; ++i) {
       if (this->keys[i] == key) {
         return i;
@@ -74,7 +74,7 @@ template <usize N, typename K> struct __attribute__((packed)) XNodeKeys {
     using T = XNodeKeys<N, K>;
     return offsetof(T, keys) + sizeof(u64) * idx;}
 
-  auto find_median_key() -> Option<u8> {
+  auto find_median_key() -> ::r2::Option<u8> {
     std::vector<std::pair<K, int>> temp;
     for (uint i = 0;i < N;++i) {
       temp.push_back(std::make_pair(this->keys[i], i));

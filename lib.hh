@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <limits>
 
 #include "deps/r2/src/common.hh"
 

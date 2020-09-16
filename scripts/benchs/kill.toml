@@ -2,3 +2,13 @@
 host = "val1"
 path = '/cock/xstore'
 cmd  = 'pkill rw_server'
+
+[[pass]]
+host = "val0"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client'
+
+[[pass]]
+host = "val2"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client'

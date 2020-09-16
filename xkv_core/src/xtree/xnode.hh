@@ -34,8 +34,6 @@ const bool kKeysSorted = false;
  */
 template <usize N, typename K, typename V> struct __attribute__((packed)) XNode {
 
-  CompactSpinLock lock;
-
   using NodeK = XNodeKeys<N,K>;
 
   // keys
@@ -54,6 +52,8 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
 
   // next pointer
   XNode<N, K, V> *next = nullptr;
+
+  CompactSpinLock lock;
 
   // methods
   XNode() = default;
@@ -74,7 +74,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
     return this->keys_ptr()->get_key(idx);
   }
 
-  auto get_value(const int &idx) -> Option<V> {
+  auto get_value(const int &idx) -> ::r2::Option<V> {
     // TODO: not check idx
     if (this->keys_ptr()->get_key(idx) != XKey(kInvalidKey)) {
       return *(values[idx].get_payload_ptr());
@@ -95,7 +95,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   /*!
     Query method
    */
-  auto search(const K &key) -> Option<u8> {
+  auto search(const K &key) -> ::r2::Option<u8> {
     return this->keys_ptr()->search(key);
   }
 
@@ -112,6 +112,19 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
         LOG(4) << "keys: #" << i << " " << this->get_key(i);
       }
     }
+  }
+
+  /*!
+    inplace update value
+    update value at *idx*
+  */
+  auto value_update(const int &idx, const V &v) {
+    if (sizeof(V) <= sizeof(u64)) {
+      // can use `store` for atomic update
+    } else {
+      // use the wrappedtype
+    }
+    ASSERT(false) << " not implemented";
   }
 
   /*!
