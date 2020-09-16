@@ -24,6 +24,8 @@ const bool kKeysSorted = false;
 #define SIZEOF_TYPE(X) (((X *)0) + 1)
 #endif
 
+#define XNODE_KEYS_ATOMIC 0
+
 /*!
   - N: max keys in this node
   - V: the value type
@@ -37,7 +39,11 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   using NodeK = XNodeKeys<N,K>;
 
   // keys
+#if XNODE_KEYS_ATOMIC
   WrappedType<NodeK> keys;
+#else
+  NodeK keys;
+#endif
 
   // values
   // if the size of value is smaller, we directly store it
@@ -52,17 +58,25 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   // methods
   XNode() = default;
 
-  auto num_keys() -> usize { return keys.get_payload_ptr()->num_keys(); }
+  auto keys_ptr() -> NodeK * {
+#if XNODE_KEYS_ATOMIC
+    return keys.get_payload_ptr();
+#else
+    return &(this->keys);
+#endif
+  }
 
-  auto get_incarnation() -> u32 { return this->keys.get_payload_ptr()->incarnation; }
+  auto num_keys() -> usize { return this->keys_ptr()->num_keys(); }
+
+  auto get_incarnation() -> u32 { return this->keys_ptr()->incarnation; }
 
   auto get_key(const int &idx) -> K {
-    return keys.get_payload_ptr()->get_key(idx);
+    return this->keys_ptr()->get_key(idx);
   }
 
   auto get_value(const int &idx) -> Option<V> {
     // TODO: not check idx
-    if (this->keys.get_payload().get_key(idx) != XKey(kInvalidKey)) {
+    if (this->keys_ptr()->get_key(idx) != XKey(kInvalidKey)) {
       return *(values[idx].get_payload_ptr());
     }
     return {};
@@ -82,7 +96,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
     Query method
    */
   auto search(const K &key) -> Option<u8> {
-    return keys.get_payload_ptr()->search(key);
+    return this->keys_ptr()->search(key);
   }
 
   auto insert(const K &key, const V &v, XNode<N, K, V> *candidate) -> bool {
@@ -110,7 +124,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   auto raw_insert(const K &key, const V &v, XNode<N,K,V> *candidate)
       -> bool { // lock the node for atomicity
     bool ret = false;
-    auto idx = this->keys.get_payload_ptr()->add_key(key);
+    auto idx = this->keys_ptr()->add_key(key);
     if (idx) {
       // in-place update
       this->values[idx.value()].reset(v);
@@ -124,18 +138,18 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
        */
 
       // 1. increment the incarnation
-      this->keys.get_payload_ptr()->incarnation += 1;
+      this->keys_ptr()->incarnation += 1;
       r2::compile_fence();
 
       // 2. move the pivot key
-      auto pivot_key_idx = this->keys.get_payload_ptr()->find_median_key().value();
-      auto pivot_key = this->keys.get_payload_ptr()->get_key(pivot_key_idx);
+      auto pivot_key_idx = this->keys_ptr()->find_median_key().value();
+      auto pivot_key = this->keys_ptr()->get_key(pivot_key_idx);
 
       // should not split
       auto r = candidate->raw_insert(
           pivot_key, *(this->values[pivot_key_idx].get_payload_ptr()), nullptr);
       ASSERT(r == false);
-      this->keys.get_payload_ptr()->clear(pivot_key_idx);
+      this->keys_ptr()->clear(pivot_key_idx);
 
       // 3. then, move other keys
       for (uint i = 0; i < N; ++i) {
@@ -145,7 +159,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
           auto r =
               candidate->raw_insert(k, *(this->values[i].get_payload_ptr()), nullptr);
           ASSERT(r == false);
-          this->keys.get_payload_ptr()->clear(i);
+          this->keys_ptr()->clear(i);
         }
       }
 

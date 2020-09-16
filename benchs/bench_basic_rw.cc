@@ -9,6 +9,8 @@
 #include "../xcomm/src/atomic_rw/rdma_rw_op.hh"
 #include "../xcomm/src/lib.hh"
 
+#include "../xkv_core/src/xtree/xnode.hh"
+
 #include "../../deps/r2/src/random.hh"
 #include "../../deps/r2/src/thread.hh"
 
@@ -40,6 +42,8 @@ using XThread = ::r2::Thread<usize>;
 using namespace bench;
 
 int main(int argc, char **argv) {
+
+
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 

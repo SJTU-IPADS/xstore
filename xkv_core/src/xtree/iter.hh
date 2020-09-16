@@ -66,14 +66,18 @@ struct XTreeIter : public KeyIterTrait<XTreeIter<N, KeyType, V>,
     if (node != nullptr) {
       // read
     retry:
+#if XNODE_KEYS_ATOMIC
+      // do atomic checks
       auto seq = node->keys.seq;
+#endif
       this->next_ptr = node->next;
       r2::compile_fence();
-      this->cur_node = node->keys.get_payload();
+      this->cur_node = *(node->keys_ptr());
+#if XNODE_KEYS_ATOMIC
       if (unlikely(node->keys.seq != seq)) {
         goto retry;
       }
-
+#endif
       // re-set next ptr
       this->cur_node_ptr = node;
     } else {

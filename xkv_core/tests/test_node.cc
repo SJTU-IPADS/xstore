@@ -43,7 +43,7 @@ TEST(XNode, Nodeoffset) {
 
   std::vector<u64> check_keys;
   r2::util::FastRandom rand(0xdeadbeaf);
-
+#if XNODE_KEYS_ATOMIC
   WrappedType<Node::NodeK> *w = reinterpret_cast<WrappedType<Node::NodeK> *>(
       reinterpret_cast<char *>(&n) + n.keys_start_offset());
   Node::NodeK *nks = w->get_payload_ptr();
@@ -65,8 +65,9 @@ TEST(XNode, Nodeoffset) {
 
   // check search
   for (auto k : check_keys) {
-    ASSERT_TRUE(n.keys.get_payload_ptr()->search(XKey(k)));
+    ASSERT_TRUE(n.keys_ptr()->search(XKey(k)));
   }
+#endif
 }
 
 TEST(XNode, Insert) {
@@ -84,7 +85,7 @@ TEST(XNode, Insert) {
   }
 
   for (auto k : check_keys) {
-    auto idx = n.keys.get_payload_ptr()->search(XKey(k));
+    auto idx = n.keys_ptr()->search(XKey(k));
     ASSERT_TRUE(idx);
     ASSERT_EQ(k, *(n.values[idx.value()].get_payload_ptr()));
   }
