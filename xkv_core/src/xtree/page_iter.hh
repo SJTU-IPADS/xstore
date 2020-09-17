@@ -63,6 +63,7 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>,
   auto read_from(XNode<N, KeyType, V> *node) {
     if (node != nullptr) {
       // read
+#if XNODE_KEYS_ATOMIC
     retry:
       auto seq = node->keys.seq;
       r2::compile_fence();
@@ -70,6 +71,9 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>,
       if (unlikely(node->keys.seq != seq)) {
         goto retry;
       }
+#else
+      this->cur_node = *(node->keys);
+#endif
     }
   }
 };
