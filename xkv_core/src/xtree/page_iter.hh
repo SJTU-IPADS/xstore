@@ -48,7 +48,7 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>,
   auto has_next_impl() -> bool { return this->cur_node_ptr != nullptr; }
 
   // TODO: what if the KeyType is not u64?
-  auto cur_key_impl() -> KeyType { return K(logic_page_id); }
+  auto cur_key_impl() -> KeyType { return KeyType(logic_page_id); }
 
   auto seek_impl(const KeyType &k, XTree<N, KeyType, V> &kv) {
     this->cur_node_ptr = kv.find_leaf(k);
