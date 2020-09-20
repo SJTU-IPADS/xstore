@@ -10,7 +10,7 @@ before_script:
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-#    - deps/
+    - deps/
     - .pip
 
 # run tests using the binary built before

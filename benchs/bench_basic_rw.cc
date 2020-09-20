@@ -25,6 +25,7 @@ DEFINE_int64(coros, 1, "num client coroutine used per threads");
 DEFINE_int64(nic_idx, 0, "which RNIC to use");
 DEFINE_int64(payload, 8, "value payload the client would fetch");
 DEFINE_string(addr, "localhost:8888", "server address");
+DEFINE_int64(emulate_page_num, 1, "estimated error of the training model");
 DEFINE_string(client_name, "xx", "Unique client name");
 DEFINE_int64(reg_mem_name, 73, "The name to register an MR at rctrl.");
 
@@ -98,10 +99,12 @@ int main(int argc, char **argv) {
       for (int i = 0; i < FLAGS_coros; ++i) {
         ssched.spawn([thread_id, qp, i, &statics, &local_mem, &remote_attr,&rand](R2_ASYNC) {
           while (true) {
-            r2::MemBlock src((void *)(rand.next() % 1024 * 1024 * 64),
+            const u64 total_pages = 1024 * 1024 * 64;
+            auto src_slot = rand.next() % (total_pages * sizeof(TestTreeNode));
+            auto start_addr = src_slot % sizeof(TestTreeNode);
+
+            r2::MemBlock src((void *)(start_addr),
                              FLAGS_payload); // rdma_addr is 0
-            //r2::MemBlock src((void *)(0),
-            //FLAGS_payload); // rdma_addr is 0
             r2::MemBlock dst((void *)((char *)(local_mem->raw_ptr) + 4096 * i), src.sz);
 
             // read src to dst

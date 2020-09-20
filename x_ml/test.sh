@@ -5,6 +5,6 @@
 cmake . ; make;
 
 ./test_lr;
-./test_nn;
+#./test_nn;
 ./test_x;
-./bench_lr;
+#./bench_lr;

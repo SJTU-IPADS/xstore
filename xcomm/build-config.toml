@@ -47,6 +47,11 @@ src = ["./tests/test_remote_rw.cc", "../deps/r2/src/logging.cc", "../deps/r2/src
 extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
 
 [[apps]]
+name = "test_batch"
+src = ["./tests/test_batch_rdma.cc", "../deps/r2/src/logging.cc", "../deps/r2/src/sshed.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
+[[apps]]
 name = "test_remote_con_rw"
 src = ["./tests/test_remote_concurrent.cc", "../deps/r2/src/logging.cc"]
 extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
