@@ -85,12 +85,12 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   /*!
     The start offset of keys
    */
-  auto keys_start_offset() -> usize { return offsetof(XNode, keys); }
+  static auto keys_start_offset() -> usize { return offsetof(XNode, keys); }
 
   /*!
     The start offset of values
    */
-  auto value_start_offset() -> usize { return offsetof(XNode, values); }
+  static auto value_start_offset() -> usize { return offsetof(XNode, values); }
 
   /*!
     Query method

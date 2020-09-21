@@ -9,12 +9,13 @@
 
 #include "../xcomm/src/atomic_rw/rdma_async_rw_op.hh"
 #include "../xcomm/src/atomic_rw/rdma_rw_op.hh"
+#include "../xcomm/src/batch_rw_op.hh"
 #include "../xcomm/src/lib.hh"
 
 #include "../xkv_core/src/xtree/xnode.hh"
 
-#include "../../deps/r2/src/random.hh"
-#include "../../deps/r2/src/thread.hh"
+#include "../deps/r2/src/random.hh"
+#include "../deps/r2/src/thread.hh"
 
 #include "./reporter.hh"
 
@@ -25,7 +26,7 @@ DEFINE_int64(coros, 1, "num client coroutine used per threads");
 DEFINE_int64(nic_idx, 0, "which RNIC to use");
 DEFINE_int64(payload, 8, "value payload the client would fetch");
 DEFINE_string(addr, "localhost:8888", "server address");
-DEFINE_int64(emulate_page_num, 1, "estimated error of the training model");
+DEFINE_int64(emulate_error, 1, "estimated error of the training model");
 DEFINE_string(client_name, "xx", "Unique client name");
 DEFINE_int64(reg_mem_name, 73, "The name to register an MR at rctrl.");
 
@@ -44,7 +45,9 @@ using XThread = ::r2::Thread<usize>;
 
 using namespace bench;
 
-using TestTreeNode = ::xstore::xkv::xtree::XNode<16, ::xstore::XKey, u64>;
+const usize kNodeMaxKeys = 16;
+using TestTreeNode =
+    ::xstore::xkv::xtree::XNode<kNodeMaxKeys, ::xstore::XKey, u64>;
 
 int main(int argc, char **argv) {
 
@@ -96,20 +99,37 @@ int main(int argc, char **argv) {
 
       SScheduler ssched;
       r2::compile_fence();
+
       for (int i = 0; i < FLAGS_coros; ++i) {
-        ssched.spawn([thread_id, qp, i, &statics, &local_mem, &remote_attr,&rand](R2_ASYNC) {
+        ssched.spawn([thread_id, qp, i, &statics, &local_mem, &remote_attr,
+                      &rand](R2_ASYNC) {
+          char *my_buf = (char *)(local_mem->raw_ptr) + 4096 * i;
+          ASSERT(4096 >= 16 * sizeof(TestTreeNode));
+
+          BatchOp<16> reqs;
           while (true) {
             const u64 total_pages = 1024 * 1024 * 64;
             auto src_slot = rand.next() % (total_pages * sizeof(TestTreeNode));
             auto start_addr = src_slot % sizeof(TestTreeNode);
+            auto num = rand.rand_number<int>(1, FLAGS_emulate_error + 1);
+            auto page_num = num / kNodeMaxKeys;
+            ASSERT(page_num < 16);
+            auto end_slot = src_slot + page_num;
 
-            r2::MemBlock src((void *)(start_addr),
-                             FLAGS_payload); // rdma_addr is 0
-            r2::MemBlock dst((void *)((char *)(local_mem->raw_ptr) + 4096 * i), src.sz);
+            // read page from src_slot -> end_slot
+            for (auto addr = src_slot; addr <= end_slot; addr += 1) {
+              auto real_addr = addr * sizeof(TestTreeNode);
+              reqs.emplace();
+              reqs.get_cur_op()
+                  .set_rdma_addr(real_addr, qp->remote_mr.value())
+                  .set_read()
+                  .set_payload((const u64 *)my_buf, TestTreeNode::value_start_offset(),
+                               qp->local_mr.value().lkey);
+            }
 
-            // read src to dst
-            auto ret = AsyncRDMARWOp(qp).read(src, dst, R2_ASYNC_WAIT);
-            ASSERT(ret == ::rdmaio::IOCode::Ok) << "error";
+            // issue
+            auto ret = reqs.execute_async(qp, R2_ASYNC_WAIT);
+            ASSERT(ret == ::rdmaio::IOCode::Ok);
 
             statics[thread_id].increment();
           }
