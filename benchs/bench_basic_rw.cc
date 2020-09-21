@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 
           BatchOp<16> reqs;
           while (true) {
-            const u64 total_pages = 64 * 1024 * 1000;
+            const u64 total_pages = 64 * 1024;
             auto src_slot = rand.next() % (total_pages);
             auto start_addr = src_slot % sizeof(TestTreeNode);
             auto num = rand.rand_number<int>(1, FLAGS_emulate_error + 1);
