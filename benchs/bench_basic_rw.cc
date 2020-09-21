@@ -103,13 +103,13 @@ int main(int argc, char **argv) {
       for (int i = 0; i < FLAGS_coros; ++i) {
         ssched.spawn([thread_id, qp, i, &statics, &local_mem, &remote_attr,
                       &rand](R2_ASYNC) {
-          char *my_buf = (char *)(local_mem->raw_ptr) + 4096 * i;
-          ASSERT(4096 >= 16 * sizeof(TestTreeNode));
+          char *my_buf = (char *)(local_mem->raw_ptr) + 40960 * i;
+          ASSERT(40960 >= 16 * sizeof(TestTreeNode)) << "need buf sz:" << sizeof(TestTreeNode) * 16;
 
           BatchOp<16> reqs;
           while (true) {
-            const u64 total_pages = 1024 * 1024 * 64;
-            auto src_slot = rand.next() % (total_pages * sizeof(TestTreeNode));
+            const u64 total_pages = 64 * 1024 * 1000;
+            auto src_slot = rand.next() % (total_pages);
             auto start_addr = src_slot % sizeof(TestTreeNode);
             auto num = rand.rand_number<int>(1, FLAGS_emulate_error + 1);
             auto page_num = num / kNodeMaxKeys;
@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
             // read page from src_slot -> end_slot
             for (auto addr = src_slot; addr <= end_slot; addr += 1) {
               auto real_addr = addr * sizeof(TestTreeNode);
+              //auto real_addr = 0;
               reqs.emplace();
               reqs.get_cur_op()
                   .set_rdma_addr(real_addr, qp->remote_mr.value())
@@ -129,7 +130,7 @@ int main(int argc, char **argv) {
 
             // issue
             auto ret = reqs.execute_async(qp, R2_ASYNC_WAIT);
-            ASSERT(ret == ::rdmaio::IOCode::Ok);
+            ASSERT(ret == ::rdmaio::IOCode::Ok) << "poll comp error:" << RC::wc_status(ret.desc);
 
             statics[thread_id].increment();
           }
