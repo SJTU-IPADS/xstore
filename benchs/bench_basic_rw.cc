@@ -104,9 +104,14 @@ int main(int argc, char **argv) {
         ssched.spawn([thread_id, qp, i, &statics, &local_mem, &remote_attr,
                       &rand](R2_ASYNC) {
           char *my_buf = (char *)(local_mem->raw_ptr) + 40960 * i;
-          ASSERT(40960 >= 16 * sizeof(TestTreeNode)) << "need buf sz:" << sizeof(TestTreeNode) * 16;
+          ASSERT(40960 >= 16 * sizeof(TestTreeNode))
+              << "need buf sz:" << sizeof(TestTreeNode) * 16;
 
+          // use to emulate leaf nodes read
           BatchOp<16> reqs;
+          // use to emulate value read
+          AsyncOp<1> op;
+
           while (true) {
             const u64 total_pages = 64 * 1024;
             auto src_slot = rand.next() % (total_pages);
@@ -119,20 +124,31 @@ int main(int argc, char **argv) {
             // read page from src_slot -> end_slot
             for (auto addr = src_slot; addr <= end_slot; addr += 1) {
               auto real_addr = addr * sizeof(TestTreeNode);
-              //auto real_addr = 0;
+              // auto real_addr = 0;
               reqs.emplace();
               reqs.get_cur_op()
                   .set_rdma_addr(real_addr, qp->remote_mr.value())
                   .set_read()
-                  .set_payload((const u64 *)my_buf, TestTreeNode::value_start_offset(),
+                  .set_payload((const u64 *)my_buf,
+                               TestTreeNode::value_start_offset(),
                                qp->local_mr.value().lkey);
             }
 
             // issue
             auto ret = reqs.execute_async(qp, R2_ASYNC_WAIT);
-            ASSERT(ret == ::rdmaio::IOCode::Ok) << "poll comp error:" << RC::wc_status(ret.desc);
+            ASSERT(ret == ::rdmaio::IOCode::Ok)
+                << "poll comp error:" << RC::wc_status(ret.desc);
 
             statics[thread_id].increment();
+
+            // then read the value
+            op.set_read()
+                .set_rdma_addr(addr * sizeof(TestTreeNode),
+                               qp->remote_mr.value())
+                .set_payload((const u64 *)my_buf, FLAGS_payload,
+                             qp->local_mr.value().lkey);
+            ret = op.execute_async(qp, IBV_SEND_SIGNALED, R2_ASYNC_WAIT);
+            ASSERT(ret == ::rdmaio::IOCode::Ok);
           }
           if (i == FLAGS_coros - 1)
             R2_STOP();

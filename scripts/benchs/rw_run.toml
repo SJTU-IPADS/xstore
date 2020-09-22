@@ -8,3 +8,8 @@ cmd  = './rw_server --alloc_mem_m 8192' ## server reg 2G mem
 host = "val0"
 path = '/cock/xstore'
 cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=1 --emulate_error=0'
+
+[[pass]]
+host = "val2"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val02:8888" --client_name=2 --emulate_error=0'
