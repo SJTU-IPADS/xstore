@@ -22,6 +22,8 @@ template <typename T> struct __attribute__((packed)) WrappedType {
   volatile u32 seq_check;
 
  public:
+  WrappedType() = default;
+
   WrappedType(const T &p) : payload(p) {
     this->init();
   }
@@ -38,8 +40,6 @@ template <typename T> struct __attribute__((packed)) WrappedType {
     this->init();
     this->payload = t;
   }
-
-  WrappedType() : seq_check(seq) {}
 
   T &get_payload() { return payload; }
 

@@ -26,6 +26,14 @@ const bool kKeysSorted = false;
 
 #define XNODE_KEYS_ATOMIC 0
 
+template <usize N, typename V> union __attribute__((packed)) Values {
+  V inplace[N];
+  WrappedType<V> wrapped[N];
+
+  Values() {
+  }
+};
+
 /*!
   - N: max keys in this node
   - V: the value type
@@ -48,7 +56,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
 
   // FIXME: how to define it statically?
   //UWrappedType<V> values[N];
-  WrappedType<V> values[N];
+  Values<N,V> values;
 
   // next pointer
   XNode<N, K, V> *next = nullptr;
@@ -77,9 +85,18 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   auto get_value(const int &idx) -> ::r2::Option<V> {
     // TODO: not check idx
     if (this->keys_ptr()->get_key(idx) != XKey(kInvalidKey)) {
-      return *(values[idx].get_payload_ptr());
+      return get_value_raw(idx);
     }
     return {};
+  }
+
+  // unsafe code, not check the idx and whether the idx's key is valid
+  auto get_value_raw(const int &idx) -> V {
+    if (sizeof(V) <= sizeof(u64)) {
+      return values.inplace[idx];
+    } else {
+      return *(values.wrapped[idx].get_payload_ptr());
+    }
   }
 
   /*!
@@ -121,10 +138,11 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
   auto value_update(const int &idx, const V &v) {
     if (sizeof(V) <= sizeof(u64)) {
       // can use `store` for atomic update
+      this->values.inplace[idx] = v;
     } else {
       // use the wrappedtype
+      this->values.wrapped[idx].reset(v);
     }
-    ASSERT(false) << " not implemented";
   }
 
   /*!
@@ -140,7 +158,8 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
     auto idx = this->keys_ptr()->add_key(key);
     if (idx) {
       // in-place update
-      this->values[idx.value()].reset(v);
+      //this->values[idx.value()].reset(v);
+      this->value_update(idx.value(), v);
     } else {
       // split
       ASSERT(candidate != nullptr) << "split at the node:" << this << " " << candidate;
@@ -160,7 +179,7 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
 
       // should not split
       auto r = candidate->raw_insert(
-          pivot_key, *(this->values[pivot_key_idx].get_payload_ptr()), nullptr);
+          pivot_key, this->get_value_raw(pivot_key_idx), nullptr);
       ASSERT(r == false);
       this->keys_ptr()->clear(pivot_key_idx);
 
@@ -169,8 +188,9 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
         auto k = this->get_key(i);
         if (k != K(kInvalidKey) && k > pivot_key) {
           // insert
-          auto r =
-              candidate->raw_insert(k, *(this->values[i].get_payload_ptr()), nullptr);
+          //auto r =
+          //candidate->raw_insert(k, *(this->values[i].get_payload_ptr()), nullptr);
+          auto r = candidate->raw_insert(k, this->get_value_raw(i), nullptr);
           ASSERT(r == false);
           this->keys_ptr()->clear(i);
         }

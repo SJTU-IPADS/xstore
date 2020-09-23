@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 // Result<> to record whether the op is done
 #include "../../../deps/rlib/core/result.hh"
 

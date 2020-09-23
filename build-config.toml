@@ -41,5 +41,5 @@ extra = ["gflags","ibverbs","pthread"]
 [[apps]]
 name = "ycsb_server"
 src = ["./benchs/ycsb/server/main.cc", "./deps/r2/src/logging.cc"]
-extra = ["gflags","ibverbs","pthread","mkl_rt"]
+extra = ["gflags","ibverbs","pthread","mkl_rt","boost_system", "boost_coroutine", "pthread"]
 
