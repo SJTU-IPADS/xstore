@@ -81,14 +81,14 @@ struct XArray : public KVTrait<XArray<KeyType, V>, KeyType, V> {
     return true;
   }
 
-  auto keys_at(const int &idx) -> Option<KeyType> {
+  auto keys_at(const int &idx) -> ::r2::Option<KeyType> {
     if (likely(idx >= 0 && idx < size)) {
       return key_ptr[idx];
     }
     return {};
   }
 
-  auto vals_at(const int &idx) -> Option<V> {
+  auto vals_at(const int &idx) -> ::r2::Option<V> {
     if (likely(idx >= 0 && idx < size)) {
       return *(val_ptr[idx].get_payload_ptr());
     }
@@ -99,7 +99,7 @@ struct XArray : public KVTrait<XArray<KeyType, V>, KeyType, V> {
     Impl the KVTrait
    */
 
-  auto get_impl(const KeyType &k) -> Option<V> {
+  auto get_impl(const KeyType &k) -> ::r2::Option<V> {
     auto p = this->pos(k);
     if (p) {
       return this->vals_at(p.value());
@@ -107,7 +107,7 @@ struct XArray : public KVTrait<XArray<KeyType, V>, KeyType, V> {
     return {};
   }
 
-  auto pos(const KeyType &k) -> Option<usize> {
+  auto pos(const KeyType &k) -> ::r2::Option<usize> {
     auto it = this->index.find(k);
     if (it != this->index.end()) {
       return it->second;

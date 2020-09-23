@@ -26,7 +26,7 @@ template <usize N, typename K, typename V> struct XTree : public KVTrait<XTree<N
   static __thread Leaf *pre_alloc_leaf_node;
 
   // impl the public trait
-  auto get_impl(const K &k) -> Option<V> {
+  auto get_impl(const K &k) -> ::r2::Option<V> {
     auto leaf = this->find_leaf(k);
     ASSERT(leaf != nullptr);
     auto idx = leaf->search(k);

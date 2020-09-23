@@ -4,7 +4,7 @@ before_script:
   - git config --global user.email "wxdwfc@gmail.com"
   - git config --global user.name "wxd"
   - git submodule sync
-  - git fetch --recurse-submodules
+#  - git fetch --recurse-submodules
   - git submodule update --init
 
 cache:
@@ -39,6 +39,14 @@ test_xcache:
     - ./test_rmi_t;
     - ./test_logic;
     - ./test_dispatcher;
+
+bench:
+  stage: test
+  tags:
+  - rdma
+  script:
+    - ./magic.py config -f build-config.toml
+    - cmake .; make;
 
 
 

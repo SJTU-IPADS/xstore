@@ -24,7 +24,7 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>,
                                            XTree<N, KeyType, V>, KeyType> {
   using Self = XTreePageIter<N, KeyType, V>;
 
-  Option<XNodeKeys<N,KeyType>> cur_node = {};
+  ::r2::Option<XNodeKeys<N,KeyType>> cur_node = {};
   XNode<N,KeyType,V> *cur_node_ptr = nullptr;
   usize logic_page_id = 0;
 
@@ -72,7 +72,7 @@ struct XTreePageIter : public KeyIterTrait<XTreePageIter<N, KeyType, V>,
         goto retry;
       }
 #else
-      this->cur_node = *(node->keys);
+      this->cur_node = node->keys;
 #endif
     }
   }

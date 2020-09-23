@@ -27,7 +27,7 @@ DEFINE_int64(nic_idx, 0, "which RNIC to use");
 DEFINE_int64(payload, 8, "value payload the client would fetch");
 DEFINE_string(addr, "localhost:8888", "server address");
 DEFINE_int64(emulate_error, 1, "estimated error of the training model");
-DEFINE_string(client_name, "xx", "Unique client name");
+DEFINE_int64(client_name, 0, "Unique client name (in int)");
 DEFINE_int64(reg_mem_name, 73, "The name to register an MR at rctrl.");
 
 namespace bench {
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
       qp->bind_remote_mr(remote_attr);
       qp->bind_local_mr(local_mr->get_reg_attr().value());
 
-      ::r2::util::FastRandom rand(0xdeadbeaf + thread_id);
+      ::r2::util::FastRandom rand(0xdeadbeaf + thread_id + 73 * FLAGS_client_name);
 
       SScheduler ssched;
       r2::compile_fence();
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
             const u64 total_pages = 64 * 1024;
             auto src_slot = rand.next() % (total_pages);
             auto start_addr = src_slot % sizeof(TestTreeNode);
-            auto num = rand.rand_number<int>(1, FLAGS_emulate_error + 1);
+            auto num = rand.rand_number<int>(1, FLAGS_emulate_error + 1) + rand.rand_number<int>(0, kNodeMaxKeys);
             auto page_num = num / kNodeMaxKeys;
             ASSERT(page_num < 16);
             auto end_slot = src_slot + page_num;
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 
             // then read the value
             op.set_read()
-                .set_rdma_addr(addr * sizeof(TestTreeNode),
+                .set_rdma_addr(src_slot * sizeof(TestTreeNode),
                                qp->remote_mr.value())
                 .set_payload((const u64 *)my_buf, FLAGS_payload,
                              qp->local_mr.value().lkey);

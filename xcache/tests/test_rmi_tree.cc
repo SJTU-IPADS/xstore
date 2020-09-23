@@ -92,7 +92,6 @@ TEST(RMI, Tree) {
   const usize num_rmi = 12;
   LocalTwoRMI<LR, LR, XKey> rmi_idx(num_rmi);
   rmi_idx.default_train_first<XTreeIter<16,XKey,u64>>(t);
-
   DefaultSample<XKey> s;
   Statics statics;
 

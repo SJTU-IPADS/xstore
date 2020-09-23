@@ -35,7 +35,7 @@ inline std::pair<int, int> default_update_func(const u64 &label,
                           static_cast<i64>(label) - static_cast<i64>(predict));
   LOG(0) << "update mm: " << new_min << " " << new_max
          << "; l : "<< label << " " << predict;
-  return std::make_pair(new_min,new_max); // not implemented
+  return std::make_pair(new_min,new_max);
 }
 
 template <template<typename> class ML,typename Key> struct XSubModel {
@@ -54,8 +54,9 @@ template <template<typename> class ML,typename Key> struct XSubModel {
   template <typename... Args> XSubModel(Args... args) : ml(args...) {}
 
   auto get_point_predict(const Key &k) -> int {
-    return static_cast<int>(
-        std::max(static_cast<int>(this->ml.predict(k)), static_cast<int>(0)));
+    auto res = this->ml.predict(k);
+    res = std::min<int>(res, max);
+    return static_cast<int>(std::max<int>(res, static_cast<int>(0)));
   }
 
   auto total_error() -> int {
@@ -73,15 +74,25 @@ template <template<typename> class ML,typename Key> struct XSubModel {
     Train the ml, and use calculate the min_max according to the train_label,
     update the min-max according to *f*
    */
-  void train(std::vector<Key> &train_data, std::vector<u64> &train_label,
+  auto train(std::vector<Key> &train_data, std::vector<u64> &train_label,
              update_func f = default_update_func) {
+    this->train_ml(train_data,train_label);
+    this->cal_error(train_data, train_label,f);
+  }
+
+  auto train_ml(std::vector<Key> &train_data, std::vector<u64> &train_label) {
     ASSERT(train_data.size() == train_label.size());
     // first train ml
-    this->ml.train(train_data,train_label);
-    //this->max = static_cast<int>(train_label.size());
+    this->ml.train(train_data, train_label);
+    if (!train_label.empty()) {
+      this->max = static_cast<int>(train_label[train_label.size() - 1]);
+    }
+  }
 
+  auto cal_error(std::vector<Key> &train_data, std::vector<u64> &train_label,
+                 update_func f = default_update_func) {
     // then calculate the min-max
-    for (uint i = 0;i < train_data.size(); ++i) {
+    for (uint i = 0; i < train_data.size(); ++i) {
       auto k = train_data[i];
       auto label = train_label[i];
 
@@ -89,7 +100,7 @@ template <template<typename> class ML,typename Key> struct XSubModel {
                    this->err_min, this->err_max);
       this->err_min = std::get<0>(res);
       this->err_max = std::get<1>(res);
-      this->max = std::max(this->max, static_cast<int>(train_label[i]));
+      // this->max = std::max(this->max, static_cast<int>(train_label[i]));
     }
   }
 };

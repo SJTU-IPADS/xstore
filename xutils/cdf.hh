@@ -12,6 +12,10 @@ namespace util {
 
 template <typename V> class CDF {
 public:
+  const std::string name;
+
+  std::vector<V> all_data;
+
   CDF(const std::string &data_name) : name(data_name) {}
 
   DistReport<V> others;
@@ -61,13 +65,7 @@ public:
     return temp.dump_as_np_data(ylabel, xlabel);
   }
 
-public:
-  const std::string name;
 
-private:
-  std::vector<V> all_data;
-
-private:
   /*!
     Transform the percentage ( 10%) to the position in the all_data.
     \param: percentage in the data.

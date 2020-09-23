@@ -22,11 +22,11 @@ namespace xcache {
 
 template <usize N, typename KeyType>
 struct PageSampler : public SampleTrait<PageSampler<N,KeyType>,KeyType> {
-  Option<KeyType> min_key_in_page = {};
-  Option<u64> min_key_label = {};
+  ::r2::Option<KeyType> min_key_in_page = {};
+  ::r2::Option<u64> min_key_label = {};
 
-  Option<KeyType> max_key_in_page = {};
-  Option<u64> max_key_label = {};
+  ::r2::Option<KeyType> max_key_in_page = {};
+  ::r2::Option<u64> max_key_label = {};
 
   PageSampler() = default;
 

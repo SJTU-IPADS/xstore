@@ -19,7 +19,7 @@ struct XTreeIter : public KeyIterTrait<XTreeIter<N, KeyType, V>,
                                        XTree<N, KeyType, V>, KeyType> {
   using Self = XTreeIter<N, KeyType, V>;
 
-  Option<XNodeKeys<N, KeyType>> cur_node = {};
+  ::r2::Option<XNodeKeys<N, KeyType>> cur_node = {};
   XNode<N, KeyType, V> *cur_node_ptr = nullptr;
   XNode<N, KeyType, V> *next_ptr = nullptr;
   usize idx = 0;     // cur idx in the cur node

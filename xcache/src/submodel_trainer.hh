@@ -18,8 +18,7 @@ using namespace xstore::xml;
   This file implements a traininer for training the second-layer submodel,
   defined in ../../x_ml/src/xmodel.hh
  */
-template <typename KeyType>
-struct XMLTrainer {
+template <typename KeyType> struct XMLTrainer {
   // the trainer may be trained in a (background) thread
   std::mutex guard;
 
@@ -54,19 +53,34 @@ struct XMLTrainer {
     \note: assumption this method will only be called in a single-threaded
     context
   */
-  template <class IT, template<typename> class S, template <typename>  class SubML>
-  auto train(typename IT::KV &kv, S<KeyType> &s, update_func f = default_update_func)
-      -> XSubModel<SubML, KeyType> {
+  template <class IT, template <typename> class S,
+            template <typename> class SubML>
+  auto train(typename IT::KV &kv, S<KeyType> &s,
+             update_func f = default_update_func) -> XSubModel<SubML, KeyType> {
     auto iter = IT::from(kv);
     return train_w_it<IT, S, SubML>(iter, kv, s, f);
   }
 
-  template <class IT, template <typename> class S, template <typename>  class SubML>
+  template <class IT, template <typename> class S,
+            template <typename> class SubML>
   auto train_w_it(IT &iter, typename IT::KV &kv, S<KeyType> &s,
                   update_func f = default_update_func)
       -> XSubModel<SubML, KeyType> {
+    DefaultSample<KeyType> shrink;
+    return train_w_it_w_shrink<IT, S, DefaultSample, SubML>(iter, kv, s, shrink,
+                                                            f);
+  }
+
+  /*!
+    Similar to train_w_it, but shrink the training-set according to Shrink
+   */
+  template <class IT, template <typename> class S, template<typename> class Shrink,
+            template <typename> class SubML>
+  auto train_w_it_w_shrink(IT &iter, typename IT::KV &kv, S<KeyType> &s, Shrink<KeyType> &ss,
+                  update_func f = default_update_func)
+      -> XSubModel<SubML, KeyType> {
     // TODO: model should be parameterized
-    XSubModel<SubML,KeyType> model;
+    XSubModel<SubML, KeyType> model;
 
     if (!this->need_train()) {
       return model;
@@ -98,12 +112,23 @@ struct XMLTrainer {
     }
     s.finalize(train_set, train_label);
 
-    // 2. train the model
-    model.train(train_set, train_label, f);
+    // 2. shinrk the train-set
+    std::vector<KeyType> s_train_set;
+    std::vector<u64> s_train_label;
+    for (uint i = 0;i < train_set.size(); i++) {
+      ss.add_to(train_set[i],train_label[i],s_train_set,s_train_label);
+    }
+    ss.finalize(s_train_set,s_train_label);
+
+    // 3. train the model
+#if 1
+    model.train_ml(s_train_set, s_train_label);
+    model.cal_error(train_set,train_label,f);
+#endif
 
     return model;
   }
-};
+}; // namespace xcache
 
 } // namespace xcache
 } // namespace xstore

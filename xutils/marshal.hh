@@ -55,7 +55,7 @@ public:
     return *ptr;
   }
 
-  static inline Option<T> deserialize_opt(const char *buf, u64 size) {
+  static inline ::r2::Option<T> deserialize_opt(const char *buf, u64 size) {
     if (size < sizeof(T))
       return {};
     T res;
@@ -83,7 +83,7 @@ template <typename  T> class MarshalT {
      return Marshal<_WrapperT>::serialize_to(temp);
    }
 
-  static inline auto deserialize(const std::string &d) -> Option<T> {
+  static inline auto deserialize(const std::string &d) -> ::r2::Option<T> {
     auto res = Marshal<_WrapperT>::deserialize_opt(d.data(), d.size());
     if (res) {
       return res.value().payload;

@@ -17,7 +17,7 @@ using namespace r2;
 template <class Derived, usize N> class AllocTrait {
 public:
   // interfaces
-  auto alloc() -> Option<char *> {
+  auto alloc() -> ::r2::Option<char *> {
     return reinterpret_cast<Derived *>(this)->alloc_impl();
   }
 
@@ -31,7 +31,7 @@ public:
  */
 template <usize S> class TrivalAlloc : public AllocTrait<TrivalAlloc<S>, S> {
 public:
-  auto alloc_impl() -> Option<char *> {
+  auto alloc_impl() -> ::r2::Option<char *> {
     return reinterpret_cast<char *>(malloc(S));
   }
 
