@@ -5,6 +5,8 @@
 
 #include "./sample_trait.hh"
 
+#include "../../xutils/marshal.hh"
+
 namespace xstore {
 
 namespace xcache {
@@ -17,7 +19,7 @@ using namespace xstore::xkv;
  */
 template <template <typename> class ML, typename KeyType> struct Dispatcher {
   ML<KeyType> model;
-  const usize dispatch_num;
+  usize       dispatch_num;
   usize       up_bound = 0;
 
   explicit Dispatcher(const usize &dn) : dispatch_num(dn) {
@@ -26,6 +28,21 @@ template <template <typename> class ML, typename KeyType> struct Dispatcher {
 
   template <class... Args>
   Dispatcher(const usize &dn, Args... args) : dispatch_num(dn), model(args...) {}
+
+  explicit Dispatcher(const std::string &d) {
+    ASSERT(d.size() == this->serialize().size());
+    {
+      char *cur_ptr = (char *)d.data();
+      this->dispatch_num =
+          ::xstore::util::Marshal<u32>::deserialize(cur_ptr, d.size());
+      cur_ptr += sizeof(u32);
+      this->up_bound =
+          ::xstore::util::Marshal<u32>::deserialize(cur_ptr, d.size());
+      cur_ptr += sizeof(u32);
+      this->model_from_serialize(
+          std::string(cur_ptr, d.size() - sizeof(u32) * 2));
+    }
+  }
 
   void model_from_serialize(const std::string &s) {
     this->model.from_serialize(s);
@@ -78,6 +95,16 @@ template <template <typename> class ML, typename KeyType> struct Dispatcher {
   auto default_train(typename IT::KV &kv) -> usize {
     DefaultSample<KeyType> s;
     return this->train<IT, DefaultSample<KeyType>>(kv, s);
+  }
+
+  auto serialize() -> std::string {
+    std::string res;
+
+    // first serialize the dispatch_num
+    res += ::xstore::util::Marshal<u32>::serialize_to(this->dispatch_num);
+    res += ::xstore::util::Marshal<u32>::serialize_to(this->up_bound);
+    res += this->model.serialize();
+    return res;
   }
 };
 

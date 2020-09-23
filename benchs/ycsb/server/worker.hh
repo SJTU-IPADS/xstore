@@ -4,8 +4,6 @@
 
 #include "../../../deps/r2/src/thread.hh"
 
-#include "../../../xcomm/src/rpc/mod.hh"
-#include "../../../xcomm/src/transport/rdma_ud_t.hh"
 
 #include "./callbacks.hh"
 
@@ -16,8 +14,6 @@ extern ::rdmaio::RCtrl ctrl;
 
 namespace xstore {
 
-using namespace xstore::rpc;
-using namespace xstore::transport;
 using namespace test;
 
 using SendTrait = UDTransport;
@@ -58,6 +54,10 @@ auto bootstrap_workers(const usize &nthreads)
       RPCCore<SendTrait, RecvTrait, SManager> rpc(12);
 
       UDRecvTransport<2048> recv(qp_recv, recv_rs_at_recv);
+
+      // register the callbacks before enter the main loop
+      ASSERT(rpc.reg_callback(meta_callback) == META);
+      r2::compile_fence();
 
       usize epoches = 0;
       while (running) {

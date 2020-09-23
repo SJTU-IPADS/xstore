@@ -55,7 +55,6 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
           << "; session id: " << session_id; // sanity check header and content
 
       MemBlock payload((char *)cur_msg.mem_ptr + sizeof(Header), h.payload);
-
       switch (h.type) {
       case Req: {
         try {
@@ -70,7 +69,7 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
       case Reply: {
         // pass
         auto ret = this->reply_station.append_reply(h.cor_id, payload);
-        ASSERT(ret);
+        ASSERT(ret) << "add reply error: " << h;
       } break;
       case Connect: {
         this->session_manager.add_new_session(session_id, payload, *recv);

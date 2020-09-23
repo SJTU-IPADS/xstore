@@ -3,6 +3,7 @@
 #include "../../../xcache/src/submodel_trainer.hh"
 
 #include "../../../xkv_core/src/xtree/page_iter.hh"
+#include "../../../xkv_core/src/xalloc.hh"
 
 #include "../../../xutils/cdf.hh"
 
@@ -16,13 +17,20 @@ using namespace xkv::xtree;
 using namespace util;
 
 // core DB
+XAlloc<sizeof(DBTree::Leaf)> *xalloc = nullptr;
 DBTree db;
 std::unique_ptr<XCache> cache = nullptr;
 std::vector<XCacheTT> tts;
 
+// avaliable serialze buf, main.cc init this
+u64 model_buf = 0;
+u64 tt_buf    = 0;
+u64 buf_end   = 0;
+
 auto load_linear(const u64 &nkeys) {
   for (u64 k = 0; k < nkeys; ++k) {
-    db.insert(XKey(k), k);
+    //db.insert(XKey(k), k);
+    db.insert_w_alloc(XKey(k),k,*xalloc);
   }
 }
 
@@ -100,6 +108,30 @@ auto train_db(const std::string &config) {
     }
     // done
   }
+}
+
+auto serialize_db() {
+  char *cur_ptr = (char *)model_buf;
+  for (uint i = 0;i < cache->second_layer.size();++i) {
+    auto s = cache->second_layer[i].serialize();
+    ASSERT(s.size() + (u64)cur_ptr <= buf_end);
+    memcpy(cur_ptr, s.data(),s.size());
+    cur_ptr += s.size();
+  }
+
+  tt_buf = (u64)cur_ptr;
+
+  LOG(4) << "after seriaize, tt buf: " << tt_buf << "; model sz:  "
+         << tt_buf - model_buf;
+
+  // update the TT
+  for (uint i = 0;i < tts.size();++i) {
+    auto s = tts[i].serialize();
+    ASSERT(s.size() + (u64)cur_ptr <= buf_end);
+    memcpy(cur_ptr,s.data(),s.size());
+    cur_ptr += s.size();
+  }
+  buf_end = (u64)cur_ptr;
 }
 
 } // namespace xstore

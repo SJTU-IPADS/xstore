@@ -4,6 +4,8 @@
 
 #include "../../deps/r2/src/common.hh"
 
+#include "../../xutils/marshal.hh"
+
 namespace xstore {
 
 namespace xcache {
@@ -22,6 +24,34 @@ template <typename EntryType> struct TT {
   auto mem() const -> usize { return this->size() * sizeof(EntryType); }
 
   auto clear() { entries.clear(); }
+
+  /*!
+    The serialization protocol works as follows:
+    | num entries | entry 0 | entry 1|, ....
+    num_entries: u32
+   */
+  auto serialize() -> std::string {
+    std::string res;
+    res += ::xstore::util::Marshal<u32>::serialize_to(this->size());
+    for (uint i = 0;i < this->size(); ++i) {
+      res += ::xstore::util::Marshal<EntryType>::serialize_to(entries[i]);
+    }
+    return res;
+  }
+
+  auto serialize_from(const std::string &d) {
+    char *cur_ptr = (char *)(d.data());
+    ASSERT(d.size() >= sizeof(u32));
+
+    u32 n = ::xstore::util::Marshal<u32>::deserialize(cur_ptr, d.size());
+    ASSERT(d.size() == sizeof(u32) + n * sizeof(EntryType));
+
+    cur_ptr += sizeof(u32);
+    this->clear();
+    for (uint i = 0; i < n; ++i) {
+      this->add(::xstore::util::Marshal<EntryType>::deserialize(cur_ptr, d.size()));
+    }
+  }
 };
 } // namespace xcache
 } // namespace xstore

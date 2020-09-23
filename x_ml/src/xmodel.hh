@@ -5,6 +5,8 @@
 
 #include "./ml_trait.hh"
 
+#include "../../xutils/marshal.hh"
+
 namespace xstore {
 
 namespace xml {
@@ -52,6 +54,31 @@ template <template<typename> class ML,typename Key> struct XSubModel {
 
   // direct forward the init parameters to the ML
   template <typename... Args> XSubModel(Args... args) : ml(args...) {}
+
+  explicit XSubModel(const std::string &d) {
+    ASSERT(d.size() == this->serialize().size());
+    {
+      char *cur_ptr = (char *)d.data();
+      this->err_max = ::xstore::util::Marshal<i32>::deserialize(cur_ptr,d.size());
+      cur_ptr += sizeof(i32);
+      this->err_min = ::xstore::util::Marshal<i32>::deserialize(cur_ptr,d.size());
+      cur_ptr += sizeof(i32);
+      this->max = ::xstore::util::Marshal<i32>::deserialize(cur_ptr,d.size());
+      cur_ptr += sizeof(i32);
+
+      // then the model
+      this->ml.from_serialize(cur_ptr, d.size() - sizeof(i32) * 3);
+    }
+  }
+
+  auto serialize() -> std::string {
+    std::string res;
+    res += ::xstore::util::Marshal<i32>::serialize_to(this->err_max);
+    res += ::xstore::util::Marshal<i32>::serialize_to(this->err_min);
+    res += ::xstore::util::Marshal<i32>::serialize_to(this->max);
+    res += this->ml.serialize();
+    return res;
+  }
 
   auto get_point_predict(const Key &k) -> int {
     auto res = this->ml.predict(k);

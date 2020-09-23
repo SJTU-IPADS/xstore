@@ -24,6 +24,9 @@ struct LocalTwoRMI {
   explicit LocalTwoRMI(const usize &num_sec)
       : second_layer(num_sec), first_layer(num_sec) {}
 
+  explicit LocalTwoRMI(const std::string &s) : first_layer(s) {
+  }
+
   // TODO: add multiple arg init of fist layer
 
   // training methods
