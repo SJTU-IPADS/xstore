@@ -6,36 +6,36 @@ cmd  = 'pkill rw_server; pkill ycsb_server;'
 [[pass]]
 host = "val0"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client; pkill ycsb_client;'
 
 [[pass]]
 host = "val2"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client; pkill ycsb_client;'
 
 
 [[pass]]
 host = "val3"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client ; pkill ycsb_client;'
 
 [[pass]]
 host = "val4"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client; pkill ycsb_client;'
 
 
 [[pass]]
 host = "val5"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client; pkill ycsb_client;'
 
 [[pass]]
 host = "val6"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client; pkill ycsb_client;'
 
 [[pass]]
 host = "val7"
 path = '/cock/xstore'
-cmd  = 'pkill rw_client'
+cmd  = 'pkill rw_client; pkill ycsb_client;'

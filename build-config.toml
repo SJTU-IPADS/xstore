@@ -43,3 +43,8 @@ name = "ycsb_server"
 src = ["./benchs/ycsb/server/main.cc", "./deps/r2/src/logging.cc"]
 extra = ["gflags","ibverbs","pthread","mkl_rt","boost_system", "boost_coroutine", "pthread"]
 
+[[apps]]
+name = "ycsb_client"
+src = ["./benchs/ycsb/client.cc", "./deps/r2/src/logging.cc","./deps/r2/src/sshed.cc"]
+extra = ["gflags","ibverbs","pthread","mkl_rt","boost_system", "boost_coroutine", "pthread"]
+

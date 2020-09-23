@@ -61,7 +61,8 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
         try {
           auto reply_channel =
               this->session_manager.incoming_sesions[session_id].get();
-          callbacks[h.rpc_id](h, payload, reply_channel);
+          auto f = callbacks.at(h.rpc_id);
+          f(h, payload, reply_channel);
         } catch (...) {
           ASSERT(false) << "rpc called failed with rpc id " << h.rpc_id;
         }
@@ -105,7 +106,7 @@ template <class SendTrait, class RecvTrait, class Manager> struct RPCCore {
           try {
             auto reply_channel =
                 this->session_manager.incoming_sesions[session_id].get();
-            callbacks[h.rpc_id](h, payload, reply_channel);
+            callbacks.at(h.rpc_id)(h, payload, reply_channel);
           } catch (...) {
             ASSERT(false) << "rpc called failed with rpc id " << h.rpc_id;
           }
