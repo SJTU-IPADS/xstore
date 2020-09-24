@@ -67,14 +67,15 @@ int main(int argc, char **argv) {
   // start the listener thread so that client can communicate w it
   ctrl.start_daemon();
 
-  u64 total_sz = sizeof(DBTree::Leaf) * 16000000L;
+  u64 total_sz = sizeof(DBTree::Leaf) * 5000000L;
   ASSERT(mem->sz > total_sz) << "total sz needed: " << total_sz;
   xalloc = new XAlloc<sizeof(DBTree::Leaf)>((char *)mem->start_ptr(), total_sz);
   db.init_pre_alloced_leaf(*xalloc);
 
   val_buf = (u64)mem->start_ptr() + total_sz;
-  model_buf = val_buf + (1024 * 1024 * 64L);
+  model_buf = val_buf + (1024L * 1024L * 1024L * 6L);
   buf_end = (u64)mem->start_ptr() + FLAGS_alloc_mem_m * 1024 * 1024;
+  ASSERT(model_buf < buf_end);
 
   // first load DB
   {

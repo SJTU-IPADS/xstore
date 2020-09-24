@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gflags/gflags.h>
+
 // db schema
 #include "./schema.hh"
 
@@ -11,6 +13,8 @@ using namespace r2::rdma;
 namespace xstore {
 extern std::unique_ptr<XCache> cache;
 extern std::vector<XCacheTT> tts;
+
+DEFINE_int32(len, 8, "average length of the value");
 
 using namespace xcomm;
 
@@ -50,7 +54,7 @@ auto core_eval(const XKey &key, const Arc<RC> &rc, char *my_buf, R2_ASYNC)
       op.set_read()
         .set_rdma_rbuf(tts.at(m)[p] + DBTree::Leaf::value_offset(idx.value()),
                          rc->remote_mr.value().key)
-        .set_payload(my_buf, sizeof(ValType), rc->local_mr.value().lkey);
+        .set_payload(my_buf, std::max<int>(FLAGS_len,sizeof(ValType)), rc->local_mr.value().lkey);
       ret = op.execute_async(rc, IBV_SEND_SIGNALED, R2_ASYNC_WAIT);
       ASSERT(ret == ::rdmaio::IOCode::Ok);
 
@@ -97,8 +101,7 @@ auto core_eval_v(const XKey &key, const Arc<RC> &rc, char *my_buf, R2_ASYNC)
       // fetch the value
 
       auto val_addr = node->get_value_raw(idx.value()); // get the pointer
-      ASSERT(val_addr.get_sz() < 4096);
-      ASSERT(val_addr.get_sz() == 8);
+      ASSERT(val_addr.get_sz() == FLAGS_len);
 
       AsyncOp<1> op;
       op.set_read()

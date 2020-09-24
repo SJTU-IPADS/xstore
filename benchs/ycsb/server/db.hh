@@ -39,7 +39,8 @@ auto load_linear(const u64 &nkeys) {
     if (!FLAGS_vlen) {
       db.insert_w_alloc(XKey(k), k, *xalloc);
     } else {
-      ASSERT((u64)(cur_val_ptr + FLAGS_len) < model_buf);
+      ASSERT((u64)(cur_val_ptr + FLAGS_len) <= model_buf) << " insert k: " << k << " failed; "
+                                                          << "total alloced:"  << (u64)(cur_val_ptr - val_buf);
       dbv.insert_w_alloc(XKey(k), FatPointer(cur_val_ptr, FLAGS_len), *xalloc);
       cur_val_ptr += FLAGS_len;
     }
