@@ -12,7 +12,7 @@ using namespace r2;
 
 template <class Derived, typename KeyType, typename V> class KVTrait {
  public:
-  auto get(const KeyType &k) -> Option<V> {
+  auto get(const KeyType &k) -> ::r2::Option<V> {
     return reinterpret_cast<Derived *>(this)->get_impl(k);
   }
 

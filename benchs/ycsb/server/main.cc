@@ -5,14 +5,14 @@
 #include "../../../xutils/huge_region.hh"
 
 DEFINE_int64(port, 8888, "Server listener (UDP) port.");
-DEFINE_int64(nthreads, 1, "Server threads.");
+DEFINE_int64(threads, 1, "Server threads.");
 DEFINE_int64(use_nic_idx, 0, "Which NIC to create QP");
 DEFINE_int64(reg_nic_name, 0, "The name to register an opened NIC at rctrl.");
 DEFINE_int64(reg_mem_name, 73, "The name to register an MR at rctrl.");
 DEFINE_uint64(magic_num, 0xdeadbeaf, "The magic number read by the client");
 DEFINE_uint64(alloc_mem_m, 64,
               "The size of memory to register (in size of MB).");
-DEFINE_uint64(nkeys, 1000000, "Number of keys to laod");
+DEFINE_uint64(nkeys, 1000000, "Number of keys to load");
 
 #include "./db.hh"
 #include "./worker.hh"
@@ -83,14 +83,14 @@ int main(int argc, char **argv) {
   // start the listener thread so that client can communicate w it
   ctrl.start_daemon();
 
-  auto workers = bootstrap_workers(FLAGS_nthreads);
+  auto workers = bootstrap_workers(FLAGS_threads);
   for (auto &w : workers) {
     w->start();
   }
 
   RDMA_LOG(2) << "YCSB bench server started!";
   // run for 20 sec
-  for (uint i = 0; i < 10; ++i) {
+  for (uint i = 0; i < 40; ++i) {
     // server does nothing because it is RDMA
     // client will read the reg_mem using RDMA
     sleep(1);

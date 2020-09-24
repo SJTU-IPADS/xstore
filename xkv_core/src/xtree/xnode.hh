@@ -32,6 +32,14 @@ template <usize N, typename V> union __attribute__((packed)) Values {
 
   Values() {
   }
+
+  static auto offset_inplace(const usize &idx) -> usize {
+    return offsetof(Values, inplace[idx]);
+  }
+
+  static auto offset_wrapped(const usize &idx) -> usize {
+    return offsetof(Values, wrapped[idx]);
+  }
 };
 
 /*!
@@ -108,6 +116,14 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
     The start offset of values
    */
   static auto value_start_offset() -> usize { return offsetof(XNode, values); }
+
+  static auto value_offset(const usize &idx) -> usize {
+    if (sizeof(V) <= sizeof(u64)) {
+      return value_start_offset() + Values<N, V>::offset_inplace(idx);
+    } else {
+      return value_start_offset() + Values<N, V>::offset_wrapped(idx);
+    }
+  }
 
   /*!
     Query method

@@ -21,7 +21,7 @@ extern u64 model_buf;
 extern u64 tt_buf;
 
 void meta_callback(const Header &rpc_header, const MemBlock &args,
-                    SendTrait *replyc) {
+                   SendTrait *replyc) {
   // sanity check the requests
   ASSERT(args.sz == sizeof(u64));
 
@@ -31,13 +31,13 @@ void meta_callback(const Header &rpc_header, const MemBlock &args,
 
   auto dispatcher = cache->first_layer.serialize();
   ReplyMeta meta = {
-      .dispatcher_sz = dispatcher.size(),
+      .dispatcher_sz = static_cast<u32>(dispatcher.size()),
       .total_sz = static_cast<u32>(buf_end - model_buf),
       .model_buf = model_buf,
       .tt_buf = tt_buf,
   };
-  ASSERT(sizeof(ReplyMeta) + dispatcher.size() + sizeof(Header) <= 64) <<
-    sizeof(ReplyMeta) << " " << dispatcher.size();
+  ASSERT(sizeof(ReplyMeta) + dispatcher.size() + sizeof(Header) <= 64)
+      << sizeof(ReplyMeta) << " " << dispatcher.size();
 
   // send
   RPCOp op;

@@ -67,7 +67,7 @@ template <template<typename> class ML,typename Key> struct XSubModel {
       cur_ptr += sizeof(i32);
 
       // then the model
-      this->ml.from_serialize(cur_ptr, d.size() - sizeof(i32) * 3);
+      this->ml.from_serialize(std::string(cur_ptr, d.size() - sizeof(i32) * 3));
     }
   }
 

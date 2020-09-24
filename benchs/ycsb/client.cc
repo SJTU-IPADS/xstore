@@ -1,11 +1,10 @@
 #include <gflags/gflags.h>
+#include <type_traits>
 
-// db schema
-#include "./schema.hh"
+#include "../../deps/kvs-workload/ycsb/mod.hh"
+using namespace kvs_workloads::ycsb;
 
 #include "./proto.hh"
-
-using namespace xstore;
 
 #include "../../xcomm/tests/transport_util.hh"
 
@@ -16,12 +15,14 @@ using namespace xstore;
 #include "../../xutils/marshal.hh"
 
 #include "../../deps/r2/src/thread.hh"
-#include "../../deps/r2/src/rdma/async_op.hh"
 
 #include "../../benchs/reporter.hh"
 
-using namespace test;
+#include "./eval_c.hh"
 
+    using namespace test;
+
+using namespace xstore;
 using namespace xstore::rpc;
 using namespace xstore::transport;
 using namespace xstore::bench;
@@ -37,12 +38,18 @@ DEFINE_int64(threads, 1, "num client thread used");
 DEFINE_int64(coros, 1, "num client coroutine used per threads");
 DEFINE_string(addr, "localhost:8888", "server address");
 
+DEFINE_uint64(nkeys, 1000000, "Number of keys to fetch");
+
 using XThread = ::r2::Thread<usize>;
 
+namespace xstore {
 std::unique_ptr<XCache> cache = nullptr;
+std::vector<XCacheTT> tts;
+} // namespace xstore
 
-using namespace r2::rdma;
 DEFINE_int64(client_name, 0, "Unique client name (in int)");
+
+volatile bool running = true;
 
 int main(int argc, char **argv) {
 
@@ -59,6 +66,9 @@ int main(int argc, char **argv) {
                                                            thread_id]()
                                                               -> usize {
       usize nic_idx = 0;
+      if (thread_id >= 12) {
+        nic_idx = 1;
+      }
       auto nic_for_sender =
           RNic::create(RNicInfo::query_dev_names().at(nic_idx)).value();
       auto qp = UD::create(nic_for_sender, QPConfig()).value();
@@ -74,10 +84,11 @@ int main(int argc, char **argv) {
         RDMA_ASSERT(res == IOCode::Ok);
       }
 
+      auto id = 1024 * FLAGS_client_name + thread_id;
       UDTransport sender;
       ASSERT(sender.connect(FLAGS_addr, "b" + std::to_string(thread_id),
-                            thread_id, qp) == IOCode::Ok)
-          << " connect failure at addr: " << FLAGS_addr;
+                            id, qp) == IOCode::Ok)
+        << " connect failure at addr: " << FLAGS_addr << " for thread:" << thread_id;
 
       RPCCore<SendTrait, RecvTrait, SManager> rpc(12);
       auto send_buf = std::get<0>(alloc1.alloc_one(4096).value());
@@ -110,11 +121,12 @@ int main(int argc, char **argv) {
 
       auto qp_res =
           cm.cc_rc(FLAGS_client_name + " thread-qp" + std::to_string(thread_id),
-                   rc,nic_idx, QPConfig());
+                   rc, nic_idx, QPConfig());
       RDMA_ASSERT(qp_res == IOCode::Ok) << std::get<0>(qp_res.desc);
 
       auto key = std::get<1>(qp_res.desc);
-      //RDMA_LOG(4) << "t-" << thread_id << " fetch QP authentical key: " << key;
+      // RDMA_LOG(4) << "t-" << thread_id << " fetch QP authentical key: " <<
+      // key;
 
       auto fetch_res = cm.fetch_remote_mr(nic_idx);
       RDMA_ASSERT(fetch_res == IOCode::Ok) << std::get<0>(fetch_res.desc);
@@ -164,46 +176,77 @@ int main(int argc, char **argv) {
 
         {
           AsyncOp<1> op;
-          op.set_read()
-            .set_payload((const u64 *)xcache_buf, meta.total_sz,
-                         rc->local_mr.value().lkey);
+          op.set_read().set_payload((const u64 *)xcache_buf, meta.total_sz,
+                                    rc->local_mr.value().lkey);
           op.set_rdma_rbuf((const u64 *)meta.model_buf, remote_attr.key);
 
-          auto ret = op.execute(rc,IBV_SEND_SIGNALED);
+          auto ret = op.execute(rc, IBV_SEND_SIGNALED);
           ASSERT(ret == IOCode::Ok);
           auto res_p = rc->wait_one_comp();
           ASSERT(res_p == IOCode::Ok);
+
+          char *cur_ptr = xcache_buf;
+          // first we parse the model
+          XCache::Sub sub;
+          const usize submodel_sz = sub.serialize().size();
+
+          ASSERT(cache->second_layer.size() == 0);
+          for (uint i = 0; i < cache->first_layer.dispatch_num; ++i) {
+            cache->second_layer.emplace_back(std::string(cur_ptr, submodel_sz));
+            cur_ptr += submodel_sz;
+          }
+
+          LOG(4) << "serialzie second layer done:" << cur_ptr - xcache_buf
+                 << ":" << meta.total_sz;
+
+          // then the TT
+          for (uint i = 0; i < cache->first_layer.dispatch_num; ++i) {
+            // serialize one
+            tts.emplace_back(
+                std::string(cur_ptr, meta.total_sz - (cur_ptr - xcache_buf)));
+            cur_ptr += tts[i].serialize().size();
+          }
+
+          LOG(4) << "serialzie TTs done:" << cur_ptr - xcache_buf << ":"
+                 << meta.total_sz;
         }
-
-        // finally, deserialize the xcache
-
-
-        ASSERT(false) << "not impl";
       }
 
       // 2. wait for the XCache to bootstrap done
       bar.wait();
 
-      for (uint i = 0; i < FLAGS_coros; ++i) {
-        ssched.spawn([&statics, &total_processed, &sender, &rpc, lkey, send_buf,
-                      thread_id](R2_ASYNC) {
-          char reply_buf[1024];
+      YCSBCWorkloadUniform ycsb(FLAGS_nkeys,0xdeadbeaf + thread_id  + FLAGS_client_name * 73);
 
-          while (1) {
+      for (uint i = 0; i < FLAGS_coros; ++i) {
+        ssched.spawn([&statics, &total_processed, &sender, &rpc, &rc, &alloc1,&ycsb,
+                      lkey, send_buf, thread_id](R2_ASYNC) {
+          char reply_buf[1024];
+          char *my_buf = reinterpret_cast<char *>(std::get<0>(alloc1.alloc_one(8192).value()));
+
+          while (running) {
+            r2::compile_fence();
+            const auto key = XKey(ycsb.next_key());
+            auto res = core_eval(key,rc,my_buf,R2_ASYNC_WAIT);
+            if (std::is_integral<ValType>::value) {
+              // check the value if it is a integer
+              ASSERT(XKey(res) == key) << XKey(res) << "; target:" << key;
+            }
+            statics[thread_id].increment();
           }
 
-          LOG(4) << "coros: " << R2_COR_ID() << " exit";
+          //LOG(4) << "coros: " << R2_COR_ID() << " exit";
 
           if (R2_COR_ID() == FLAGS_coros) {
-
             R2_STOP();
           }
           R2_RET;
         });
       }
       ssched.run();
-      LOG(4) << "after run, total processed: " << total_processed
-             << " at client: " << thread_id;
+      if (thread_id == 0) {
+        LOG(4) << "after run, total processed: " << total_processed
+               << " at client: " << thread_id;
+      }
 
       return 0;
     })));
@@ -213,7 +256,8 @@ int main(int argc, char **argv) {
     w->start();
   }
 
-  Reporter::report_thpt(statics, 10);
+  Reporter::report_thpt(statics, 30, std::to_string(FLAGS_client_name) + ".xstorelog");
+  running = false;
 
   for (auto &w : workers) {
     w->join();

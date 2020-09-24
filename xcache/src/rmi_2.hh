@@ -15,17 +15,18 @@ namespace xcache {
   We hard-coded to use a two-layer index.
  */
 
-template <template<typename> class DispatchML, template <typename> class SubML,
+template <template <typename> class DispatchML, template <typename> class SubML,
           typename KeyType>
 struct LocalTwoRMI {
-  Dispatcher<DispatchML,KeyType> first_layer;
-  std::vector<XSubModel<SubML,KeyType>> second_layer;
+  Dispatcher<DispatchML, KeyType> first_layer;
+  std::vector<XSubModel<SubML, KeyType>> second_layer;
+
+  using Sub = XSubModel<SubML, KeyType>;
 
   explicit LocalTwoRMI(const usize &num_sec)
       : second_layer(num_sec), first_layer(num_sec) {}
 
-  explicit LocalTwoRMI(const std::string &s) : first_layer(s) {
-  }
+  explicit LocalTwoRMI(const std::string &s) : first_layer(s) {}
 
   // TODO: add multiple arg init of fist layer
 
@@ -56,14 +57,15 @@ struct LocalTwoRMI {
     for (it.begin(); it.has_next(); it.next()) {
       auto model = this->select_sec_model(it.cur_key());
       //      LOG(4) << "update m:" << model << " w key: "<< it.cur_key();
-      ASSERT(model >= 0 && model < trainers.size()) << "invalid model n: " << model
-                                                    << "; max: " << this->first_layer.up_bound;
+      ASSERT(model >= 0 && model < trainers.size())
+          << "invalid model n: " << model
+          << "; max: " << this->first_layer.up_bound;
       trainers[model].update_key(it.cur_key());
     }
     return trainers;
   }
 
-  template <class IT, template<typename> class S>
+  template <class IT, template <typename> class S>
   auto train_second_models(typename IT::KV &kv, S<KeyType> &s, Statics &statics,
                            update_func f = default_update_func) {
     auto it = IT::from(kv);
@@ -71,7 +73,8 @@ struct LocalTwoRMI {
     auto trainers = this->dispatch_keys_to_trainers<IT>(kv);
     // dispatch done
     for (uint i = 0; i < second_layer.size(); ++i) {
-      this->second_layer[i] = trainers[i].template train<IT, S, SubML>(kv, s, f);
+      this->second_layer[i] =
+          trainers[i].template train<IT, S, SubML>(kv, s, f);
     }
     // done
   }

@@ -21,9 +21,15 @@ template <class T> std::string format_value(T value, int precission = 4) {
 
 class Reporter {
 public:
-  static double report_thpt(std::vector<Statics> &statics, int epoches) {
+  static double report_thpt(std::vector<Statics> &statics, int epoches,
+                            ::r2::Option<std::string> log_file = {}) {
 
     std::vector<Statics> old_statics(statics.size());
+
+    std::ofstream outfile;
+    if (log_file) {
+      outfile.open(log_file.value(), std::ios::out | std::ios::trunc);
+    }
 
     r2::Timer timer;
     for (int epoch = 0; epoch < epoches; epoch += 1) {
@@ -42,10 +48,15 @@ public:
       r2::compile_fence();
       timer.reset();
 
-      DISPLAY(2) << "epoch @ " << epoch
-                 << ": thpt: " << format_value(res, 0)
-                 << " reqs/sec." << passed_msec
-                 << " msec passed since last epoch.";
+      LOG(2) << "epoch @ " << epoch << ": thpt: " << format_value(res, 0)
+             << " reqs/sec." << passed_msec << " msec passed since last epoch.";
+
+      if (log_file) {
+        outfile << format_value(res,0) << "\n";
+      }
+    }
+    if (log_file) {
+      outfile.close();
     }
     return 0.0;
   }

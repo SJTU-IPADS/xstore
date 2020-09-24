@@ -31,6 +31,7 @@ auto load_linear(const u64 &nkeys) {
   for (u64 k = 0; k < nkeys; ++k) {
     //db.insert(XKey(k), k);
     db.insert_w_alloc(XKey(k),k,*xalloc);
+    ASSERT(db.get(XKey(k)).value() == k);
   }
 }
 
