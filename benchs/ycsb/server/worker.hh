@@ -4,13 +4,17 @@
 
 #include "../../../deps/r2/src/thread.hh"
 
+#include "../../../xutils/local_barrier.hh"
 
 #include "./callbacks.hh"
 
 #include "../../../xcomm/tests/transport_util.hh"
 
 extern volatile bool running;
+extern volatile bool init;
 extern ::rdmaio::RCtrl ctrl;
+
+extern ::xstore::util::PBarrier *bar;
 
 namespace xstore {
 
@@ -58,6 +62,11 @@ auto bootstrap_workers(const usize &nthreads)
       // register the callbacks before enter the main loop
       ASSERT(rpc.reg_callback(meta_callback) == META);
       r2::compile_fence();
+
+      bar->wait();
+      while(!init) {
+        r2::compile_fence();
+      }
 
       usize epoches = 0;
       while (running) {

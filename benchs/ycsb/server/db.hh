@@ -2,14 +2,17 @@
 
 #include "../../../xcache/src/submodel_trainer.hh"
 
-#include "../../../xkv_core/src/xtree/page_iter.hh"
 #include "../../../xkv_core/src/xalloc.hh"
+#include "../../../xkv_core/src/xtree/page_iter.hh"
 
 #include "../../../xutils/cdf.hh"
 
 #include "../schema.hh"
 
 namespace xstore {
+
+DEFINE_bool(vlen, false, "whether to use variable length value");
+DEFINE_int32(len, 8, "average length of the value");
 
 using namespace xcache;
 using namespace xml;
@@ -19,25 +22,35 @@ using namespace util;
 // core DB
 XAlloc<sizeof(DBTree::Leaf)> *xalloc = nullptr;
 DBTree db;
+DBTreeV dbv;
 std::unique_ptr<XCache> cache = nullptr;
 std::vector<XCacheTT> tts;
 
 // avaliable serialze buf, main.cc init this
+u64 val_buf = 0;
 u64 model_buf = 0;
-u64 tt_buf    = 0;
-u64 buf_end   = 0;
+u64 tt_buf = 0;
+u64 buf_end = 0;
 
 auto load_linear(const u64 &nkeys) {
+  char *cur_val_ptr = reinterpret_cast<char *>(val_buf);
   for (u64 k = 0; k < nkeys; ++k) {
-    //db.insert(XKey(k), k);
-    db.insert_w_alloc(XKey(k),k,*xalloc);
-    ASSERT(db.get(XKey(k)).value() == k);
+    // db.insert(XKey(k), k);
+    if (!FLAGS_vlen) {
+      db.insert_w_alloc(XKey(k), k, *xalloc);
+    } else {
+      ASSERT((u64)(cur_val_ptr + FLAGS_len) < model_buf);
+      dbv.insert_w_alloc(XKey(k), FatPointer(cur_val_ptr, FLAGS_len), *xalloc);
+      cur_val_ptr += FLAGS_len;
+    }
   }
 }
 
 auto page_updater(const u64 &label, const u64 &predict, const int &cur_min,
-                      const int &cur_max) -> std::pair<int, int> {
-  if (predict / kNPageKey == label / kNPageKey) {
+                  const int &cur_max) -> std::pair<int, int> {
+
+  if (LogicAddr::decode_logic_id<kNPageKey>(predict) ==
+      LogicAddr::decode_logic_id<kNPageKey>(label)) {
     return std::make_pair(cur_min, cur_max);
   }
 
@@ -58,7 +71,7 @@ auto train_db(const std::string &config) {
     cache = std::make_unique<XCache>(num_sub);
 
     // init sub
-    for (uint i = 0;i < num_sub; ++i)  {
+    for (uint i = 0; i < num_sub; ++i) {
       tts.emplace_back();
     }
 
@@ -66,50 +79,101 @@ auto train_db(const std::string &config) {
     // 1. first layer
     {
       r2::Timer t;
-      cache->default_train_first<DBTreeIter>(db);
-      LOG(4) << "train first layer done using: " << t.passed_sec() << " secs";
+      if (FLAGS_vlen) {
+        cache->default_train_first<DBTreeIterV>(dbv);
+      } else {
+        cache->default_train_first<DBTreeIter>(db);
+        LOG(4) << "train first layer done using: " << t.passed_sec() << " secs";
+      }
     }
     // 2. second layer
-    auto trainers =
-        cache->dispatch_keys_to_trainers<DBTreeIter>(db);
-    {
-      CDF<int> error_cdf("");
-      CDF<int> page_cdf("");
 
-      usize null_model = 0;
+    if (!FLAGS_vlen) {
+      auto trainers = cache->dispatch_keys_to_trainers<DBTreeIter>(db);
+      {
+        CDF<int> error_cdf("");
+        CDF<int> page_cdf("");
 
-      for (uint i = 0;i < trainers.size();++i) {
-        auto &trainer = trainers[i];
-        auto it = TrainIter::from_tt(db,&(tts[i]));
+        usize null_model = 0;
 
-        //DefaultSample<XKey> s;
-        PS<XKey> s;
-        StepSampler<XKey> ss(2);
+        for (uint i = 0; i < trainers.size(); ++i) {
+          auto &trainer = trainers[i];
+          auto it = TrainIter::from_tt(db, &(tts[i]));
 
-        cache->second_layer[i] =
-            trainer.train_w_it_w_shrink<TrainIter, PS, StepSampler, LR>(
-                it, db, s, ss, page_updater);
-        if (tts[i].size() != 0) {
-          error_cdf.insert(cache->second_layer[i].total_error());
-          page_cdf.insert(tts[i].size());
-        } else {
-          null_model += 1;
+          // DefaultSample<XKey> s;
+          PS<XKey> s;
+          StepSampler<XKey> ss(2);
+
+          cache->second_layer[i] =
+              trainer.train_w_it_w_shrink<TrainIter, PS, StepSampler, LR>(
+                  it, db, s, ss, page_updater);
+          if (tts[i].size() != 0) {
+            error_cdf.insert(cache->second_layer[i].total_error());
+            page_cdf.insert(tts[i].size());
+          } else {
+            null_model += 1;
+          }
         }
+        error_cdf.finalize();
+        page_cdf.finalize();
+
+        LOG(4) << "Error data:";
+        LOG(4) << error_cdf.dump_as_np_data() << "\n";
+
+        LOG(4) << "Page entries:" << page_cdf.dump_as_np_data() << "\n";
+
+        LOG(4) << "total " << num_sub << " models; null models:" << null_model;
       }
-      error_cdf.finalize();
-      page_cdf.finalize();
+    } else {
+      auto trainers = cache->dispatch_keys_to_trainers<DBTreeIterV>(dbv);
+      {
+        CDF<int> error_cdf("");
+        CDF<int> page_cdf("");
 
-      LOG(4) << "Error data:";
-      LOG(4) << error_cdf.dump_as_np_data() << "\n";
+        usize null_model = 0;
 
-      LOG(4) << "Page entries:" << page_cdf.dump_as_np_data() << "\n";
+        for (uint i = 0; i < trainers.size(); ++i) {
+          auto &trainer = trainers[i];
+          auto it = TrainIterV::from_tt(dbv, &(tts[i]));
 
-      LOG(4) << "total " << num_sub
-             << " models; null models:" << null_model;
+          // DefaultSample<XKey> s;
+          PS<XKey> s;
+          StepSampler<XKey> ss(2);
+
+          cache->second_layer[i] =
+              trainer.train_w_it_w_shrink<TrainIterV, PS, StepSampler, LR>(
+                  it, dbv, s, ss, page_updater);
+          if (tts[i].size() != 0) {
+            error_cdf.insert(cache->second_layer[i].total_error());
+            page_cdf.insert(tts[i].size());
+          } else {
+            null_model += 1;
+          }
+        }
+        error_cdf.finalize();
+        page_cdf.finalize();
+
+        LOG(4) << "Error data:";
+        LOG(4) << error_cdf.dump_as_np_data() << "\n";
+
+        LOG(4) << "Page entries:" << page_cdf.dump_as_np_data() << "\n";
+
+        LOG(4) << "total " << num_sub << " models; null models:" << null_model;
+      }
     }
     // done
   }
 }
+
+
+template<typename T>
+static constexpr T
+round_up(const T& num, const T& multiple)
+{
+  assert(multiple && ((multiple & (multiple - 1)) == 0));
+  return (num + multiple - 1) & -multiple;
+}
+
 
 auto serialize_db() {
   char *cur_ptr = (char *)model_buf;
@@ -121,6 +185,8 @@ auto serialize_db() {
   }
 
   tt_buf = (u64)cur_ptr;
+  tt_buf = round_up<u64>(tt_buf,sizeof(u64));
+  cur_ptr = (char *)tt_buf;
 
   LOG(4) << "after seriaize, tt buf: " << tt_buf << "; model sz:  "
          << tt_buf - model_buf;

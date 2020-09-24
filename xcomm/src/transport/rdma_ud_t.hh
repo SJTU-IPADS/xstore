@@ -39,7 +39,7 @@ struct UDTransport : public STrait<UDTransport> {
 
     // try connect to the server
     ConnectManager cm(addr);
-    auto wait_res = cm.wait_ready(1000000, 2);
+    auto wait_res = cm.wait_ready(1000000, 4);
     if (wait_res != IOCode::Ok) {
       return transfer_raw(wait_res);
     }

@@ -117,6 +117,8 @@ template <usize N, typename K, typename V> struct __attribute__((packed)) XNode 
    */
   static auto value_start_offset() -> usize { return offsetof(XNode, values); }
 
+  static auto inplace_value_end_offset() -> usize { return value_start_offset() + sizeof(V) * N; }
+
   static auto value_offset(const usize &idx) -> usize {
     if (sizeof(V) <= sizeof(u64)) {
       return value_start_offset() + Values<N, V>::offset_inplace(idx);

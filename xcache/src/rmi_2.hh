@@ -41,7 +41,11 @@ struct LocalTwoRMI {
   }
 
   auto select_sec_model(const KeyType &k) -> usize {
-    return first_layer.predict(k, first_layer.up_bound);
+    auto  res =  first_layer.predict(k, first_layer.up_bound);
+    if (res >= second_layer.size()) {
+      res = second_layer.size() - 1;
+    }
+    return res;
   }
 
   auto get_predict_range(const KeyType &k) -> std::pair<int, int> {

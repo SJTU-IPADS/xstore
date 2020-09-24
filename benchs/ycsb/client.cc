@@ -20,7 +20,7 @@ using namespace kvs_workloads::ycsb;
 
 #include "./eval_c.hh"
 
-    using namespace test;
+using namespace test;
 
 using namespace xstore;
 using namespace xstore::rpc;
@@ -37,6 +37,8 @@ using SManager = UDSessionManager<2048>;
 DEFINE_int64(threads, 1, "num client thread used");
 DEFINE_int64(coros, 1, "num client coroutine used per threads");
 DEFINE_string(addr, "localhost:8888", "server address");
+
+DEFINE_bool(vlen, false, "whether to use variable length value");
 
 DEFINE_uint64(nkeys, 1000000, "Number of keys to fetch");
 
@@ -59,7 +61,7 @@ int main(int argc, char **argv) {
 
   std::vector<::xstore::bench::Statics> statics(FLAGS_threads);
 
-  PBarrier bar(FLAGS_threads);
+  PBarrier bar(FLAGS_threads + 1);
 
   for (uint thread_id = 0; thread_id < FLAGS_threads; ++thread_id) {
     workers.push_back(std::move(std::make_unique<XThread>([&statics, &bar,
@@ -73,7 +75,7 @@ int main(int argc, char **argv) {
           RNic::create(RNicInfo::query_dev_names().at(nic_idx)).value();
       auto qp = UD::create(nic_for_sender, QPConfig()).value();
 
-      auto mem_region1 = HugeRegion::create(64 * 1024 * 1024).value();
+      auto mem_region1 = HugeRegion::create(128 * 1024 * 1024).value();
       auto mem1 = mem_region1->convert_to_rmem().value();
       auto handler1 = RegHandler::create(mem1, nic_for_sender).value();
       SimpleAllocator alloc1(mem1, handler1->get_reg_attr().value());
@@ -86,9 +88,18 @@ int main(int argc, char **argv) {
 
       auto id = 1024 * FLAGS_client_name + thread_id;
       UDTransport sender;
-      ASSERT(sender.connect(FLAGS_addr, "b" + std::to_string(thread_id),
-                            id, qp) == IOCode::Ok)
-        << " connect failure at addr: " << FLAGS_addr << " for thread:" << thread_id;
+      {
+        r2::Timer t;
+        do {
+          auto res = sender.connect(FLAGS_addr, "b" + std::to_string(thread_id), id, qp);
+          if (res == IOCode::Ok) {
+            break;
+          }
+          if (t.passed_sec() >= 10) {
+            ASSERT(false) << "conn failed at thread:" << thread_id;
+          }
+        } while (t.passed_sec() < 10);
+      }
 
       RPCCore<SendTrait, RecvTrait, SManager> rpc(12);
       auto send_buf = std::get<0>(alloc1.alloc_one(4096).value());
@@ -167,7 +178,8 @@ int main(int argc, char **argv) {
         cache = std::make_unique<XCache>(
             std::string(reply_buf + sizeof(ReplyMeta), meta.dispatcher_sz));
         LOG(4) << "first layer check: " << cache->first_layer.up_bound
-               << "; num: " << cache->first_layer.dispatch_num;
+               << "; num: " << cache->first_layer.dispatch_num
+               << " total sz:" << meta.total_sz;
 
         // try serialize the second layer
         // we first create the QP to fetch the model
@@ -200,11 +212,18 @@ int main(int argc, char **argv) {
                  << ":" << meta.total_sz;
 
           // then the TT
+          tts.reserve(cache->first_layer.dispatch_num);
           for (uint i = 0; i < cache->first_layer.dispatch_num; ++i) {
+            ASSERT(cur_ptr >= xcache_buf);
+            if (i % 100 == 0) {
+              //LOG(4) << "load :" << i << " done; total: " << cache->first_layer.dispatch_num;
+            }
+
+            auto tt_n = ::xstore::util::Marshal<u32>::deserialize(cur_ptr, sizeof(u64));
+            const std::string buf((const char *)cur_ptr, sizeof(u32) + tt_n * sizeof(XCacheTT::ET));
             // serialize one
-            tts.emplace_back(
-                std::string(cur_ptr, meta.total_sz - (cur_ptr - xcache_buf)));
-            cur_ptr += tts[i].serialize().size();
+            tts.emplace_back(buf);
+            cur_ptr += tts[i].tt_sz();
           }
 
           LOG(4) << "serialzie TTs done:" << cur_ptr - xcache_buf << ":"
@@ -226,10 +245,15 @@ int main(int argc, char **argv) {
           while (running) {
             r2::compile_fence();
             const auto key = XKey(ycsb.next_key());
-            auto res = core_eval(key,rc,my_buf,R2_ASYNC_WAIT);
-            if (std::is_integral<ValType>::value) {
-              // check the value if it is a integer
-              ASSERT(XKey(res) == key) << XKey(res) << "; target:" << key;
+            if (!FLAGS_vlen) {
+              auto res = core_eval(key, rc, my_buf, R2_ASYNC_WAIT);
+              if (std::is_integral<ValType>::value) {
+                // check the value if it is a integer
+                ASSERT(XKey(res) == key) << XKey(res) << "; target:" << key;
+              }
+            } else {
+              auto res = core_eval_v(key, rc, my_buf, R2_ASYNC_WAIT);
+              // TODO: how to check the value's correctness?
             }
             statics[thread_id].increment();
           }
@@ -256,6 +280,7 @@ int main(int argc, char **argv) {
     w->start();
   }
 
+  bar.wait();
   Reporter::report_thpt(statics, 30, std::to_string(FLAGS_client_name) + ".xstorelog");
   running = false;
 

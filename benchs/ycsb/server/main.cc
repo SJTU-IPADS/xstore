@@ -4,6 +4,8 @@
 
 #include "../../../xutils/huge_region.hh"
 
+#include "../../../xutils/local_barrier.hh"
+
 DEFINE_int64(port, 8888, "Server listener (UDP) port.");
 DEFINE_int64(threads, 1, "Server threads.");
 DEFINE_int64(use_nic_idx, 0, "Which NIC to create QP");
@@ -23,43 +25,19 @@ using namespace xstore::util;
 using namespace xstore;
 
 volatile bool running = true;
+volatile bool init = false;
 
 RCtrl ctrl(FLAGS_port);
+
+PBarrier *bar;
 
 int main(int argc, char **argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  auto total_sz = sizeof(DBTree::Leaf) * 1000000;
-  auto mem = HugeRegion::create(FLAGS_alloc_mem_m * 1024 * 1024).value();
-  ASSERT(mem->sz > total_sz);
-  xalloc = new XAlloc<sizeof(DBTree::Leaf)>((char *)mem->start_ptr(), total_sz);
-  db.init_pre_alloced_leaf(*xalloc);
-
-  model_buf = (u64)mem->start_ptr() + total_sz;
-  buf_end = (u64)mem->start_ptr() + FLAGS_alloc_mem_m * 1024 * 1024;
-
-  // first load DB
-  {
-    r2::Timer t;
-    ::xstore::load_linear(FLAGS_nkeys);
-    LOG(2) << "load linear dataset in :" << t.passed_msec() << " msecs";
-  }
-
-  // then train DB
-  {
-    r2::Timer t;
-    ::xstore::train_db("");
-    LOG(2) << "Train dataset in :" << t.passed_msec() << "msecs";
-  }
-
-  {
-    ::xstore::serialize_db();
-  }
-  LOG(4) << "index related work done!";
-
-  // start a controler, so that others may access it using UDP based channel
+  bar = new  PBarrier(FLAGS_threads + 1);
 
   const usize MB = 1024 * 1024;
+  auto mem = HugeRegion::create(FLAGS_alloc_mem_m * 1024 * 1024L).value();
 
   // first we open the NIC
   auto all_nics = RNicInfo::query_dev_names();
@@ -80,17 +58,52 @@ int main(int argc, char **argv) {
     }
   }
 
-  // start the listener thread so that client can communicate w it
-  ctrl.start_daemon();
-
   auto workers = bootstrap_workers(FLAGS_threads);
   for (auto &w : workers) {
     w->start();
   }
 
   RDMA_LOG(2) << "YCSB bench server started!";
+  // start the listener thread so that client can communicate w it
+  ctrl.start_daemon();
+
+  u64 total_sz = sizeof(DBTree::Leaf) * 16000000L;
+  ASSERT(mem->sz > total_sz) << "total sz needed: " << total_sz;
+  xalloc = new XAlloc<sizeof(DBTree::Leaf)>((char *)mem->start_ptr(), total_sz);
+  db.init_pre_alloced_leaf(*xalloc);
+
+  val_buf = (u64)mem->start_ptr() + total_sz;
+  model_buf = val_buf + (1024 * 1024 * 64L);
+  buf_end = (u64)mem->start_ptr() + FLAGS_alloc_mem_m * 1024 * 1024;
+
+  // first load DB
+  {
+    r2::Timer t;
+    ::xstore::load_linear(FLAGS_nkeys);
+    LOG(2) << "load linear dataset in :" << t.passed_msec() << " msecs";
+  }
+
+  // then train DB
+  {
+    r2::Timer t;
+    ::xstore::train_db("");
+    LOG(2) << "Train dataset in :" << t.passed_msec() << "msecs";
+  }
+
+  {
+    ::xstore::serialize_db();
+  }
+  LOG(4) << "index related work done!";
+  r2::compile_fence();
+  init = true;
+  bar->wait();
+
+  // start a controler, so that others may access it using UDP based channel
+
+
   // run for 20 sec
   for (uint i = 0; i < 40; ++i) {
+  //while (1) {
     // server does nothing because it is RDMA
     // client will read the reg_mem using RDMA
     sleep(1);

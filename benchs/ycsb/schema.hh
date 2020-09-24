@@ -15,6 +15,11 @@ using namespace xcache;
 using namespace xml;
 using namespace xkv::xtree;
 
+template <usize N>
+struct OpaqueVal {
+  char data[N];
+};
+
 // 8-byte value
 const usize kNPageKey = 16;
 using ValType = u64;
@@ -24,5 +29,9 @@ using XCache = LocalTwoRMI<LR, LR, XKey>;
 using TrainIter = XCacheTreeIter<kNPageKey, XKey, ValType>;
 
 template <typename Key> using PS = PageSampler<kNPageKey, Key>;
+
+using DBTreeV = XTree<kNPageKey, XKey, FatPointer>;
+using DBTreeIterV = XTreeIter<kNPageKey, XKey, FatPointer>;
+using TrainIterV = XCacheTreeIter<kNPageKey, XKey, FatPointer>;
 
 } // namespace xstore

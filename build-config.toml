@@ -40,11 +40,11 @@ extra = ["gflags","ibverbs","pthread"]
 
 [[apps]]
 name = "ycsb_server"
-src = ["./benchs/ycsb/server/main.cc", "./deps/r2/src/logging.cc"]
+src = ["./benchs/ycsb/server/main.cc", "./deps/r2/src/logging.cc", "./benchs/terminate.cc" ]
 extra = ["gflags","ibverbs","pthread","mkl_rt","boost_system", "boost_coroutine", "pthread"]
 
 [[apps]]
 name = "ycsb_client"
-src = ["./benchs/ycsb/client.cc", "./deps/r2/src/logging.cc","./deps/r2/src/sshed.cc"]
+src = ["./benchs/ycsb/client.cc", "./deps/r2/src/logging.cc","./deps/r2/src/sshed.cc", "./benchs/terminate.cc"]
 extra = ["gflags","ibverbs","pthread","mkl_rt","boost_system", "boost_coroutine", "pthread"]
 

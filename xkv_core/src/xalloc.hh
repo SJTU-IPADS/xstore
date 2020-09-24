@@ -14,13 +14,13 @@ template <usize S>
 class XAlloc : public AllocTrait<XAlloc<S>, S> {
   ::xstore::xkv::xtree::CompactSpinLock lock;
   char *mem_pool = nullptr;
-  const usize total_sz = 0;
-  usize cur_alloc_sz = 0;
+  const u64 total_sz = 0;
+  u64 cur_alloc_sz = 0;
 
 public:
   usize cur_alloc_num = 0;
 
-  XAlloc(char *m, const usize &t) : mem_pool(m), total_sz(t) {}
+  XAlloc(char *m, const u64 &t) : mem_pool(m), total_sz(t) {}
 
   // interfaces
   auto alloc_impl() -> Option<char *> {
@@ -34,6 +34,7 @@ public:
       return res;
     }
     lock.unlock();
+    //ASSERT(false) << cur_alloc_sz << " " << total_sz;
     return {};
   }
 

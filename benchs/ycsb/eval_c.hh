@@ -63,4 +63,60 @@ auto core_eval(const XKey &key, const Arc<RC> &rc, char *my_buf, R2_ASYNC)
   return res;
 }
 
+auto core_eval_v(const XKey &key, const Arc<RC> &rc, char *my_buf, R2_ASYNC)
+    -> ValType {
+  // evaluate a get() req
+  const usize read_sz = DBTreeV::Leaf::inplace_value_end_offset();
+
+  // 1. predict
+  auto m = cache->select_sec_model(key);
+  auto range = cache->get_predict_range(key);
+
+  auto ns = std::max(std::get<0>(range) / 16, 0);
+  auto ne =
+      std::min(std::get<1>(range) / 16, static_cast<int>(tts[m].size() - 1));
+
+  BatchOp<16> reqs;
+  for (auto p = ns; p <= ne; ++p) {
+    reqs.emplace();
+    reqs.get_cur_op()
+        .set_read()
+        .set_rdma_rbuf((const u64 *)(tts.at(m)[p]), rc->remote_mr.value().key)
+        .set_payload(my_buf + read_sz * (p - ns), read_sz,
+                     rc->local_mr.value().lkey);
+  }
+
+  auto ret = reqs.execute_async(rc, R2_ASYNC_WAIT);
+  ASSERT(ret == ::rdmaio::IOCode::Ok);
+
+  // then find the value
+  for (auto p = ns; p <= ne; ++p) {
+    DBTreeV::Leaf *node = reinterpret_cast<DBTreeV::Leaf *> (my_buf + read_sz * (p - ns));
+    auto idx = node->search(key);
+    if (idx) {
+      // fetch the value
+
+      auto val_addr = node->get_value_raw(idx.value()); // get the pointer
+      ASSERT(val_addr.get_sz() < 4096);
+      ASSERT(val_addr.get_sz() == 8);
+
+      AsyncOp<1> op;
+      op.set_read()
+        .set_rdma_rbuf(//(const u64 *)(tts.at(m)[p]),
+                       val_addr.get_ptr<u64>(),
+                       rc->remote_mr.value().key)
+        .set_payload(my_buf, val_addr.get_sz(), rc->local_mr.value().lkey);
+      ret = op.execute_async(rc, IBV_SEND_SIGNALED, R2_ASYNC_WAIT);
+      ASSERT(ret == ::rdmaio::IOCode::Ok);
+
+      return *((ValType *)my_buf);
+    }
+  }
+  // failed to found
+  ASSERT(false);
+  ValType res;
+  return res;
+}
+
+
 } // namespace xstore
