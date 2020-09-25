@@ -1,0 +1,9 @@
+[[pass]]
+host = "val1"
+path = ''
+cmd  = 'cd /cock/r2/; ./bench_server'
+
+[[pass]]
+host = "val0"
+path = ''
+cmd  = ' sleep 1; cd /cock/r2/; ./co_client -client_name xx -threads 12 --coroutines 10 --addr=val01:8888'
