@@ -1,0 +1,32 @@
+global_configs = "--nkeys=10000000 --threads=24 --vlen=false --len=512"
+
+[[pass]]
+host = "val1"
+path = '/cock/xstore'
+cmd  = './ycsb_server --alloc_mem_m=20480 --len=8'
+
+[[pass]]
+host = "val0"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=1' 
+
+[[pass]]
+host = "val2"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=2' 
+
+[[pass]]
+host = "val3"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=3' 
+
+[[pass]]
+host = "val4"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=4' 
+
+[[pass]]
+host = "val5"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=5' 
+
