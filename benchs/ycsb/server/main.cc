@@ -80,7 +80,11 @@ int main(int argc, char **argv) {
   // first load DB
   {
     r2::Timer t;
-    ::xstore::load_linear(FLAGS_nkeys);
+    if (FLAGS_load_from_file) {
+      ::xstore::load_from_file(FLAGS_nkeys);
+    } else {
+      ::xstore::load_linear(FLAGS_nkeys);
+    }
     LOG(2) << "load linear dataset in :" << t.passed_msec() << " msecs";
   }
 

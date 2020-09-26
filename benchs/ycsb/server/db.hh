@@ -6,6 +6,7 @@
 #include "../../../xkv_core/src/xtree/page_iter.hh"
 
 #include "../../../xutils/cdf.hh"
+#include "../../../xutils/file_loader.hh"
 
 #include "../schema.hh"
 
@@ -13,6 +14,7 @@ namespace xstore {
 
 DEFINE_bool(vlen, false, "whether to use variable length value");
 DEFINE_int32(len, 8, "average length of the value");
+DEFINE_int32(nmodels, 10000, "number submodel used");
 
 using namespace xcache;
 using namespace xml;
@@ -47,6 +49,31 @@ auto load_linear(const u64 &nkeys) {
   }
 }
 
+DEFINE_bool(load_from_file, true, "whether to load DB from the file");
+DEFINE_string(data_file, "lognormal_uni_100m.txt", "data file name");
+
+auto load_from_file(const usize &nkeys) {
+  FileLoader loader(FLAGS_data_file);
+  char *cur_val_ptr = reinterpret_cast<char *>(val_buf);
+
+  for (usize i = 0;i < nkeys; ++i) {
+    auto key = loader.next_key<u64>(FileLoader::default_converter<u64>);
+    if (key) {
+      auto k = key.value();
+      if (!FLAGS_vlen) {
+        db.insert_w_alloc(XKey(k), k, *xalloc);
+      } else {
+        ASSERT((u64)(cur_val_ptr + FLAGS_len) <= model_buf)
+            << " insert k: " << k << " failed; "
+            << "total alloced:" << (u64)(cur_val_ptr - val_buf);
+        dbv.insert_w_alloc(XKey(k), FatPointer(cur_val_ptr, FLAGS_len),
+                           *xalloc);
+        cur_val_ptr += FLAGS_len;
+      }
+    }
+  }
+}
+
 auto page_updater(const u64 &label, const u64 &predict, const int &cur_min,
                   const int &cur_max) -> std::pair<int, int> {
 
@@ -65,7 +92,7 @@ auto page_updater(const u64 &label, const u64 &predict, const int &cur_min,
 
 auto train_db(const std::string &config) {
   // TODO: load model configuration from the file
-  const int num_sub = 10000;
+  const int num_sub = FLAGS_nmodels;
 
   if (cache == nullptr) {
     // init
@@ -118,7 +145,8 @@ auto train_db(const std::string &config) {
         error_cdf.finalize();
         page_cdf.finalize();
 
-        LOG(4) << "Error data:";
+        LOG(4) << "Error data: " << "[average: " << error_cdf.others.average
+               << ", min: " << error_cdf.others.min << ", max: " << error_cdf.others.max;
         LOG(4) << error_cdf.dump_as_np_data() << "\n";
 
         LOG(4) << "Page entries:" << page_cdf.dump_as_np_data() << "\n";

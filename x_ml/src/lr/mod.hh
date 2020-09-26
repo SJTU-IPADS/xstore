@@ -35,7 +35,12 @@ struct __attribute__((packed)) LR : public MLTrait<LR<Key>, Key> {
       return;
     }
 
-    ASSERT(train_data.size() > 1) << "train data sz:" << train_data.size();
+    if (train_data.size() <= 1) {
+      this->w = 0;
+      this->b = 0;
+      return;
+    }
+    //ASSERT(train_data.size() >= 1) << "train data sz:" << train_data.size();
 
     auto num_rows = train_data.size();
     auto lr_parameter = 2; // w + b
