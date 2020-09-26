@@ -8,6 +8,7 @@ using namespace r2;
 
 enum RPCId {
   META = 0,
+  GET  = 1,
 };
 
 // metadata description of the xcache meta

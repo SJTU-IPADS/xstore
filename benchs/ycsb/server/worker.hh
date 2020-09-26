@@ -61,6 +61,7 @@ auto bootstrap_workers(const usize &nthreads)
 
       // register the callbacks before enter the main loop
       ASSERT(rpc.reg_callback(meta_callback) == META);
+      ASSERT(rpc.reg_callback(get_callback) == GET);
       r2::compile_fence();
 
       bar->wait();

@@ -49,4 +49,28 @@ void meta_callback(const Header &rpc_header, const MemBlock &args,
   ASSERT(ret == IOCode::Ok);
 }
 
+/*!
+  handle Get() request using RPC
+ */
+void get_callback(const Header &rpc_header, const MemBlock &args,
+                   SendTrait *replyc) {
+  // sanity check the requests
+  ASSERT(args.sz == sizeof(u64));
+
+  u64 key = *(reinterpret_cast<u64 *>(args.mem_ptr));
+
+  // get()
+  auto value = db.get(XKey(key)).value();
+
+  char reply_buf[64];
+
+  // send the reply
+  RPCOp op;
+  ASSERT(op.set_msg(MemBlock(reply_buf, 64)).set_reply().add_arg(value));
+  op.set_corid(rpc_header.cor_id);
+
+  auto ret = op.execute(replyc);
+  ASSERT(ret == IOCode::Ok);
+}
+
 } // namespace xstore
