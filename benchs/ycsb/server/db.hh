@@ -152,6 +152,16 @@ auto train_db(const std::string &config) {
         LOG(4) << "Page entries:" << page_cdf.dump_as_np_data() << "\n";
 
         LOG(4) << "total " << num_sub << " models; null models:" << null_model;
+
+        // make some sanity checks
+        if (1) {
+          auto key = XKey(50040828);
+          auto m = cache->select_sec_model(key);
+          auto range = cache->get_predict_range(key);
+          LOG(4) <<" model num: " << tts[m].size();
+
+          //LOG(4) << "sanity check key: " << key << " use model: " << m << "; range:" << std::get<0>(range) << "~" << std::get<1>(range);
+        }
       }
     } else {
       auto trainers = cache->dispatch_keys_to_trainers<DBTreeIterV>(dbv);

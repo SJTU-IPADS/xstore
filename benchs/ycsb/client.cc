@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
   }
 
   bar.wait();
-  Reporter::report_thpt(statics, 30,
+  Reporter::report_thpt(statics, 20,
                         std::to_string(FLAGS_client_name) + ".xstorelog");
   running = false;
 

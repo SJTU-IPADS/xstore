@@ -78,7 +78,6 @@ auto core_eval(const XKey &key, const Arc<RC> &rc, RPC &rpc,
   //std::min(std::get<1>(range), static_cast<int>(tts[m].size() - 1)) / 16;
   auto ne = std::min<int>(static_cast<int>(tts[m].size() - 1),
                           std::get<1>(range) / kNPageKey);
-
   // record statics
   if (FLAGS_client_name == 1 && worker_id == 0) {
     error_cdf.insert(std::get<1>(range) - std::get<0>(range));
