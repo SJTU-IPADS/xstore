@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
   // start the listener thread so that client can communicate w it
   ctrl.start_daemon();
 
-  u64 total_sz = sizeof(DBTree::Leaf) * 5000000L;
+  u64 total_sz = sizeof(DBTree::Leaf) * 10000000L;
   ASSERT(mem->sz > total_sz) << "total sz needed: " << total_sz;
   xalloc = new XAlloc<sizeof(DBTree::Leaf)>((char *)mem->start_ptr(), total_sz);
   db.init_pre_alloced_leaf(*xalloc);
@@ -82,10 +82,12 @@ int main(int argc, char **argv) {
     r2::Timer t;
     if (FLAGS_load_from_file) {
       ::xstore::load_from_file(FLAGS_nkeys);
+      LOG(2) << "load dataset from " << FLAGS_data_file << "in :" << t.passed_msec() << " msecs";
+
     } else {
+      LOG(2) << "load linear dataset in :" << t.passed_msec() << " msecs";
       ::xstore::load_linear(FLAGS_nkeys);
     }
-    LOG(2) << "load linear dataset in :" << t.passed_msec() << " msecs";
   }
 
   // then train DB

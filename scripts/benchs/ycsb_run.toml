@@ -1,9 +1,9 @@
-global_configs = "--nkeys=10000000 --threads=24 --vlen=false --len=8"
+global_configs = "--nkeys=100000000 --threads=24 --vlen=false --len=8 --load_from_file=true"
 
 [[pass]]
 host = "val1"
 path = '/cock/xstore'
-cmd  = './ycsb_server --alloc_mem_m=20480 --len=8 --nmodels=10'
+cmd  = './ycsb_server --alloc_mem_m=20480 --len=8 --nmodels=500000'
 
 [[pass]]
 host = "val0"

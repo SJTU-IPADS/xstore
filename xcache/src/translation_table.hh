@@ -56,7 +56,7 @@ template <typename EntryType> struct TT {
 
     u32 n = ::xstore::util::Marshal<u32>::deserialize(cur_ptr, d.size());
     ASSERT(d.size() >= sizeof(u32) + n * sizeof(EntryType)) << d.size() << "; n:" << n;
-    ASSERT(n < 2048) << n;
+    //ASSERT(n < 2048) << n;
 
     cur_ptr += sizeof(u32);
     this->clear();

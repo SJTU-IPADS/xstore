@@ -2,13 +2,14 @@
 #include <type_traits>
 
 #include "../../deps/kvs-workload/ycsb/mod.hh"
+#include "../../deps/kvs-workload/static_loader.hh"
 using namespace kvs_workloads::ycsb;
 
 #include "./proto.hh"
 
 #include "../../xcomm/tests/transport_util.hh"
 
-
+#include "../../xutils/file_loader.hh"
 #include "../../xutils/local_barrier.hh"
 #include "../../xutils/marshal.hh"
 
@@ -35,6 +36,9 @@ DEFINE_bool(vlen, false, "whether to use variable length value");
 
 DEFINE_uint64(nkeys, 1000000, "Number of keys to fetch");
 
+DEFINE_bool(load_from_file, true, "whether to load DB from the file");
+DEFINE_string(data_file, "lognormal_uni_100m.txt", "data file name");
+
 using XThread = ::r2::Thread<usize>;
 
 namespace xstore {
@@ -42,7 +46,8 @@ std::unique_ptr<XCache> cache = nullptr;
 std::vector<XCacheTT> tts;
 } // namespace xstore
 
-DEFINE_int64(client_name, 0, "Unique client name (in int)");
+
+std::shared_ptr<std::vector<u64>> all_keys = std::make_shared<std::vector<u64>>();
 
 volatile bool running = true;
 
@@ -53,6 +58,19 @@ int main(int argc, char **argv) {
   std::vector<std::unique_ptr<XThread>> workers;
 
   std::vector<::xstore::bench::Statics> statics(FLAGS_threads);
+
+  if (FLAGS_load_from_file) {
+    FileLoader loader(FLAGS_data_file);
+
+    for (usize i = 0; i < FLAGS_nkeys; ++i) {
+      auto key = loader.next_key<u64>(FileLoader::default_converter<u64>);
+      if (key) {
+        all_keys->push_back(key.value());
+      } else {
+        break;
+      }
+    }
+  }
 
   PBarrier bar(FLAGS_threads + 1);
 
@@ -84,7 +102,8 @@ int main(int argc, char **argv) {
       {
         r2::Timer t;
         do {
-          auto res = sender.connect(FLAGS_addr, "b" + std::to_string(thread_id), id, qp);
+          auto res = sender.connect(FLAGS_addr, "b" + std::to_string(thread_id),
+                                    id, qp);
           if (res == IOCode::Ok) {
             break;
           }
@@ -120,7 +139,8 @@ int main(int argc, char **argv) {
       // 2. create the pair QP at server using CM
       ConnectManager cm(FLAGS_addr);
       if (cm.wait_ready(1000000, 2) ==
-          IOCode::Timeout) // wait 1 second for server to ready, retry 2 times
+          IOCode::Timeout) // wait 1 second for server to ready, retry 2
+                           // times
         RDMA_ASSERT(false) << "cm connect to server timeout";
 
       auto qp_res =
@@ -129,8 +149,8 @@ int main(int argc, char **argv) {
       RDMA_ASSERT(qp_res == IOCode::Ok) << std::get<0>(qp_res.desc);
 
       auto key = std::get<1>(qp_res.desc);
-      // RDMA_LOG(4) << "t-" << thread_id << " fetch QP authentical key: " <<
-      // key;
+      // RDMA_LOG(4) << "t-" << thread_id << " fetch QP authentical key: "
+      // << key;
 
       auto fetch_res = cm.fetch_remote_mr(nic_idx);
       RDMA_ASSERT(fetch_res == IOCode::Ok) << std::get<0>(fetch_res.desc);
@@ -209,11 +229,14 @@ int main(int argc, char **argv) {
           for (uint i = 0; i < cache->first_layer.dispatch_num; ++i) {
             ASSERT(cur_ptr >= xcache_buf);
             if (i % 100 == 0) {
-              //LOG(4) << "load :" << i << " done; total: " << cache->first_layer.dispatch_num;
+              // LOG(4) << "load :" << i << " done; total: " <<
+              // cache->first_layer.dispatch_num;
             }
 
-            auto tt_n = ::xstore::util::Marshal<u32>::deserialize(cur_ptr, sizeof(u64));
-            const std::string buf((const char *)cur_ptr, sizeof(u32) + tt_n * sizeof(XCacheTT::ET));
+            auto tt_n =
+                ::xstore::util::Marshal<u32>::deserialize(cur_ptr, sizeof(u64));
+            const std::string buf((const char *)cur_ptr,
+                                  sizeof(u32) + tt_n * sizeof(XCacheTT::ET));
             // serialize one
             tts.emplace_back(buf);
             cur_ptr += tts[i].tt_sz();
@@ -227,19 +250,32 @@ int main(int argc, char **argv) {
       // 2. wait for the XCache to bootstrap done
       bar.wait();
 
-      YCSBCWorkloadUniform ycsb(FLAGS_nkeys,0xdeadbeaf + thread_id  + FLAGS_client_name * 73);
+      YCSBCWorkloadUniform ycsb(FLAGS_nkeys, 0xdeadbeaf + thread_id +
+                                                 FLAGS_client_name * 73);
+      ::kvs_workloads::StaticLoader other(all_keys, 0xdeadbeaf + thread_id +
+                                                      FLAGS_client_name * 73);
+
+      worker_id = thread_id;
 
       for (uint i = 0; i < FLAGS_coros; ++i) {
-        ssched.spawn([&statics, &total_processed, &sender,&rc, &alloc1,&ycsb,&rpc,
-                      lkey, send_buf, thread_id](R2_ASYNC) {
+        ssched.spawn([&statics, &total_processed, &sender, &rc, &alloc1, &ycsb,&other,
+                      &rpc, lkey, send_buf, thread_id](R2_ASYNC) {
           char reply_buf[1024];
-          char *my_buf = reinterpret_cast<char *>(std::get<0>(alloc1.alloc_one(8192).value()));
+          char *my_buf = reinterpret_cast<char *>(
+              std::get<0>(alloc1.alloc_one(8192).value()));
 
           while (running) {
             r2::compile_fence();
-            const auto key = XKey(ycsb.next_key());
+            //const auto key = XKey(ycsb.next_key());
+            XKey key;
+            if (FLAGS_load_from_file) {
+              key = XKey(other.next_key());
+            } else {
+              key = XKey(ycsb.next_key());
+            }
+
             if (!FLAGS_vlen) {
-              auto res = core_eval(key, rc, rpc, sender, my_buf, R2_ASYNC_WAIT);
+              auto res = core_eval(key, rc, rpc, sender, my_buf, statics[thread_id], R2_ASYNC_WAIT);
               if (std::is_integral<ValType>::value) {
                 // check the value if it is a integer
                 ASSERT(XKey(res) == key) << XKey(res) << "; target:" << key;
@@ -251,7 +287,7 @@ int main(int argc, char **argv) {
             statics[thread_id].increment();
           }
 
-          //LOG(4) << "coros: " << R2_COR_ID() << " exit";
+          // LOG(4) << "coros: " << R2_COR_ID() << " exit";
 
           if (R2_COR_ID() == FLAGS_coros) {
             R2_STOP();
@@ -265,6 +301,15 @@ int main(int argc, char **argv) {
                << " at client: " << thread_id;
       }
 
+      if (FLAGS_client_name == 1 && worker_id == 0) {
+        error_cdf.finalize();
+        LOG(4) << "Error data: "
+               << "[average: " << error_cdf.others.average
+               << ", min: " << error_cdf.others.min
+               << ", max: " << error_cdf.others.max;
+        LOG(4) << error_cdf.dump_as_np_data() << "\n";
+      }
+
       return 0;
     })));
   }
@@ -274,7 +319,8 @@ int main(int argc, char **argv) {
   }
 
   bar.wait();
-  Reporter::report_thpt(statics, 30, std::to_string(FLAGS_client_name) + ".xstorelog");
+  Reporter::report_thpt(statics, 30,
+                        std::to_string(FLAGS_client_name) + ".xstorelog");
   running = false;
 
   for (auto &w : workers) {

@@ -13,10 +13,13 @@ using namespace r2::rdma;
 #include "../../xcomm/src/rpc/mod.hh"
 #include "../../xcomm/src/transport/rdma_ud_t.hh"
 
+#include "../../xutils/cdf.hh"
+
 namespace xstore {
 
 using namespace xstore::rpc;
 using namespace xstore::transport;
+using namespace xstore::util;
 
 // prepare the sender transport
 using SendTrait = UDTransport;
@@ -26,11 +29,16 @@ using SManager = UDSessionManager<2048>;
 extern std::unique_ptr<XCache> cache;
 extern std::vector<XCacheTT> tts;
 
+__thread usize worker_id;
+
 DEFINE_int32(len, 8, "average length of the value");
+DEFINE_int32(client_name, 0, "Unique client name (in int)");
 
 using namespace xcomm;
 
 using RPC = RPCCore<SendTrait, RecvTrait, SManager>;
+
+CDF<usize> error_cdf("");
 
 auto eval_w_rpc(const XKey &key, RPC &rpc, UDTransport &sender, R2_ASYNC) -> ValType {
   char send_buf[64];
@@ -55,7 +63,9 @@ auto eval_w_rpc(const XKey &key, RPC &rpc, UDTransport &sender, R2_ASYNC) -> Val
 }
 
 auto core_eval(const XKey &key, const Arc<RC> &rc, RPC &rpc,
-               UDTransport &sender, char *my_buf, R2_ASYNC) -> ValType {
+               UDTransport &sender, char *my_buf,
+               ::xstore::bench::Statics &s,
+               R2_ASYNC) -> ValType {
   // evaluate a get() req
   const usize read_sz = DBTree::Leaf::value_start_offset();
 
@@ -63,14 +73,24 @@ auto core_eval(const XKey &key, const Arc<RC> &rc, RPC &rpc,
   auto m = cache->select_sec_model(key);
   auto range = cache->get_predict_range(key);
 
-  auto ns = std::max(std::get<0>(range) / 16, 0);
-  auto ne =
-      std::min(std::get<1>(range) / 16, static_cast<int>(tts[m].size() - 1));
+  auto ns = std::max<int>(std::get<0>(range) / kNPageKey, 0);
+  //auto ne =
+  //std::min(std::get<1>(range), static_cast<int>(tts[m].size() - 1)) / 16;
+  auto ne = std::min<int>(static_cast<int>(tts[m].size() - 1),
+                          std::get<1>(range) / kNPageKey);
 
-  BatchOp<16> reqs;
+  // record statics
+  if (FLAGS_client_name == 1 && worker_id == 0) {
+    error_cdf.insert(std::get<1>(range) - std::get<0>(range));
+  }
 
-  if (unlikely(ne - ns + 1 > 16)) {
+  const usize kMaxBatch = 10;
+  BatchOp<kMaxBatch> reqs;
+  //LOG(4) << "get key: "<< key; sleep(1);
+
+  if (unlikely(ne - ns + 1 > kMaxBatch)) {
     // unsafe case
+    s.increment_gap_1(1);
     return eval_w_rpc(key, rpc, sender, R2_ASYNC_WAIT);
   }
 
