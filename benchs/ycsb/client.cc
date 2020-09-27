@@ -8,8 +8,6 @@ using namespace kvs_workloads::ycsb;
 
 #include "../../xcomm/tests/transport_util.hh"
 
-#include "../../xcomm/src/rpc/mod.hh"
-#include "../../xcomm/src/transport/rdma_ud_t.hh"
 
 #include "../../xutils/local_barrier.hh"
 #include "../../xutils/marshal.hh"
@@ -27,11 +25,6 @@ using namespace xstore::rpc;
 using namespace xstore::transport;
 using namespace xstore::bench;
 using namespace xstore::util;
-
-// prepare the sender transport
-using SendTrait = UDTransport;
-using RecvTrait = UDRecvTransport<2048>;
-using SManager = UDSessionManager<2048>;
 
 // flags
 DEFINE_int64(threads, 1, "num client thread used");
@@ -237,7 +230,7 @@ int main(int argc, char **argv) {
       YCSBCWorkloadUniform ycsb(FLAGS_nkeys,0xdeadbeaf + thread_id  + FLAGS_client_name * 73);
 
       for (uint i = 0; i < FLAGS_coros; ++i) {
-        ssched.spawn([&statics, &total_processed, &sender, &rpc, &rc, &alloc1,&ycsb,
+        ssched.spawn([&statics, &total_processed, &sender,&rc, &alloc1,&ycsb,&rpc,
                       lkey, send_buf, thread_id](R2_ASYNC) {
           char reply_buf[1024];
           char *my_buf = reinterpret_cast<char *>(std::get<0>(alloc1.alloc_one(8192).value()));
@@ -246,7 +239,7 @@ int main(int argc, char **argv) {
             r2::compile_fence();
             const auto key = XKey(ycsb.next_key());
             if (!FLAGS_vlen) {
-              auto res = core_eval(key, rc, my_buf, R2_ASYNC_WAIT);
+              auto res = core_eval(key, rc, rpc, sender, my_buf, R2_ASYNC_WAIT);
               if (std::is_integral<ValType>::value) {
                 // check the value if it is a integer
                 ASSERT(XKey(res) == key) << XKey(res) << "; target:" << key;

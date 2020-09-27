@@ -10,7 +10,19 @@ using namespace r2::rdma;
 
 #include "../../xcomm/src/batch_rw_op.hh"
 
+#include "../../xcomm/src/rpc/mod.hh"
+#include "../../xcomm/src/transport/rdma_ud_t.hh"
+
 namespace xstore {
+
+using namespace xstore::rpc;
+using namespace xstore::transport;
+
+// prepare the sender transport
+using SendTrait = UDTransport;
+using RecvTrait = UDRecvTransport<2048>;
+using SManager = UDSessionManager<2048>;
+
 extern std::unique_ptr<XCache> cache;
 extern std::vector<XCacheTT> tts;
 
@@ -18,8 +30,32 @@ DEFINE_int32(len, 8, "average length of the value");
 
 using namespace xcomm;
 
-auto core_eval(const XKey &key, const Arc<RC> &rc, char *my_buf, R2_ASYNC)
-    -> ValType {
+using RPC = RPCCore<SendTrait, RecvTrait, SManager>;
+
+auto eval_w_rpc(const XKey &key, RPC &rpc, UDTransport &sender, R2_ASYNC) -> ValType {
+  char send_buf[64];
+  char reply_buf[sizeof(ValType)];
+
+  RPCOp op;
+  op.set_msg(MemBlock(send_buf, 64))
+      .set_req()
+      .set_rpc_id(GET)
+      .set_corid(R2_COR_ID())
+      .add_one_reply(rpc.reply_station, {.mem_ptr = reply_buf, .sz = sizeof(ValType)})
+      .add_arg<XKey>(key);
+  ASSERT(rpc.reply_station.cor_ready(R2_COR_ID()) == false);
+  auto ret = op.execute_w_key(&sender, 0);
+  ASSERT(ret == IOCode::Ok);
+
+  // yield the coroutine to wait for reply
+  R2_PAUSE_AND_YIELD;
+
+  // check the rest
+  return *(reinterpret_cast<ValType *>(reply_buf));
+}
+
+auto core_eval(const XKey &key, const Arc<RC> &rc, RPC &rpc,
+               UDTransport &sender, char *my_buf, R2_ASYNC) -> ValType {
   // evaluate a get() req
   const usize read_sz = DBTree::Leaf::value_start_offset();
 
@@ -32,6 +68,12 @@ auto core_eval(const XKey &key, const Arc<RC> &rc, char *my_buf, R2_ASYNC)
       std::min(std::get<1>(range) / 16, static_cast<int>(tts[m].size() - 1));
 
   BatchOp<16> reqs;
+
+  if (unlikely(ne - ns + 1 > 16)) {
+    // unsafe case
+    return eval_w_rpc(key, rpc, sender, R2_ASYNC_WAIT);
+  }
+
   for (auto p = ns; p <= ne; ++p) {
     reqs.emplace();
     reqs.get_cur_op()

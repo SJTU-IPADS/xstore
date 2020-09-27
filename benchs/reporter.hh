@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include <iomanip> // std::setprecision
+
 #include "./statics.hh"
 
 #include "../deps/r2/src/timer.hh"
