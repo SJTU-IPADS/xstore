@@ -16,6 +16,7 @@ DEFINE_uint64(alloc_mem_m, 64,
               "The size of memory to register (in size of MB).");
 DEFINE_uint64(nkeys, 1000000, "Number of keys to load");
 
+DEFINE_uint64(ncheck_model, 100, "Number of models to check");
 #include "./db.hh"
 #include "./worker.hh"
 
@@ -67,15 +68,19 @@ int main(int argc, char **argv) {
   // start the listener thread so that client can communicate w it
   ctrl.start_daemon();
 
-  u64 total_sz = sizeof(DBTree::Leaf) * 10000000L;
+  u64 total_sz = sizeof(DBTree::Leaf) * 15000000L;
   ASSERT(mem->sz > total_sz) << "total sz needed: " << total_sz;
   xalloc = new XAlloc<sizeof(DBTree::Leaf)>((char *)mem->start_ptr(), total_sz);
   db.init_pre_alloced_leaf(*xalloc);
 
   val_buf = (u64)mem->start_ptr() + total_sz;
-  model_buf = val_buf + (1024L * 1024L * 1024L * 6L);
+  if (FLAGS_vlen) {
+    model_buf = val_buf + (1024L * 1024L * 1024L * 6L);
+  } else {
+    model_buf = val_buf;
+  }
   buf_end = (u64)mem->start_ptr() + FLAGS_alloc_mem_m * 1024 * 1024;
-  ASSERT(model_buf < buf_end);
+  ASSERT(model_buf < buf_end) << "too little model buf";
 
   // first load DB
   {
@@ -105,8 +110,14 @@ int main(int argc, char **argv) {
   init = true;
   bar->wait();
 
-  // start a controler, so that others may access it using UDP based channel
-
+  // check the xcache
+  for (uint i = 0;i < FLAGS_ncheck_model;++i) {
+    if (cache->second_layer.at(i).max != 0) {
+      LOG(4) << "model x : " << i
+             << " error:" << cache->second_layer.at(i).total_error()
+             << "; total: " << cache->second_layer.at(i).max;
+    }
+  }
 
   // run for 20 sec
   for (uint i = 0; i < 40; ++i) {

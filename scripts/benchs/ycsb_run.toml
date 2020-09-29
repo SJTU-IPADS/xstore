@@ -1,9 +1,9 @@
-global_configs = "--nkeys=1000000 --threads=1 --vlen=false --len=8 --load_from_file=true --coros=1 --undefok=coros"
+global_configs = "--nkeys=100000000 --threads=24 --vlen=false --len=8 --load_from_file=true --coros=10 --undefok=coros --data_file=osm_uni_100m.txt"
 
 [[pass]]
 host = "val1"
 path = '/cock/xstore'
-cmd  = './ycsb_server --alloc_mem_m=20480 --len=8 --nmodels=5000'
+cmd  = './ycsb_server --alloc_mem_m=22480 --len=8 --nmodels=5000000 --ncheck_model=0'
 
 [[pass]]
 host = "val0"

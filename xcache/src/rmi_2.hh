@@ -33,7 +33,7 @@ struct LocalTwoRMI {
   // training methods
   template <class IT, class S>
   auto train_first(typename IT::KV &kv, S &s) -> usize {
-    return this->first_layer.train(kv, s);
+    return this->first_layer.template train<IT,S>(kv, s);
   }
 
   template <class IT> auto default_train_first(typename IT::KV &kv) -> usize {

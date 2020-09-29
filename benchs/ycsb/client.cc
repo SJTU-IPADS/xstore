@@ -87,11 +87,15 @@ int main(int argc, char **argv) {
       auto qp = UD::create(nic_for_sender, QPConfig()).value();
 
       auto mem_region1 = HugeRegion::create(128 * 1024 * 1024).value();
+      if (thread_id == 0) {
+        // thread 0 uses a larger region
+        mem_region1 = HugeRegion::create(512 * 1024 * 1024).value();
+      }
       auto mem1 = mem_region1->convert_to_rmem().value();
       auto handler1 = RegHandler::create(mem1, nic_for_sender).value();
       SimpleAllocator alloc1(mem1, handler1->get_reg_attr().value());
       auto recv_rs_at_send =
-          RecvEntriesFactory<SimpleAllocator, 2048, 4096>::create(alloc1);
+          RecvEntriesFactory<SimpleAllocator, 2048, 1024>::create(alloc1);
       {
         auto res = qp->post_recvs(*recv_rs_at_send, 2048);
         RDMA_ASSERT(res == IOCode::Ok);
@@ -114,11 +118,11 @@ int main(int argc, char **argv) {
       }
 
       RPCCore<SendTrait, RecvTrait, SManager> rpc(12);
-      auto send_buf = std::get<0>(alloc1.alloc_one(4096).value());
+      auto send_buf = std::get<0>(alloc1.alloc_one(1024).value());
       ASSERT(send_buf != nullptr);
       auto lkey = handler1->get_reg_attr().value().key;
 
-      memset(send_buf, 0, 4096);
+      memset(send_buf, 0, 1024);
 
       // 0. connect the RPC
       // first we send the connect transport

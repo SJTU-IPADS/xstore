@@ -107,18 +107,30 @@ auto train_db(const std::string &config) {
     // 1. first layer
     {
       r2::Timer t;
+
+      using SS = StepSampler<XKey>;
+      SS ss(1);
+
       if (FLAGS_vlen) {
+
+        //cache->train_first<DBTreeIterV, SS>(dbv,ss);
         cache->default_train_first<DBTreeIterV>(dbv);
       } else {
-        cache->default_train_first<DBTreeIter>(db);
-        LOG(4) << "train first layer done using: " << t.passed_sec() << " secs";
+        //cache->default_train_first<DBTreeIter>(db);
+        //cache->first_layer.train<DBTreeIter, SS>(db,ss);
+        auto num = cache->train_first<DBTreeIter, SS>(db, ss);
+        LOG(4) << "train first layer done using: " << t.passed_sec() << " secs; for: " << num << " keys";
       }
     }
     // 2. second layer
 
+    usize max = 0;
+    int idx = -1;
+
     if (!FLAGS_vlen) {
       auto trainers = cache->dispatch_keys_to_trainers<DBTreeIter>(db);
       {
+        CDF<int> num_cdf("");
         CDF<int> error_cdf("");
         CDF<int> page_cdf("");
 
@@ -138,12 +150,19 @@ auto train_db(const std::string &config) {
           if (tts[i].size() != 0) {
             error_cdf.insert(cache->second_layer[i].total_error());
             page_cdf.insert(tts[i].size());
+
+            if (cache->second_layer[i].max > max) {
+              max = cache->second_layer[i].max;
+              idx = i;
+            }
           } else {
             null_model += 1;
           }
         }
         error_cdf.finalize();
         page_cdf.finalize();
+
+        LOG(4) << "model: " << idx << " has max key: " << max << "; ratio: " << (double)max / FLAGS_nkeys;
 
         LOG(4) << "Error data: " << "[average: " << error_cdf.others.average
                << ", min: " << error_cdf.others.min << ", max: " << error_cdf.others.max;
