@@ -1,0 +1,9 @@
+[[pass]]
+host = "val0"
+path = "/cock/fstore"
+cmd = "./fserver --help"
+
+[[pass]]
+host = "val1"
+path = "/cock/fstore"
+cmd = "./ycsb --help"

@@ -1,0 +1,9 @@
+#[[pass]]
+#host = "val2"
+#path = ''
+#cmd  = 'cd /cock/fstore/; cmake .; make micro; make fserver; make ycsb; make master; make micro_local_kv;'
+
+[[pass]]
+host = "val2"
+path = ''
+cmd  = 'cd /cock/fstore/; cmake .; make fserver; make ycsb; make master; make micro;"

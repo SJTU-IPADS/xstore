@@ -1,0 +1,11 @@
+[[stages]]
+type = "lr"
+parameter = 1
+
+[[stages]]
+type = "lr"
+## typically, they use much larger models
+
+
+## YCSB large 200M
+parameter = 100000

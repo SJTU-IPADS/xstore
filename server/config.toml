@@ -1,0 +1,6 @@
+[memory]
+page        = "20G"
+rdma_heap   = "8G"
+
+[rpc]
+network = "ud"

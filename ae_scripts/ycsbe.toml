@@ -1,0 +1,55 @@
+global_configs="-total_accts=20000000 --force_rpc=false --workloads=dynamic_scan --threads=24  --concurrency=1 --undefok=concurrency,force_rpc,threads,workloads,total_accts"
+
+[[pass]]
+host = "val0"
+path = "/cock/fstore"
+cmd = "sleep 1; ./fserver --threads 24 --id 0 -ycsb_num=20000 -db_type dummy -ycsb_num 20000000 --model_config=ae_scripts/ycsb-dynamic-model.toml"
+
+[[pass]]
+host = "val1"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 1 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val2"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 2 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val3"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 3 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val4"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 4 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val5"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 5 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val6"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 6 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val7"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 7 -total_accts=10000000 -need_hash=true"
+
+[[pass]]
+host = "val8"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 8 -total_accts=10000000 -need_hash=true"
+
+
+
+[[pass]]
+host = "val15"
+path = "/cock/fstore"
+cmd = "sleep 5; ./master -client_config cs.toml -epoch 200  -nclients 8"
+
+

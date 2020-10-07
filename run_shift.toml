@@ -1,0 +1,49 @@
+global_configs = "--total_accts=100000 --rdma_payload=64 --workloads shift --rdma_rounds=5 --concurrency=16 --undefok=rdma_payload,rdma_rounds,concurrency,workloads,total_accts"
+
+[[pass]]
+host = "val0"
+path = "/cock/fstore"
+cmd = "sleep 1; ./fserver -db_type ycsbh --threads 24 --id 0 -ycsb_num=100000"
+
+[[pass]]
+host = "val1"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -server_host val00 -id 1 -need_hash=true"
+
+[[pass]]
+host = "val2"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -server_host val00 -id 2 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val3"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -workloads rdma_round -server_host val00 -id 3 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val4"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -workloads rdma_round -server_host val00 -id 4 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val5"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -workloads rdma_round -server_host val00 -id 5 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val6"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -workloads rdma_round -server_host val00 -id 6 -total_accts=20000000 -need_hash=true"
+
+
+[[pass]]
+host = "val7"
+path = "/cock/fstore"
+cmd = "./micro --threads 24   -workloads rdma_round -server_host val00 -id 7 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val15"
+path = "/cock/fstore"
+cmd = "sleep 5; ./master -client_config cs.toml -epoch 40 -nclients 1"
+
+

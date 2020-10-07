@@ -1,0 +1,145 @@
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",include="include"}
+
+[[apps]]
+name = "fserver"
+src = ["server/main.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc", "server/loaders/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system","mkl_rt"]
+deps  = ["jemalloc","boost"]
+
+[[apps]]
+name = "micro"
+src = ["benchs/micro/*.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system", "mkl_rt"]
+deps  = ["jemalloc","boost"]
+
+
+[[apps]]
+name = "ycsb"
+src = ["benchs/ycsb/*.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system", "mkl_rt"]
+deps  = ["jemalloc","boost"]
+
+[[apps]]
+name = "rc_server"
+src = ["benchs/micro/rc_server.cpp", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc","deps/rocksdbb/port/stack_trace.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+[[apps]]
+name = "nullc"
+src = ["benchs/micro/null_client.cpp", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc","deps/rocksdbb/port/stack_trace.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+
+[[apps]]
+name = "master"
+src = ["benchs/bench_master.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+
+[[apps]]
+name = "pp_server"
+src = ["benchs/pingpong/server.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+[[apps]]
+name = "pp_client"
+src = ["benchs/pingpong/client.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+[[apps]]
+name = "pp"
+src = ["benchs/pingpong/aclient.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+[[apps]]
+name = "ppr"
+src = ["benchs/pingpong/aclient_rdma.cc", "deps/r2/src/*.cc","deps/r2/src/rpc/*.cc",
+       "deps/r2/src/msg/*.cc"]
+extra = ["gflags","jemalloc","pthread","ibverbs","boost_coroutine","boost_system"]
+deps  = ["jemalloc","boost"]
+
+
+
+[[apps]]
+name = "zip"
+src  = ["benchs/kv/zipfan.cpp"]
+
+[[apps]]
+name = "mc_perf"
+src  = ["benchs/mallocs/main.cc","src/utils/*.cc","deps/r2/src/logging.cc"]
+extra = ["gflags","jemalloc","pthread"]
+deps  = ["jemalloc"] ## cmake depends list
+
+[[apps]]
+name = "tpcc"
+src  = ["benchs/kv/tpcc_distribution.cpp","deps/r2/src/logging.cc"]
+extra = ["gflags"]
+
+[[apps]]
+name = "micro_local_kv"
+src  = [ "src/*.cc", "benchs/kv/local_perf.cc","benchs/kv/flags.cc","deps/r2/src/logging.cc"]
+extra = ["rocksdb","mkl_rt","gflags","pthread"]
+
+[[apps]]
+name = "micro_dynamic"
+src  = [ "src/*.cc", "benchs/kv/dynamic.cc","benchs/kv/flags.cc","deps/r2/src/logging.cc"]
+extra = ["rocksdb","mkl_rt","gflags","pthread"]
+
+
+[[apps]]
+name = "ycsb_single"
+src  = [ "benchs/ycsb/single_node.cpp", "deps/r2/src/logging.cc"]
+extra = ["gflags","pthread"]
+
+[[apps]]
+name = "analysis"
+src  = [ "src/*.cc", "benchs/kv/analysis.cpp","benchs/kv/flags.cc","deps/r2/src/logging.cc"]
+extra = ["rocksdb","mkl_rt","gflags","pthread"]
+
+[[apps]]
+name = "scan_analysis"
+src  = [ "src/*.cc", "benchs/kv/scan_analysis.cpp","benchs/kv/flags.cc","deps/r2/src/logging.cc"]
+extra = ["rocksdb","mkl_rt","gflags","pthread"]
+
+[tests]
+src   = ["deps/r2/src/logging.cc","tests/*.cc","src/stores/*.cc"]
+extra = ["rocksdb","mkl_rt","boost_serialization","jemalloc"]
+deps  = ["boost"] ## cmake depends list
+
+[installs]
+boost = {url = "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz", configure_cmd = "./bootstrap.sh  --with-libraries=system,coroutine,serialization", build_cmd = "./b2",install_cmd = "./b2 install",exports=["boost_system","boost_coroutine","boost_serialization"],include="include",lib="lib"}
+#rocksdbb = {url = "https://github.com/facebook/rocksdb.git", configure_cmd = "cmake .", build_cmd = "make -j12",install_cmd = "",exports=["rocksdb"],include="./include"}
+#r2 = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/r2.git",exports=[],include=".",build = false}
+#mousika = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/mousika.git",exports=[],build = false}
+#rlib = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git",build = false,exports=[],include=".."}
+#ralloc = {url="https://ipads.se.sjtu.edu.cn:1312/weixd/ralloc.git",build = true,exports = ["ssmalloc"],configure_cmd = " mkdir -p lib",build_cmd = "make",install_cmd = "make install"}
+lru = {url = "https://github.com/goldsborough/lru-cache.git", build=false, exports=[], include="include"}
+jemalloc={url="https://github.com/jemalloc/jemalloc.git",configure_cmd = "./configure --with-jemalloc-prefix=je",build_cmd = "make -j12;",install_cmd = "",exports=["jemalloc"],include="include",build=true,lib="lib"}
+
+[includes]
+## cmake add subdirectory
+ggflags = {url = "https://github.com/gflags/gflags.git",include="include"}
+
+[downloads]
+## just downloads the specific libraries
+cpptoml =  {url = "https://github.com/skystrife/cpptoml.git" }
+
+[config]
+std = "c++14"

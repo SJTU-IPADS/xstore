@@ -1,0 +1,88 @@
+[[pass]]
+host = "val0"
+path = "/cock/fstore"
+cmd = "pkill fserver; pkill ycsb; pkill micro;"
+
+[[pass]]
+host = "val1"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val2"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val3"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val4"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val5"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val6"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val7"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val8"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val9"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro; pkill fserver;"
+
+[[pass]]
+host = "val10"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro; pkill fserver;"
+
+[[pass]]
+host = "val11"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+[[pass]]
+host = "val12"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+
+[[pass]]
+host = "val13"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+
+[[pass]]
+host = "val14"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro"
+
+
+
+[[pass]]
+host = "val15"
+path = "/cock/fstore"
+cmd = "pkill ycsb; pkill micro; pkill master;"
+
+
+
+
+

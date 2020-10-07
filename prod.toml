@@ -1,0 +1,55 @@
+global_configs="--force_rpc=false --write_ratio=58 --workloads=prod --threads=12  --concurrency=8 --undefok=concurrency,force_rpc,threads,workloads,write_ratio"
+
+[[pass]]
+host = "val0"
+path = "/cock/fstore"
+cmd = "sleep 1; ./fserver --threads 12 --id 0 -ycsb_num=20000 -db_type nut0 -ycsb_num 500000000 --dump_keys=false --no_train=true"
+
+[[pass]]
+host = "val1"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 1 -total_accts=10000000 -need_hash=true" #
+                                                                                                                               #
+[[pass]]                                                                                                                       #
+host = "val2"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 2 -total_accts=10000000 -need_hash=true" #
+                                                                                                                               #
+[[pass]]                                                                                                                       #
+host = "val3"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 3 -total_accts=10000000 -need_hash=true" #
+                                                                                                                               #
+[[pass]]                                                                                                                       #
+host = "val4"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 4 -total_accts=10000000 -need_hash=true" #
+
+[[pass]]                                                                                                                       #
+host = "val5"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 5 -total_accts=10000000 -need_hash=true" #
+
+[[pass]]                                                                                                                       #
+host = "val6"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 6 -total_accts=10000000 -need_hash=true" #
+
+[[pass]]                                                                                                                       #
+host = "val7"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 7 -total_accts=10000000 -need_hash=true" #
+
+[[pass]]                                                                                                                       #
+host = "val8"                                                                                                                  #
+path = "/cock/fstore"                                                                                                          #
+cmd = "./micro --threads 24 -concurrency 1 -workloads dynamic2 -server_host val00 -id 8 -total_accts=10000000 -need_hash=true" #
+
+
+
+[[pass]]
+host = "val15"
+path = "/cock/fstore"
+cmd = "sleep 5; ./master -client_config cs.toml -epoch 200 -nclients 8"
+
+

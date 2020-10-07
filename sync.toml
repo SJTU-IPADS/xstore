@@ -1,0 +1,5 @@
+[[pass]]
+host = "localhost"
+path = '/Users/weixingda/lab/store'
+cmd  = './sync_to_server.sh'
+local = "yes"

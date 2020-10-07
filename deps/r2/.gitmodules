@@ -1,0 +1,12 @@
+[submodule "deps/rlib"]
+	path = deps/rlib
+	url = https://ipads.se.sjtu.edu.cn:1312/weixd/rib.git
+[submodule "deps/gflags"]
+	path = deps/gflags
+	url = https://github.com/gflags/gflags.git
+[submodule "deps/googletest"]
+	path = deps/googletest
+	url = https://github.com/google/googletest.git
+[submodule "deps/rib"]
+	path = deps/rib
+	url = git@ipads.se.sjtu.edu.cn:weixd/rib.git

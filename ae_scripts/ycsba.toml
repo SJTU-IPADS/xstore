@@ -1,0 +1,63 @@
+## global configs will overwrite the per-process configurations
+global_configs = "--need_hash=false --cache_sz_m=327680 --server_host=val11 --total_accts=100000000 --eval_type=sc --workloads=ycsba --concurrency=8 --undefok=concurrency,workloads,eval_type,total_accts,server_host,cache_sz_m,need_hash"
+
+## server process
+[[pass]]
+host = "val11"
+path = "/cock/fstore"
+cmd = "sleep 1; ./fserver -db_type ycsb --threads 24 --id 0 -ycsb_num=100000000 --no_train=false --step=2 --model_config=ae_scripts/ycsb-model.toml"
+
+## master process to collect results
+[[pass]]
+host = "val15"
+path = "/cock/fstore"
+cmd = "sleep 5; ./master -client_config cs.toml -epoch 400 -nclients 8"
+
+## below are clients
+[[pass]]
+host="val1"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 1 -total_accts=20000000 -need_hash -eval_type=rpc"
+
+[[pass]]
+host="val2"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 2 -total_accts=20000000 -need_hash -eval_type=rpc"
+
+
+[[pass]]
+host="val3"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 3 -total_accts=20000000 -need_hash -eval_type=sc"
+
+[[pass]]
+host="val4"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 4 -total_accts=20000000 -need_hash -eval_type=sc"
+
+[[pass]]
+host="val5"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 5 -total_accts=20000000 -need_hash -eval_type=sc"
+
+
+[[pass]]
+host="val6"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 6 -total_accts=20000000 -need_hash -eval_type=sc"
+
+
+[[pass]]
+host="val7"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 7 -total_accts=20000000 -need_hash -eval_type=sc"
+
+[[pass]]
+host="val8"
+path="/cock/fstore"
+cmd = "./ycsb --threads 24 -concurrency 1 -workloads ycsbb -server_host val00 --id 8 -total_accts=20000000 -need_hash -eval_type=sc"
+
+
+
+
+

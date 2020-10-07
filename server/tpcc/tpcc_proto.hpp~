@@ -1,0 +1,15 @@
+#pragma once
+
+#include "common.hpp"
+#include "internal/tables.hpp"
+#include "r2/src/rpc/rpc.hpp"
+
+namespace fstore {
+
+namespace server {
+
+enum NO_ID = ::r2::rpc::RESERVED_RPC_ID;
+
+}
+
+}

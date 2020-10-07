@@ -1,0 +1,37 @@
+## This script will first saturate RPC's throughput, and then add client to issue one-sided requests.
+
+global_configs = "--rdma_rounds=1 --workloads=null_rdma --concurrency=16 --rdma_payload=8 --undefok=rdma_payload,rdma_rounds,concurrency,workloads,total_accts"
+
+[[pass]]
+host = "val0"
+path = "/cock/fstore"
+cmd = "./fserver -db_type ycsbh --threads 24 --id 0 -ycsb_num=20000000"
+
+[[pass]]
+host = "val1"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -workloads rpc_get -server_host val00 -id 1 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val2"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -workloads rpc_get -server_host val00 -id 2 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val3"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -workloads rpc_get -server_host val00 -id 3 -total_accts=20000000 -need_hash=true"
+
+[[pass]]
+host = "val4"
+path = "/cock/fstore"
+cmd = "./micro --threads 24 -workloads rpc_get -server_host val00 -id 4 -total_accts=20000000 -need_hash=true"
+
+
+[[pass]]
+host = "val15"
+path = "/cock/fstore"
+cmd = "./master -client_config cs.toml -epoch 40 -nclients 4"
+
+
+

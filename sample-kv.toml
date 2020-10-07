@@ -1,0 +1,10 @@
+[[pass]]
+host = "val11"
+path = "/cock/fstore"
+cmd = "sleep 1; ./fserver -db_type ycsb --threads 24 --id 0 -ycsb_num=100000000 --step=2 --model_config=ae_scripts/ycsb-model.toml"
+
+[[pass]]
+host="val1"
+path="/cock/fstore"
+cmd = "./ycsb --threads 1 -concurrency 8 -workloads ycsbc -server_host val11 --id 1 -total_accts=100000000  -eval_type=sc --use_master=false"
+

@@ -1,0 +1,78 @@
+[general_config]
+port   = 8888
+
+[[client]]
+id   = 1
+host = "val01"
+
+[[client]]
+id   = 2
+host = "val02"
+
+[[client]]
+id   = 3
+host = "val03"
+
+[[client]]
+id   = 4
+host = "val04"
+
+[[client]]
+id   = 5
+host = "val05"
+
+[[client]]
+id   = 6
+host = "val06" # we use val06 as the server
+
+##################
+ [[client]]     #
+ id   = 7       #
+ host = "val07" #
+##################
+
+[[client]]
+id   = 8
+host = "val08"
+
+[[client]]
+id   = 9
+host = "val09"
+
+[[client]]
+id   = 10
+host = "val11"
+
+[[client]]
+id   = 11
+host = "val12"
+
+[[client]]
+id   = 12
+host = "val13"
+
+[[client]]
+id   = 13
+host = "val14"
+
+[[client]]
+id   = 14
+host = "val00"
+
+[[client]]
+id   = 15
+host = "val15"
+
+
+
+[master]
+host = "val15"
+
+
+## server config
+
+[[server]]
+host    = "val00"
+
+[server_config]
+db_type = "ycsbh"

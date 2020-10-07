@@ -1,0 +1,7 @@
+#pragma once
+
+namespace fstore {
+
+namespace server {} // namespace server
+
+} // namespace fstore
