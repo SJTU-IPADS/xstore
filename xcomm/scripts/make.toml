@@ -1,4 +1,0 @@
-[[pass]]
-host = "val2"
-path = '/cock/xstore/xcomm'
-cmd  = 'cmake .; make test_transport; make test_ud; make rpc_server; make rpc_client;'
