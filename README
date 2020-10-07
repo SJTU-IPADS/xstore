@@ -1,6 +1,6 @@
 # Before the start
-First of all, we want to emphasize that, the current submitted XStore source code is not the **final release** version of XStore. The codebase is only intend to reproduce the evaluations results in our submitted paper. 
-Please check [XStore](https://ipads.se.sjtu.edu.cn/pub/projects/xstore) for the open-source version of XStore, which will be released in the future.
+This is the legacy codebase of XStore. 
+Please check [XStore](https://ipads.se.sjtu.edu.cn/pub/projects/xstore) for the latest version.
 
 # Overview
 XStore is an RDMA-enabled **ordered** key-value store targeted at a client-sever setting. Specifically, the server has an in-memory B+Tree; and the client uses one-sided RDMA READs to traverse the B+Tree. To accelerate the lookup, we deploy a learned cache (xcache) at the client to accomplish the traversal in one round-trip (if the learned cache is all cached). Even if the xcahe is not cached, XStore client only needs at most 2 round-trips for the traversal. 
@@ -9,12 +9,17 @@ XStore is an RDMA-enabled **ordered** key-value store targeted at a client-sever
 
 - **RDMA:** As XStore leverages RDMA's feature, we recommend using RDMA NIC with good one-sided performance. For Mellanox NICs, we recommend using recent generations of NICs, including **ConnectX-4** or **ConnectX-5**. 
 - **RTM:** XStore server uses Intel restricted transactional memory (RTM) to coordinate server's concurrent threads. Recent generations of processor later than Haswell all have RTM. (Note that some processor may disable this feature; please contact us if you want to re-enable RTM). 
+- **Operation system**. We use `Ubuntu 16.04.2` with `Linux Linux 4.4.98` for evaluating XStore. Yet, we believe XStore does not depend on a specific OS version. 
 
 ***
 
 # Getting started 
 XStore's codebase will automatically download most of the dependent packages 
-(either using `git submodule` or `cmake external project`). Except one: **Intel's mkl**, please download and install it manually. After installing the Intel MKL, please modify `build-config.toml`; and adjust the following **path**， **lib** and  **include** path in XStore's build configure to where you have installed the MKL:
+(either using `git submodule` or `cmake external project`). Except one: **Intel's mkl**, please download and install it manually.
+
+- **Intel MKL** 
+
+ After installing the Intel MKL, please modify `build-config.toml`; and adjust the following **path**， **lib** and  **include** path in XStore's build configure to where you have installed the MKL:
 
 ![](./6.png)
 
