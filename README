@@ -15,17 +15,28 @@ XStore is an RDMA-enabled **ordered** key-value store targeted at a client-sever
 
 # Getting started 
 XStore's codebase will automatically download most of the dependent packages 
-(either using `git submodule` or `cmake external project`). Except one: **Intel's mkl**, please download and install it manually.
+(either using `git submodule` or `cmake external project`).
+There are two exceptions: **Intel MKL** and **Mellanox OFED**.
+Below, we first briefly describe how to install them. 
 
-- **Intel MKL** 
+- **Intel MKL**
+There are two ways to install Intel MKL.
+One way is to download the install package from its official website. 
+For example, we downloaded a tar file named `l_mkl_2020.3.279`.
+After untar it, we run the `./install.sh` and follow its instructions to complete the installation.
+Note that the install process may depend on cpio, which can be installed by `apt-get update; apt-get install cpio`.
+Another way is to install it from `apt`.
+Please follow the instructions at [](https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-apt-repo.html) for the detailed information.
 
- After installing the Intel MKL, please modify `build-config.toml`; and adjust the following **path**， **lib** and  **include** path in XStore's build configure to where you have installed the MKL:
+After installing the Intel MKL, please modify `build-config.toml`; and adjust the following **path**， **lib** and  **include** path in XStore's build configure to where you have installed the MKL:
 
 ![](./6.png)
 
 For example, the header file of our sampled install configuration is `/opt/intel/mkl/include` .
 
-
+- **Mellanox OFED**
+After downloading the specific OFED from [OFED](https://www.mellanox.com/products/infiniband-drivers/linux/mlnx_ofed),
+we use `mlnxofedinstall --without-iser-dkms --without-srp-dkms --without-srptools --force` to install it.
 
 For other dependencies, XStore only depends on some python packages for bootstrapping the automatic process.
 We recommend using `pip` to install the dependencies, using the following command:
