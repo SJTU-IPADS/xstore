@@ -1,0 +1,82 @@
+[[apps]]
+name = "bench_local"
+src = ["./benchs/main.cc", "../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread"]
+
+[[apps]]
+name = "bench_ud"
+src = ["./benchs/bench_ud.cc", "../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread"]
+
+[[apps]]
+name = "rpc_server"
+src = ["./benchs/rpc_server.cc", "../deps/r2/src/logging.cc"]
+extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
+
+[[apps]]
+name = "rpc_client"
+src = ["./benchs/rpc_client.cc", "../deps/r2/src/logging.cc", "../deps/r2/src/sshed.cc"]
+extra = ["boost_system","boost_coroutine", "pthread","gflags","ibverbs"]
+
+
+######################### start test apps ################################
+## test apps
+[[apps]]
+name = "test_rw"
+src = ["./tests/test_local_rw.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+[[apps]]
+name = "test_transport"
+src = ["./tests/test_transport.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs"]
+
+[[apps]]
+name = "test_ud"
+src = ["./tests/test_ud_transport.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs","boost_system"]
+
+[[apps]]
+name = "test_rpc"
+src = ["./tests/test_rpc.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs", "boost_system"]
+
+[[apps]]
+name = "test_remote_rw"
+src = ["./tests/test_remote_rw.cc", "../deps/r2/src/logging.cc", "../deps/r2/src/sshed.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
+[[apps]]
+name = "test_async_local"
+src = ["./tests/test_async_local.cc", "../deps/r2/src/logging.cc", "../deps/r2/src/sshed.cc"]
+extra = ["gtest", "boost_system","boost_coroutine"]
+
+
+[[apps]]
+name = "test_batch"
+src = ["./tests/test_batch_rdma.cc", "../deps/r2/src/logging.cc", "../deps/r2/src/sshed.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
+[[apps]]
+name = "test_remote_con_rw"
+src = ["./tests/test_remote_concurrent.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "ibverbs", "boost_system","boost_coroutine", "pthread"]
+
+
+[[apps]]
+name = "test_con_rw"
+src = ["./tests/test_local_concurrent.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest","pthread"]
+########################## end test apps ################################
+
+[includes]
+## cmake add subdirectory
+ggflags = {url = "https://github.com/gflags/gflags.git",include="include"}
+
+
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+boost = { path = "../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
+rlib = { path = "../deps", exports = [], lib = "", include = ""}
+jemalloc = { path = "../deps/jemalloc", exports=["jemalloc"], include = "include", lib = "lib"}
+

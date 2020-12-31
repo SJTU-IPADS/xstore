@@ -1,0 +1,47 @@
+[[apps]]
+name = "test_alloc"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_alloc.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+[[apps]]
+name = "test_array"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_array.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+[[apps]]
+name = "test_tree_sz"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_tree_sz.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+
+[[apps]]
+name = "test_node"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_node.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+[[apps]]
+name = "test_tree"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_tree.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+[[apps]]
+name = "test_iter"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_sorted_iter.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+[[apps]]
+name = "test_tree_con"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_con_tree.cc"]
+extra = ["boost_system","boost_coroutine", "pthread", "gtest"]
+
+[[apps]]
+name = "test_ft"
+src = ["../deps/r2/src/logging.cc" , "./tests/test_fat_pointer.cc"]
+extra = ["gtest"]
+
+
+
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+boost = { path = "../../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
+

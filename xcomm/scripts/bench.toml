@@ -1,0 +1,13 @@
+[[pass]]
+host = "val1"
+path = "/cock/xstore/xcomm"
+cmd  = "./rpc_server"
+
+
+[[pass]]
+host = "val2"
+path = "/cock/xstore/xcomm"
+cmd  = "sleep 2; ./rpc_client --addr='val01:8888' --coros 10"
+
+
+

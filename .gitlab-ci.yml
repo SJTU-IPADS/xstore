@@ -1,0 +1,69 @@
+before_script:
+  - python -V  # Print out python version for debugging
+  - pip --cache-dir=.pip install toml
+  - git config --global user.email "wxdwfc@gmail.com"
+  - git config --global user.name "wxd"
+  - git submodule sync
+#  - git fetch --recurse-submodules
+  - git submodule update --init
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - deps/
+    - .pip
+
+# run tests using the binary built before
+test_xml:
+  stage: test
+  tags:
+  - rdma
+  script:
+    - cd x_ml; ./test.sh
+
+test_xkv:
+  stage: test
+  tags:
+  - rdma
+  script:
+    - cd xkv_core; ./test.sh
+
+test_xcache:
+    stage: test
+    tags:
+    - rdma
+    script:
+    - cd xcache; ./test.sh
+    - ./test_sampler
+    - ./test_rmi;
+    - ./test_rmi_t;
+    - ./test_logic;
+    - ./test_dispatcher;
+
+bench:
+  stage: test
+  tags:
+  - rdma
+  script:
+    - ./magic.py config -f build-config.toml
+    - cmake .; make;
+
+
+
+################################################
+# test_xcomm:                                  #
+#   stage: test                                #
+#   tags:                                      #
+#   - rdma                                     #
+#                                              #
+#   cache:                                     #
+#     key: "boost"                             #
+#                                              #
+#   script:                                    #
+#     - cd xcomm; ./test.sh                    #
+#                                              #
+#   before_script:                             #
+#   - ./magic.py config -f  build-config.toml  #
+#   - cmake .; make boost                      #
+################################################
+

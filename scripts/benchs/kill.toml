@@ -1,0 +1,41 @@
+[[pass]]
+host = "val1"
+path = '/cock/xstore'
+cmd  = 'pkill rw_server; pkill ycsb_server; pkill ycsbd_server; pkill ycsbd_client;'
+
+[[pass]]
+host = "val0"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'
+
+[[pass]]
+host = "val2"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'
+
+
+[[pass]]
+host = "val3"
+path = '/cock/xstore'
+cmd  = 'pkill bash; pkill rw_client ; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'
+
+[[pass]]
+host = "val4"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'
+
+
+[[pass]]
+host = "val5"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'
+
+[[pass]]
+host = "val6"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'
+
+[[pass]]
+host = "val7"
+path = '/cock/xstore'
+cmd  = 'pkill rw_client; pkill ycsb_client; pkill ycsbd_server; pkill ycsbd_client;'

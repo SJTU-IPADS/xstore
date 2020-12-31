@@ -1,0 +1,4 @@
+[[pass]]
+host = "val2"
+path = '/cock/xstore'
+cmd  = './test_reg; ./test_snapshot'

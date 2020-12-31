@@ -1,0 +1,41 @@
+global_configs = "--nkeys=10000 --threads=24 --vlen=false --len=8 --load_from_file=false --coros=6 --undefok=coros "
+
+[[pass]]
+host = "val01"
+path = '/cock/xstore'
+cmd  = './data_server --alloc_mem_m=22480 --len=8 --nmodels=100 --ncheck_model=0 --skip_first=true'
+
+[[pass]]
+host = "val00"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=1 ' 
+
+[[pass]]
+host = "val02"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=2 ' 
+
+[[pass]]
+host = "val03"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=3 ' 
+
+[[pass]]
+host = "val04"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=4 ' 
+
+[[pass]]
+host = "val05"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=5 ' 
+
+[[pass]]
+host = "val06"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=6 ' 
+
+[[pass]]
+host = "val07"
+path = '/cock/xstore'
+cmd  = './data_client  --coros 10  --client_name=7 ' 

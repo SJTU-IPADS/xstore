@@ -1,0 +1,11 @@
+global_configs = "--nkeys=10000000 --threads=1"
+
+[[pass]]
+host = "val03"
+path = '/cock/xstore'
+cmd  = './ycsbd_server --alloc_mem_m=22480  --nmodels=5000 '
+
+[[pass]]
+host = "val02"
+path = '/cock/xstore'
+cmd  = './ycsbd_client  --addr="val03:8888"'

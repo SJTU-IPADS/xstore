@@ -1,0 +1,4 @@
+[[pass]]
+host = "val02"
+path = ''
+cmd  = 'cd /cock/xstore; make ycsbd_server; make ycsbd_client;'

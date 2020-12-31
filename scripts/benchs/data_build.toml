@@ -1,0 +1,4 @@
+[[pass]]
+host = "val02"
+path = ''
+cmd  = 'cd /cock/xstore; make clean;make data_server -j12; make data_client -j12;'

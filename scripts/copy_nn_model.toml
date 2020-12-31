@@ -1,0 +1,39 @@
+[[pass]]
+host = "val01"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val00"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val02"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val03"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val04"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val05"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val06"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'
+
+[[pass]]
+host = "val07"
+path = '/cock/xstore'
+cmd  = 'cp /cock/xstore/*.pt ~/'

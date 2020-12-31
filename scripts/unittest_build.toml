@@ -1,0 +1,4 @@
+[[pass]]
+host = "val2"
+path = ''
+cmd  = 'cd /cock/xstore; cmake .; make .'

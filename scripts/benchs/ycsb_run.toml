@@ -1,0 +1,46 @@
+global_configs = "--addr='val00:8888' --nkeys=10000000 --threads=24 --vlen=false --len=8 --load_from_file=false --coros=10 --undefok=coros,addr --data_file=osm_uni_100m.txt "
+
+[[pass]]
+host = "val00"
+path = '/cock/xstore'
+cmd  = './ycsb_server --alloc_mem_m=22480 --len=8 --nmodels=50000 --ncheck_model=0'
+
+[[pass]]
+host = "val01"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=1' 
+
+[[pass]]
+host = "val02"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=2' 
+
+[[pass]]
+host = "val03"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=3' 
+
+[[pass]]
+host = "val04"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=4' 
+
+[[pass]]
+host = "val05"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=5' 
+
+[[pass]]
+host = "val06"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=6' 
+
+[[pass]]
+host = "val07"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=7' 
+
+[[pass]]
+host = "val08"
+path = '/cock/xstore'
+cmd  = './ycsb_client --addr="val01:8888" --coros 10  --client_name=8' 

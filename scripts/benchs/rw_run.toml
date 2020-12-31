@@ -1,0 +1,43 @@
+global_configs = "--emulate_error=5 --undefok=emulate_error"
+
+[[pass]]
+host = "val1"
+path = '/cock/xstore'
+cmd  = './rw_server --alloc_mem_m 8192' ## server reg 2G mem
+
+[[pass]]
+host = "val0"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=1 --emulate_error=0'
+
+[[pass]]
+host = "val2"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=2 --emulate_error=0'
+
+
+[[pass]]
+host = "val3"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=3 --emulate_error=0'
+
+[[pass]]
+host = "val4"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=4 --emulate_error=0'
+
+[[pass]]
+host = "val5"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=5 --emulate_error=0'
+
+[[pass]]
+host = "val6"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=6 --emulate_error=0'
+
+
+[[pass]]
+host = "val7"
+path = '/cock/xstore'
+cmd  = './rw_client --threads=12 --coros=8 --addr="val01:8888" --client_name=7 --emulate_error=0'

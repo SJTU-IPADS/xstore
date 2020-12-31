@@ -1,0 +1,9 @@
+[config]
+std = "c++17"
+
+[[apps]]
+name = "test_rtm"
+src = ["../../deps/r2/src/logging.cc","./test_rtm.cc"]
+extra = ["pthread", "gtest"]
+
+

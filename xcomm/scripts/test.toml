@@ -1,0 +1,19 @@
+[[pass]]
+host = "localhost"
+path = '~/lab/xstore/scripts/'
+cmd  = './sync.sh'
+local = "yes"
+
+
+[[pass]]
+host = "val2"
+path = '/cock/xstore/xcomm'
+#cmd  = '../magic.py config -f build-config.toml;  cmake .; make test_transport; make test_ud;' ## build from scratch
+cmd = 'cmake .; make test_transport; make test_ud;'
+
+[[pass]]
+host = "val2"
+path = "/cock/xstore/xcomm"
+cmd  = "./test_ud"
+
+

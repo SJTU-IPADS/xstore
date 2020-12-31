@@ -1,0 +1,40 @@
+######################### start test apps ################################
+## test apps
+[[apps]]
+name = "test_dispatcher"
+src = ["./tests/test_dispatcher.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
+[[apps]]
+name = "test_rmi"
+src = ["./tests/test_rmi.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
+
+[[apps]]
+name = "test_sampler"
+src = ["./tests/test_sampler.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+
+[[apps]]
+name = "test_logic"
+src = ["./tests/test_logic.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest"]
+
+[[apps]]
+name = "test_rmi_t"
+src = ["./tests/test_rmi_tree.cc", "../deps/r2/src/logging.cc"]
+extra = ["gtest", "mkl_rt"]
+
+
+########################## end test apps ################################
+
+
+[externals]
+## The external libs are libs which donot built/cloned by the tool
+boost = { path = "../deps/boost", exports = ["boost", "boost_system", "boost_coroutine"],lib = "lib/",include="include"}
+rlib = { path = "../deps", exports = [], lib = "", include = ""}
+mkl = { path = "/opt/intel/mkl", exports = ["mkl_rt"],lib = "lib/intel64",include="include"}
+tiny-dnn = {path = "../deps/tiny-dnn", exports = [], lib = "", include = ""}
+

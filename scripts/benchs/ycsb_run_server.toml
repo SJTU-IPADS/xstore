@@ -1,0 +1,7 @@
+global_configs = "--nkeys=10000000 --threads=1 --vlen=false --len=8 "
+
+[[pass]]
+host = "val1"
+path = '/cock/xstore'
+cmd  = './ycsb_server --alloc_mem_m=20480 --len=8 --nmodels=50000 --load_from_file=true --ncheck_model=0 --data_file=osm_uni_10m.txt'  
+

@@ -1,0 +1,43 @@
+[submodule "deps/ggtest"]
+	path = deps/ggtest
+	url = https://github.com/google/googletest.git
+[submodule "deps/cpptoml"]
+	path = deps/cpptoml
+	url = https://github.com/skystrife/cpptoml.git
+
+[submodule "deps/jemalloc"]
+	path = deps/jemalloc
+	url = https://github.com/jemalloc/jemalloc.git
+[submodule "deps/ggflags"]
+	path = deps/ggflags
+	url = https://github.com/gflags/gflags.git
+[submodule "xkv_core/deps/ggtest"]
+	path = xkv_core/deps/ggtest
+	url = https://github.com/google/googletest.git
+[submodule "xcomm/deps/ggtest"]
+	path = xcomm/deps/ggtest
+	url = https://github.com/google/googletest.git
+[submodule "x_ml/deps/ggtest"]
+	path = x_ml/deps/ggtest
+	url = https://github.com/google/googletest.git
+[submodule "deps/tiny-dnn"]
+	path = deps/tiny-dnn
+	url = https://github.com/tiny-dnn/tiny-dnn.git
+[submodule "deps/kvs-workload"]
+	path = deps/kvs-workload
+	url = https://ipads.se.sjtu.edu.cn:1312/weixd/kvsworkloads.git
+[submodule "xcache/deps/ggtest"]
+	path = xcache/deps/ggtest
+	url = https://github.com/google/googletest.git
+[submodule "deps/rlib"]
+	path = deps/rlib
+	url = https://github.com/wxdwfc/rlibv2.git
+[submodule "deps/r2"]
+	path = deps/r2
+	url = https://github.com/wxdwfc/r2.git
+[submodule "xutils/tests/deps/ggtest"]
+	path = xutils/tests/deps/ggtest
+	url = https://github.com/google/googletest.git
+[submodule "deps/progress-cpp"]
+	path = deps/progress-cpp
+	url = https://github.com/prakhar1989/progress-cpp.git

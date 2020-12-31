@@ -1,0 +1,9 @@
+[[pass]]
+host = "val1"
+path = ''
+cmd  = 'pkill bench_server'
+
+[[pass]]
+host = "val0"
+path = ''
+cmd  = 'pkill co_client'
