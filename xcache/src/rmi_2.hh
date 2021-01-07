@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "./dispatcher.hh"
 #include "./statics.hh"
 
