@@ -13,7 +13,7 @@ rsync -i -rtuv \
       $PWD/../xcli \
       $PWD/../tests \
       $PWD/../dockerfiles \
-      $target:/raid/wxd/xstore \
+      $target:/raid/wxd/xstore-open \
       --exclude 'CMakeCache.txt' \
       --exclude 'scripts/ar.txt'
 

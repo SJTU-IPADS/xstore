@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include "./dist_report.hh"
 
 namespace xstore {
