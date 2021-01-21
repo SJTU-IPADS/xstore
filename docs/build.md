@@ -12,7 +12,15 @@
 
 ## Build unittests
 
-TBD
+Most unittests are in separate modules (e.g., x_ml).
+For building and running unittests in each module,
+you can directly goto each module.
+
+For instance, the following steps will run unittests in `xkv_core`,
+which implements the core storage of XStore.
+
+- `cd xkv_core`;
+- `./test.sh`
 
 ## Build benchmarks
 

@@ -13,8 +13,9 @@ namespace test {
 using namespace xstore;
 using namespace xstore::xkv::xtree;
 
-TEST(XNode, offset) {
-  using Node = XNodeKeys<16,XKey>;
+TEST(XNode, offset)
+{
+  using Node = XNodeKeys<16, XKey>;
 
   Node n;
 
@@ -30,13 +31,14 @@ TEST(XNode, offset) {
   // now check
   for (uint i = 0; i < check_keys.size(); ++i) {
     auto key = check_keys[i];
-    XKey *node_k_ptr =
-        reinterpret_cast<XKey *>(reinterpret_cast<char *>(&n) + n.key_offset(i));
+    XKey* node_k_ptr =
+      reinterpret_cast<XKey*>(reinterpret_cast<char*>(&n) + n.key_offset(i));
     ASSERT_EQ(node_k_ptr->d, key);
   }
 }
 
-TEST(XNode, Nodeoffset) {
+TEST(XNode, Nodeoffset)
+{
 
   using Node = XNode<16, XKey, u64>;
   Node n;
@@ -44,9 +46,9 @@ TEST(XNode, Nodeoffset) {
   std::vector<u64> check_keys;
   r2::util::FastRandom rand(0xdeadbeaf);
 #if XNODE_KEYS_ATOMIC
-  WrappedType<Node::NodeK> *w = reinterpret_cast<WrappedType<Node::NodeK> *>(
-      reinterpret_cast<char *>(&n) + n.keys_start_offset());
-  Node::NodeK *nks = w->get_payload_ptr();
+  WrappedType<Node::NodeK>* w = reinterpret_cast<WrappedType<Node::NodeK>*>(
+    reinterpret_cast<char*>(&n) + n.keys_start_offset());
+  Node::NodeK* nks = w->get_payload_ptr();
 
   for (uint i = 0; i < 16; ++i) {
     u64 key = rand.next();
@@ -57,7 +59,7 @@ TEST(XNode, Nodeoffset) {
   // now check
   for (uint i = 0; i < check_keys.size(); ++i) {
     auto key = check_keys[i];
-    auto node_k_ptr = reinterpret_cast<XKey *>(reinterpret_cast<char *>(nks) +
+    auto node_k_ptr = reinterpret_cast<XKey*>(reinterpret_cast<char*>(nks) +
                                               nks->key_offset(i));
     ASSERT_EQ(node_k_ptr->d, key);
     ASSERT_EQ(n.get_key(i).d, key);
@@ -70,7 +72,8 @@ TEST(XNode, Nodeoffset) {
 #endif
 }
 
-TEST(XNode, Insert) {
+TEST(XNode, Insert)
+{
   using Node = XNode<16, XKey, u64>;
   Node n;
 
@@ -87,7 +90,7 @@ TEST(XNode, Insert) {
   for (auto k : check_keys) {
     auto idx = n.keys_ptr()->search(XKey(k));
     ASSERT_TRUE(idx);
-    ASSERT_EQ(k, *(n.values[idx.value()].get_payload_ptr()));
+    ASSERT_EQ(k, (n.values.inplace[idx.value()]));
   }
 
   // check 1000 times
@@ -153,7 +156,9 @@ TEST(XNode, Insert) {
 
 } // namespace test
 
-int main(int argc, char **argv) {
+int
+main(int argc, char** argv)
+{
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
